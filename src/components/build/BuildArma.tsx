@@ -72,8 +72,6 @@ export function BuildArma() {
   const [velocidad, setVelocidad] = useState<Velocidad>(weapon.velocidad);
   const [rareza, setRareza] = useState<Rareza>(weapon.rareza);
   const [bonusAtributo, setBonusAtributo] = useState(weapon.bonusAtributo);
-  const [notas, setNotas] = useState(weapon.notas);
-
   const [damageRows, setDamageRows] = useState<DamageRow[]>(() => weaponToDamageRows(weapon));
   const [bonusRows, setBonusRows] = useState<BonusRow[]>(() => weaponToBonusRows(weapon));
   const [muescaRows, setMuescaRows] = useState<MuescaRow[]>(() => weaponToMuescaRows(weapon));
@@ -85,7 +83,6 @@ export function BuildArma() {
     setVelocidad(w.velocidad);
     setRareza(w.rareza);
     setBonusAtributo(w.bonusAtributo);
-    setNotas(w.notas);
     setDamageRows(weaponToDamageRows(w));
     setBonusRows(weaponToBonusRows(w));
     setMuescaRows(weaponToMuescaRows(w));
@@ -130,10 +127,10 @@ export function BuildArma() {
       ...prev,
       nombre, clase, subcategoria: subcategoria as Subcategoria, velocidad, rareza,
       bonusStat, bonusAtributo, critChanceExtra, critDmgExtra, attackSpeedPct, atributoClasePct,
-      tiposDano, bonusDano, muescas, notas,
+      tiposDano, bonusDano, muescas, notas: '',
     }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [nombre, clase, subcategoria, velocidad, rareza, bonusAtributo, notas, damageRows, bonusRows, muescaRows]);
+  }, [nombre, clase, subcategoria, velocidad, rareza, bonusAtributo, damageRows, bonusRows, muescaRows]);
 
   const subcatOptions = SUBCATEGORIAS_POR_CLASE[clase].map((s) => ({ value: s, label: s }));
 
@@ -233,16 +230,6 @@ export function BuildArma() {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Notes */}
-      <div className="flex flex-col gap-1">
-        <label className="text-xs text-zinc-400 font-medium">Notas</label>
-        <textarea
-          value={notas}
-          onChange={(e) => setNotas(e.target.value)}
-          className="bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 resize-none h-16"
-        />
       </div>
     </div>
   );
