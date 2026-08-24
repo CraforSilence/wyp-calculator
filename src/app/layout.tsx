@@ -33,7 +33,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <div className="max-w-7xl mx-auto px-4 text-center text-sm text-zinc-500">
             <p>W&amp;P Calculator (Weapon and Protection Calculator) es un proyecto libre y de codigo abierto.</p>
             <p className="mt-1">
-              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-400 transition-colors">
+              <a href="https://github.com/CraforSilence/wyp-calculator" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-400 transition-colors">
                 GitHub
               </a>
               {' '}&middot;{' '}
