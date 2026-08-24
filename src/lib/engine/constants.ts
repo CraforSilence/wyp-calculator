@@ -173,6 +173,25 @@ export const ARMOR_BONUS_LABELS: Record<ArmorBonusType, string> = {
   armaduraPct: 'Armadura %',
 };
 
+// Iconos por slot de armadura
+export const ARMOR_SLOT_ICONS: Record<ArmorSlot, string> = {
+  pechera: '/icons/pechera.png',
+  casco: '/icons/casco.png',
+  perneras: '/icons/perneras.png',
+  hombreras: '/icons/hombreras.png',
+  guanteletes: '/icons/guanteletes.png',
+  escudo: '/icons/escudo.png',
+  brazalete: '/icons/escudo.png',
+  tunica: '/icons/pechera.png',
+};
+
+// Iconos de joyería
+export const JEWELRY_ICONS: Record<string, string> = {
+  anillo1: '/icons/anillo.png',
+  anillo2: '/icons/anillo.png',
+  amuleto: '/icons/amuleto.png',
+};
+
 // Mapa subcategoría → categoría para cálculos de habilidades
 export const SUBCATEGORIA_TO_CATEGORIA: Record<string, string> = {
   'Lanza': 'lanza',
