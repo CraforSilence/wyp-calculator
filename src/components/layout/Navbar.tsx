@@ -18,7 +18,7 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4">
         <div className="flex items-center h-12 gap-1 overflow-x-auto">
           <Link href="/" className="text-amber-500 font-bold text-lg mr-4 shrink-0">
-            Regnum
+            W&P Calculator
           </Link>
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;

@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Regnum Calculator",
-  description: "Calculadora de armas, armadura y simulador de daño para Regnum Online",
+  title: "W&P Calculator",
+  description: "Weapon and Protection Calculator - Calculadora de armas, armadura y simulador de daño para Regnum Online",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -29,6 +29,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
           {children}
         </main>
+        <footer className="border-t border-zinc-800 py-6 mt-8">
+          <div className="max-w-7xl mx-auto px-4 text-center text-sm text-zinc-500">
+            <p>W&amp;P Calculator (Weapon and Protection Calculator) es un proyecto libre y de codigo abierto.</p>
+            <p className="mt-1">
+              <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-400 transition-colors">
+                GitHub
+              </a>
+              {' '}&middot;{' '}
+              Hecho por la comunidad para la comunidad.
+            </p>
+          </div>
+        </footer>
       </body>
     </html>
   );
