@@ -6,7 +6,8 @@ export type JewelryBonusType =
   | 'vida' | 'mana'
   | 'STR' | 'DXT' | 'INT' | 'CON'
   | 'attackSpeed' | 'castSpeed'
-  | 'weaponDmgPct';
+  | 'weaponDmgPct'
+  | 'critChance';
 
 export interface JewelryBonus {
   type: JewelryBonusType;

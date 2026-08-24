@@ -7,6 +7,9 @@ interface UseLocalStorageOptions<T> {
   migrate?: (raw: unknown) => T | undefined;
 }
 
+// Custom event name for intra-tab sync between multiple useLocalStorage instances
+const SYNC_EVENT = 'regnum-localstorage-sync';
+
 export function useLocalStorage<T>(
   key: string,
   initialValue: T,
@@ -35,6 +38,18 @@ export function useLocalStorage<T>(
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key]);
 
+  // Listen for sync events from other instances of the same key
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail;
+      if (detail?.key === key) {
+        setStoredValue(detail.value);
+      }
+    };
+    window.addEventListener(SYNC_EVENT, handler);
+    return () => window.removeEventListener(SYNC_EVENT, handler);
+  }, [key]);
+
   const setValue = useCallback((value: T | ((prev: T) => T)) => {
     setStoredValue(prev => {
       const newValue = value instanceof Function ? value(prev) : value;
@@ -43,6 +58,8 @@ export function useLocalStorage<T>(
       } catch (error) {
         console.warn(`Error writing localStorage key "${key}":`, error);
       }
+      // Notify other instances of the same key in this tab
+      window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: { key, value: newValue } }));
       return newValue;
     });
   }, [key]);

@@ -63,11 +63,12 @@ export function calcWeaponDamage(
   const muescas = weapon.muescas;
   const bonusStat = weapon.bonusStat + (arrows?.bonusStat || 0);
   const bonusAtributo = weapon.bonusAtributo;
-  const critExtra = weapon.critChanceExtra + (arrows?.critChanceExtra || 0);
   const atributoClasePct = weapon.atributoClasePct;
 
   // Agregar bonuses de joyería
   const jBonus = jewelry ? aggregateJewelryBonuses(jewelry) : {};
+
+  const critExtra = weapon.critChanceExtra + (arrows?.critChanceExtra || 0) + (jBonus.critChance || 0);
 
   // Determinar stat principal y multiplicador según subclase
   const mainStat = SUBCLASE_MAIN_STAT[character.subclase];
@@ -278,7 +279,7 @@ export function calcDualDamage(
   const velEfectiva = 1.0 / golpesPorSeg;
 
   const critBaseValue = CRIT_BASE[character.subclase];
-  const critExtra = mergedWeapon.critChanceExtra;
+  const critExtra = mergedWeapon.critChanceExtra + (jBonus.critChance || 0);
   const critTotal = (critBaseValue * (1 + critExtra / 100)) / 100;
   const critMultTotal = result.critMult;
   const danoPromedio = result.danoPromedio;

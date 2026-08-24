@@ -126,6 +126,7 @@ export const JEWELRY_BONUS_TYPES: JewelryBonusType[] = [
   'STR', 'DXT', 'INT', 'CON',
   'attackSpeed', 'castSpeed',
   'weaponDmgPct',
+  'critChance',
 ];
 
 // Labels para bonus de joyería
@@ -145,6 +146,7 @@ export const JEWELRY_BONUS_LABELS: Record<JewelryBonusType, string> = {
   attackSpeed: 'Vel. Ataque %',
   castSpeed: 'Vel. Invocación %',
   weaponDmgPct: '% Daño de Arma',
+  critChance: 'Chance de Crítico %',
 };
 
 // Categorías de bonus de joyería para el resumen
@@ -152,6 +154,7 @@ export const JEWELRY_BONUS_CATEGORIES: Record<string, JewelryBonusType[]> = {
   'Daño': ['dano_punzante', 'dano_aplastante', 'dano_cortante', 'dano_electrico', 'dano_hielo', 'dano_fuego'],
   'Stats': ['STR', 'DXT', 'INT', 'CON'],
   'Velocidad': ['attackSpeed', 'castSpeed'],
+  'Combate': ['critChance'],
   'Otros': ['vida', 'mana', 'weaponDmgPct'],
 };
 

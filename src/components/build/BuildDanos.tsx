@@ -5,7 +5,7 @@ import { useCharacter } from '@/hooks/useCharacter';
 import { useJewelry } from '@/hooks/useJewelry';
 import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { calcWeaponDamage, calcDualDamage } from '@/lib/engine/damage';
-import { DAMAGE_TYPE_LABELS } from '@/lib/engine/constants';
+import { DAMAGE_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import { Card } from '@/components/ui/Card';
 import type { DamageTypeName, WeaponCalcResult } from '@/types/weapon';
 
@@ -52,6 +52,67 @@ function DamageStatsGrid({ calc, label }: { calc: WeaponCalcResult; label?: stri
         </Card>
       </div>
     </div>
+  );
+}
+
+function DamageSummary({ calc }: { calc: WeaponCalcResult }) {
+  const physicalTypes = PHYSICAL_DAMAGE_TYPES.filter((t) => calc.desglose[t]);
+  const elementalTypes = MAGICAL_DAMAGE_TYPES.filter((t) => calc.desglose[t]);
+
+  const sumRange = (types: DamageTypeName[]) => {
+    let min = 0, max = 0;
+    for (const t of types) {
+      const r = calc.desglose[t];
+      if (r) { min += r[0]; max += r[1]; }
+    }
+    return [min, max] as const;
+  };
+
+  const [physMin, physMax] = sumRange(physicalTypes);
+  const [elemMin, elemMax] = sumRange(elementalTypes);
+  const hasElemental = elementalTypes.length > 0;
+  const hasSpecial = Object.keys(calc.specialDamagePerType).length > 0;
+
+  if (!hasElemental && !hasSpecial) return null;
+
+  return (
+    <Card title="Resumen de Dano">
+      <div className="grid grid-cols-2 gap-4 text-sm">
+        <div>
+          <div className="text-xs text-zinc-500 mb-1">Fisico</div>
+          <div className="text-lg font-bold text-orange-400">
+            {Math.round(physMin)} - {Math.round(physMax)}
+          </div>
+          <div className="text-xs text-zinc-500">
+            {physicalTypes.map((t) => DAMAGE_TYPE_LABELS[t]).join(', ')}
+          </div>
+        </div>
+        {hasElemental && (
+          <div>
+            <div className="text-xs text-zinc-500 mb-1">Elemental</div>
+            <div className="text-lg font-bold text-blue-400">
+              {Math.round(elemMin)} - {Math.round(elemMax)}
+            </div>
+            <div className="text-xs text-zinc-500">
+              {elementalTypes.map((t) => DAMAGE_TYPE_LABELS[t]).join(', ')}
+            </div>
+          </div>
+        )}
+      </div>
+      {hasSpecial && (
+        <div className="mt-3 pt-3 border-t border-zinc-800">
+          <div className="text-xs text-zinc-500 mb-1">Dano Especial (solo reducido por PF)</div>
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            {Object.entries(calc.specialDamagePerType).map(([tipo, valor]) => (
+              <div key={tipo}>
+                <span className="text-zinc-400">{DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo}:</span>{' '}
+                <span className="text-purple-400 font-semibold">+{valor}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </Card>
   );
 }
 
@@ -169,6 +230,9 @@ export function BuildDanos() {
           </div>
         </div>
       )}
+
+      {/* Damage summary (physical vs elemental) */}
+      <DamageSummary calc={mainCalc} />
 
       {/* Damage breakdown */}
       <DamageBreakdown calc={mainCalc} />
