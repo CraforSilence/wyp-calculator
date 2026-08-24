@@ -113,7 +113,7 @@ export const ARMOR_SLOTS_POR_CLASE: Record<Clase, ArmorSlot[]> = {
 
 // Subcategorías por clase
 export const SUBCATEGORIAS_POR_CLASE: Record<Clase, string[]> = {
-  'Guerrero': ['Lanza', 'Maza', 'Espada', 'Hacha'],
+  'Guerrero': ['Lanza', 'Maza', 'Espada', 'Hacha', 'Martillo', 'Florin', 'Garrote'],
   'Arquero': ['Arco Corto', 'Arco Largo'],
   'Mago': ['Baculo'],
 };
@@ -198,6 +198,9 @@ export const SUBCATEGORIA_TO_CATEGORIA: Record<string, string> = {
   'Maza': 'maza',
   'Espada': 'espada',
   'Hacha': 'hacha',
+  'Martillo': 'martillo',
+  'Florin': 'florin',
+  'Garrote': 'garrote',
   'Arco Corto': 'arco_corto',
   'Arco Largo': 'arco_largo',
   'Baculo': 'baculo',

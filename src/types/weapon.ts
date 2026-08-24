@@ -8,6 +8,7 @@ export type Velocidad = 'lenta' | 'media' | 'rapida';
 export type Rareza = 'Épica' | 'Mágica' | 'Legendaria' | 'Arcana';
 export type Subcategoria =
   | 'Lanza' | 'Maza' | 'Espada' | 'Hacha'
+  | 'Martillo' | 'Florin' | 'Garrote'
   | 'Arco Corto' | 'Arco Largo' | 'Baculo';
 
 export interface Weapon {

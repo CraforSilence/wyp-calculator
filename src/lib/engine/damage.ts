@@ -183,7 +183,7 @@ export function calcWeaponDamage(
   }
 
   let impactoVigoroso: { min: number; max: number; prom: number } | null = null;
-  if (categoria === 'maza') {
+  if (categoria === 'maza' || categoria === 'martillo' || categoria === 'garrote') {
     const ivMin = 180 + finalMin;
     const ivMax = 240 + finalMax;
     impactoVigoroso = { min: ivMin, max: ivMax, prom: roundTo((ivMin + ivMax) / 2, 1) };
