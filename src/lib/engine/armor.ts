@@ -73,3 +73,31 @@ export function calcTotalProtection(
 
   return { perType, perPiece };
 }
+
+/**
+ * Calculates the average Protection Factor per damage type across all equipped pieces.
+ * Used for special damage reduction (gem/muesca damage only reduced by PF).
+ */
+export function calcAverageProtectionFactors(
+  armorSet: ArmorSet
+): Record<string, number> {
+  const pfSums: Record<string, number> = {};
+  const pfCounts: Record<string, number> = {};
+
+  for (const piece of Object.values(armorSet.pieces)) {
+    if (!piece) continue;
+    for (const dmgType of ALL_DAMAGE_TYPES) {
+      const quality = piece.protectionFactors[dmgType];
+      if (!quality) continue;
+      const pf = PROTECTION_FACTORS[quality];
+      pfSums[dmgType] = (pfSums[dmgType] || 0) + pf;
+      pfCounts[dmgType] = (pfCounts[dmgType] || 0) + 1;
+    }
+  }
+
+  const result: Record<string, number> = {};
+  for (const dmgType of ALL_DAMAGE_TYPES) {
+    result[dmgType] = pfCounts[dmgType] > 0 ? pfSums[dmgType] / pfCounts[dmgType] : 0;
+  }
+  return result;
+}

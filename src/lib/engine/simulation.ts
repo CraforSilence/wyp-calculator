@@ -4,7 +4,7 @@ import type { JewelrySet } from '@/types/jewelry';
 import type { ArmorSet } from '@/types/armor';
 import type { SimulationHit, SimulationResult } from '@/types/simulation';
 import { calcWeaponDamage } from './damage';
-import { calcTotalProtection } from './armor';
+import { calcTotalProtection, calcAverageProtectionFactors } from './armor';
 import { applyDamageReduction } from './resistance';
 import { ARMOR_CLASSES } from './constants';
 
@@ -21,6 +21,7 @@ export function simulateHits(
   const weaponResult = calcWeaponDamage(weapon, character, jewelry);
   const armorClass = ARMOR_CLASSES[character.subclase];
   const protection = calcTotalProtection(armorSet, armorClass);
+  const avgPF = calcAverageProtectionFactors(armorSet);
 
   const critChance = weaponResult.critTotalPct / 100;
   const critMult = weaponResult.critMult;
@@ -31,10 +32,14 @@ export function simulateHits(
   const hits: SimulationHit[] = [];
 
   for (let i = 0; i < numHits; i++) {
-    // Randomize damage per type within [min, max]
+    // Randomize damage per type within [min, max], EXCLUDING special damage
     const rawDamage: Record<string, number> = {};
     for (const [type, [min, max]] of Object.entries(weaponResult.desglose)) {
-      rawDamage[type] = min + Math.random() * (max - min);
+      const specialFlat = weaponResult.specialDamagePerType[type] || 0;
+      // Subtract special damage from the range (it's flat, added equally to min and max)
+      const adjMin = min - specialFlat;
+      const adjMax = max - specialFlat;
+      rawDamage[type] = Math.max(0, adjMin + Math.random() * (adjMax - adjMin));
     }
 
     // Check critical hit
@@ -50,13 +55,14 @@ export function simulateHits(
       rawDamage[type] = Math.floor(rawDamage[type]);
     }
 
-    // Special damage from muescas (treated as gem bonus damage)
+    // Special damage from muescas + jewelry (NOT affected by crit, reduced only by PF)
     const specialDamage: Record<string, number> = {};
-    // Note: muescas are already included in the weapon calc, so special damage
-    // from external sources (gem bonus) would be separate. For now, leave empty.
+    for (const [type, value] of Object.entries(weaponResult.specialDamagePerType)) {
+      if (value > 0) specialDamage[type] = value;
+    }
 
-    // Apply damage reduction
-    const hit = applyDamageReduction(rawDamage, specialDamage, protection, armorSet, isMelee);
+    // Apply damage reduction with real PF values
+    const hit = applyDamageReduction(rawDamage, specialDamage, protection, armorSet, isMelee, avgPF);
     hit.hitNumber = i + 1;
     hit.isCrit = isCrit;
 

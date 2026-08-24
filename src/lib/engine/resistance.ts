@@ -22,12 +22,13 @@ export function applyDamageReduction(
   specialDamage: Record<string, number>,
   protection: ProtectionResult,
   armorSet: ArmorSet,
-  isMelee: boolean = true
+  isMelee: boolean = true,
+  avgProtectionFactors: Record<string, number> = {}
 ): SimulationHit {
   const damageTypes = Object.keys(incomingDamage);
   const totalRawDamage = Object.values(incomingDamage).reduce((s, v) => s + v, 0);
 
-  if (totalRawDamage <= 0) {
+  if (totalRawDamage <= 0 && Object.values(specialDamage).reduce((s, v) => s + v, 0) <= 0) {
     return {
       hitNumber: 0,
       rawDamage: incomingDamage,
@@ -48,7 +49,7 @@ export function applyDamageReduction(
   const minDmgPct = 4 + Math.random() * 4; // 4-8%
 
   for (const type of damageTypes) {
-    protInfluence[type] = (100 / totalRawDamage) * incomingDamage[type];
+    protInfluence[type] = totalRawDamage > 0 ? (100 / totalRawDamage) * incomingDamage[type] : 0;
     minimumDamage[type] = incomingDamage[type] / 100 * minDmgPct;
   }
 
@@ -90,18 +91,16 @@ export function applyDamageReduction(
     }
   }
 
-  // Step 3f: Special damage (gem bonus damage) reduced only by protection factor
-  // For simplicity, we use a flat reduction approach
+  // Step 3f: Special damage (gem/muesca) reduced only by Protection Factor
+  // Formula: special_damage[type] = ceil(special_damage[type] - (special_damage[type] * PF[type]))
   const processedSpecial: Record<string, number> = {};
   for (const [type, value] of Object.entries(specialDamage)) {
     if (value <= 0) continue;
-    // Special damage reduced by (value * PF) where PF is an average protection factor
-    // Simplified: use the ratio of protection to total raw damage
-    const protRatio = (protection.perType[type] || 0) / Math.max(totalRawDamage, 1);
-    processedSpecial[type] = Math.ceil(value - (value * Math.min(protRatio, 0.8)));
+    const pf = avgProtectionFactors[type] || 0;
+    processedSpecial[type] = Math.ceil(value - (value * pf));
   }
 
-  // Step 3g: Total damage
+  // Step 3g: Total damage = sum(regular) + sum(special)
   let totalDamage = Object.values(damage).reduce((s, v) => s + v, 0)
     + Object.values(processedSpecial).reduce((s, v) => s + v, 0);
 
