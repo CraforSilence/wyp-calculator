@@ -37,11 +37,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                 GitHub
               </a>
               {' '}&middot;{' '}
+              Hecho por la comunidad para la comunidad.
+            </p>
+            <p className="mt-1">
+              Para sugerencias y mejoras:{' '}
               <a href="https://discord.com/users/215881295962570753" target="_blank" rel="noopener noreferrer" className="text-indigo-400 hover:text-indigo-300 transition-colors">
                 Discord (crafor)
               </a>
-              {' '}&middot;{' '}
-              Hecho por la comunidad para la comunidad.
             </p>
           </div>
         </footer>
