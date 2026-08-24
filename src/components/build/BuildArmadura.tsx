@@ -7,7 +7,7 @@ import { calcTotalProtection } from '@/lib/engine/armor';
 import {
   ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, ARMOR_SLOT_LABELS,
   PHYSICAL_DAMAGE_TYPES, ARMOR_SLOTS_POR_CLASE, CLASE_SUBCLASES,
-  ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS,
+  ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, ARMOR_SLOT_ICONS,
 } from '@/lib/engine/constants';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -89,7 +89,12 @@ export function BuildArmadura() {
           return (
             <Card
               key={slot}
-              title={ARMOR_SLOT_LABELS[slot]}
+              title={
+                <span className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={ARMOR_SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
+                  {ARMOR_SLOT_LABELS[slot]}
+                </span>
+              }
               className={isEmpty ? 'opacity-60' : ''}
             >
               <div className="space-y-3">

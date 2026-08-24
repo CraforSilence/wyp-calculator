@@ -4,7 +4,7 @@ import { useJewelry, aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import { Card } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
-import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_CATEGORIES } from '@/lib/engine/constants';
+import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_CATEGORIES, JEWELRY_ICONS } from '@/lib/engine/constants';
 import type { JewelrySlot, JewelryBonusType } from '@/types/jewelry';
 
 const SLOT_LABELS: Record<JewelrySlot, string> = {
@@ -27,7 +27,12 @@ export function BuildJoyeria() {
           const usedTypes = piece.bonuses.map((b) => b.type);
 
           return (
-            <Card key={slot} title={SLOT_LABELS[slot]}>
+            <Card key={slot} title={
+              <span className="flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={JEWELRY_ICONS[slot]} alt={SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
+                {SLOT_LABELS[slot]}
+              </span>
+            }>
               <div className="flex flex-col gap-2">
                 {piece.bonuses.map((bonus, idx) => {
                   const availableTypes = JEWELRY_BONUS_TYPES.filter(

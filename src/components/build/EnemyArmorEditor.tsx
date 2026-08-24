@@ -5,7 +5,7 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import {
   ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, ARMOR_SLOT_LABELS,
-  ARMOR_SLOTS_POR_CLASE,
+  ARMOR_SLOTS_POR_CLASE, ARMOR_SLOT_ICONS,
 } from '@/lib/engine/constants';
 import type { ArmorSet, ArmorSlot, ArmorPiece, ProtectionQuality } from '@/types/armor';
 import type { Clase } from '@/types/character';
@@ -57,7 +57,12 @@ export function EnemyArmorEditor({ armorSet, enemyClase, onChangeClase, onUpdate
           const isEmpty = piece.pba === 0;
 
           return (
-            <Card key={slot} title={ARMOR_SLOT_LABELS[slot]} className={isEmpty ? 'opacity-60' : ''}>
+            <Card key={slot} title={
+              <span className="flex items-center gap-2">
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={ARMOR_SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
+                {ARMOR_SLOT_LABELS[slot]}
+              </span>
+            } className={isEmpty ? 'opacity-60' : ''}>
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <Input
