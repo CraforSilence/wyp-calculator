@@ -31,6 +31,17 @@ export interface Weapon {
   createdAt: string;
 }
 
+export type WeaponMode = '2manos' | 'duales';
+
+export interface ArrowSet {
+  nombre: string;
+  tiposDano: Partial<Record<DamageTypeName, [number, number]>>;
+  bonusStat: number;
+  critChanceExtra: number;
+  critDmgExtra: number;
+  bonusDano: Partial<Record<DamageTypeName, number>>;
+}
+
 export interface WeaponCalcResult {
   nombre: string;
   danoMin: number;
@@ -46,4 +57,5 @@ export interface WeaponCalcResult {
   riposteDmg: number | null;
   impactoVigoroso: { min: number; max: number; prom: number } | null;
   desglose: Record<string, [number, number]>;
+  specialDamagePerType: Record<string, number>;
 }
