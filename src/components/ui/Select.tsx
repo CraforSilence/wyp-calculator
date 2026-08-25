@@ -4,15 +4,20 @@ import { SelectHTMLAttributes } from 'react';
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
+  tooltip?: string;
   options: { value: string; label: string }[];
 }
 
-export function Select({ label, options, className = '', id, ...props }: SelectProps) {
+export function Select({ label, tooltip, options, className = '', id, ...props }: SelectProps) {
   const selectId = id || label?.toLowerCase().replace(/\s+/g, '-');
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label htmlFor={selectId} className="text-xs text-zinc-400 font-medium">
+        <label
+          htmlFor={selectId}
+          className={`text-xs text-zinc-400 font-medium ${tooltip ? 'cursor-help border-b border-dotted border-zinc-600' : ''}`}
+          title={tooltip}
+        >
           {label}
         </label>
       )}
