@@ -19,3 +19,22 @@ export interface SimulationResult {
   totalDamage: number;
   critsLanded: number;
 }
+
+// Presets para cargar configuraciones predefinidas
+import type { Clase, Subclase } from './character';
+import type { ArmorSet } from './armor';
+import type { JewelrySet } from './jewelry';
+
+export interface ArmorPreset {
+  id: string;
+  nombre: string;
+  clase: Clase;
+  subclase: Subclase;
+  armorSet: ArmorSet;
+}
+
+export interface JewelryPreset {
+  id: string;
+  nombre: string;
+  jewelry: JewelrySet;
+}

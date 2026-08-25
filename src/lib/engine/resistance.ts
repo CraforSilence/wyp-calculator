@@ -26,9 +26,10 @@ export function applyDamageReduction(
   avgProtectionFactors: Record<string, number> = {}
 ): SimulationHit {
   const damageTypes = Object.keys(incomingDamage);
-  const totalRawDamage = Object.values(incomingDamage).reduce((s, v) => s + v, 0);
+  const totalSpecialRaw = Object.values(specialDamage).reduce((s, v) => s + v, 0);
+  const totalRawDamage = Object.values(incomingDamage).reduce((s, v) => s + v, 0) + totalSpecialRaw;
 
-  if (totalRawDamage <= 0 && Object.values(specialDamage).reduce((s, v) => s + v, 0) <= 0) {
+  if (totalRawDamage <= 0) {
     return {
       hitNumber: 0,
       rawDamage: incomingDamage,
@@ -44,12 +45,13 @@ export function applyDamageReduction(
   }
 
   // Step 3a: Calculate protection influence and minimum damage per type
+  const totalRegularDamage = Object.values(incomingDamage).reduce((s, v) => s + v, 0);
   const protInfluence: Record<string, number> = {};
   const minimumDamage: Record<string, number> = {};
   const minDmgPct = 4 + Math.random() * 4; // 4-8%
 
   for (const type of damageTypes) {
-    protInfluence[type] = totalRawDamage > 0 ? (100 / totalRawDamage) * incomingDamage[type] : 0;
+    protInfluence[type] = totalRegularDamage > 0 ? (100 / totalRegularDamage) * incomingDamage[type] : 0;
     minimumDamage[type] = incomingDamage[type] / 100 * minDmgPct;
   }
 
@@ -70,7 +72,7 @@ export function applyDamageReduction(
     const generalRes = isPhysical
       ? armorSet.generalResistance.fisico
       : armorSet.generalResistance.magico;
-    if (generalRes > 0) {
+    if (generalRes > 0 && damage[type] > 0) {
       const genReduc = damage[type] * generalRes / 100;
       damage[type] -= genReduc;
       resistanceApplied[type] = (resistanceApplied[type] || 0) + genReduc;
@@ -78,7 +80,7 @@ export function applyDamageReduction(
 
     // Step 3d: Per-type resistance
     const typeRes = armorSet.typeResistance[type as keyof typeof armorSet.typeResistance] ?? 0;
-    if (typeRes > 0) {
+    if (typeRes > 0 && damage[type] > 0) {
       const typeReduc = damage[type] * typeRes / 100;
       damage[type] -= typeReduc;
       resistanceApplied[type] = (resistanceApplied[type] || 0) + typeReduc;
@@ -104,13 +106,13 @@ export function applyDamageReduction(
   let totalDamage = Object.values(damage).reduce((s, v) => s + v, 0)
     + Object.values(processedSpecial).reduce((s, v) => s + v, 0);
 
-  // Step 3h: Magical barrier
+  // Step 3h: Magical barrier (clamped to available damage per type)
   let barrierReduction = 0;
   for (const type of damageTypes) {
     const barrier = armorSet.barrierPoints[type as keyof typeof armorSet.barrierPoints] ?? 0;
     if (barrier > 0) {
-      damage[type] -= barrier;
-      barrierReduction += barrier;
+      const effectiveBarrier = Math.min(barrier, Math.max(0, damage[type]));
+      barrierReduction += effectiveBarrier;
     }
   }
   totalDamage -= barrierReduction;

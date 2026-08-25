@@ -1,4 +1,4 @@
-import type { CharacterProfile } from '@/types/character';
+import type { CharacterProfile, Subclase } from '@/types/character';
 import type { Weapon, DamageTypeName } from '@/types/weapon';
 import type { JewelrySet } from '@/types/jewelry';
 import type { ArmorSet } from '@/types/armor';
@@ -10,16 +10,18 @@ import { ARMOR_CLASSES } from './constants';
 
 /**
  * Simulates N hits of a weapon against an armor set.
+ * @param defenderSubclase - Subclass of the defender (determines armor class multiplier)
  */
 export function simulateHits(
   weapon: Weapon,
   character: CharacterProfile,
   jewelry: JewelrySet | null,
   armorSet: ArmorSet,
-  numHits: number = 10
+  numHits: number = 10,
+  defenderSubclase?: Subclase
 ): SimulationResult {
   const weaponResult = calcWeaponDamage(weapon, character, jewelry);
-  const armorClass = ARMOR_CLASSES[character.subclase];
+  const armorClass = ARMOR_CLASSES[defenderSubclase || character.subclase];
   const protection = calcTotalProtection(armorSet, armorClass);
   const avgPF = calcAverageProtectionFactors(armorSet);
 
