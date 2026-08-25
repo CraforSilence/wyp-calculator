@@ -58,8 +58,10 @@ export function useLocalStorage<T>(
       } catch (error) {
         console.warn(`Error writing localStorage key "${key}":`, error);
       }
-      // Notify other instances of the same key in this tab
-      window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: { key, value: newValue } }));
+      // Notify other instances of the same key in this tab (async to avoid setState-during-render)
+      queueMicrotask(() => {
+        window.dispatchEvent(new CustomEvent(SYNC_EVENT, { detail: { key, value: newValue } }));
+      });
       return newValue;
     });
   }, [key]);
