@@ -16,6 +16,15 @@ No están vinculados, así que el flujo es **manual**:
 - **GitHub auth**: usar `gh auth switch -u CraforSilence` si es necesario
 - **Remote**: `https://CraforSilence@github.com/CraforSilence/wyp-calculator.git`
 
+## Git author
+
+Antes de cada commit, verificar que `git config user.name` sea `CraforSilence`.
+Si es diferente, corregir con:
+```bash
+git config user.name "CraforSilence"
+git config user.email "CraforSilence@users.noreply.github.com"
+```
+
 ## Convenciones de commits
 
 - `feat:` nueva funcionalidad
