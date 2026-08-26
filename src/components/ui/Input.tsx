@@ -1,6 +1,7 @@
 'use client';
 
 import { InputHTMLAttributes } from 'react';
+import { HelpPopover } from './HelpPopover';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -12,12 +13,9 @@ export function Input({ label, tooltip, className = '', id, ...props }: InputPro
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label
-          htmlFor={inputId}
-          className={`text-xs text-zinc-400 font-medium ${tooltip ? 'cursor-help border-b border-dotted border-zinc-600' : ''}`}
-          title={tooltip}
-        >
+        <label htmlFor={inputId} className="text-xs text-zinc-400 font-medium">
           {label}
+          {tooltip && <HelpPopover text={tooltip} />}
         </label>
       )}
       <input

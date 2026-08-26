@@ -1,6 +1,7 @@
 'use client';
 
 import { SelectHTMLAttributes } from 'react';
+import { HelpPopover } from './HelpPopover';
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -13,12 +14,9 @@ export function Select({ label, tooltip, options, className = '', id, ...props }
   return (
     <div className="flex flex-col gap-1">
       {label && (
-        <label
-          htmlFor={selectId}
-          className={`text-xs text-zinc-400 font-medium ${tooltip ? 'cursor-help border-b border-dotted border-zinc-600' : ''}`}
-          title={tooltip}
-        >
+        <label htmlFor={selectId} className="text-xs text-zinc-400 font-medium">
           {label}
+          {tooltip && <HelpPopover text={tooltip} />}
         </label>
       )}
       <select
