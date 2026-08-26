@@ -5,7 +5,7 @@ import { useCharacter } from '@/hooks/useCharacter';
 import { useArmor } from '@/hooks/useArmor';
 import { calcTotalProtection } from '@/lib/engine/armor';
 import {
-  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, ARMOR_SLOT_LABELS,
+  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
   PHYSICAL_DAMAGE_TYPES, ARMOR_SLOTS_POR_CLASE, CLASE_SUBCLASES,
   ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, ARMOR_SLOT_ICONS,
 } from '@/lib/engine/constants';
@@ -123,7 +123,7 @@ export function BuildArmadura() {
                     {ALL_DAMAGE_TYPES.map((t) => (
                       <Select
                         key={t}
-                        label={DAMAGE_TYPE_LABELS[t]}
+                        label={`${DAMAGE_TYPE_ICONS[t]} ${DAMAGE_TYPE_LABELS[t]}`}
                         value={piece?.protectionFactors[t] || ''}
                         onChange={(e) => {
                           const val = e.target.value as ProtectionQuality | '';

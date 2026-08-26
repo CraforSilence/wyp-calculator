@@ -5,7 +5,7 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { HelpTip } from '@/components/ui/HelpTip';
 import {
-  ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, ARMOR_SLOT_LABELS,
+  ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
   ARMOR_SLOTS_POR_CLASE, ARMOR_SLOT_ICONS, CLASE_SUBCLASES,
 } from '@/lib/engine/constants';
 import { ARMOR_PRESETS } from '@/data/armor-presets';
@@ -39,7 +39,9 @@ interface EnemyArmorEditorProps {
 }
 
 function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
-  return { slot, pba: 0, bcmt: 0, protectionFactors: {}, bonusProteccionPct: {}, bonuses: [] };
+  const protectionFactors: Record<string, string> = {};
+  for (const t of ALL_DAMAGE_TYPES) protectionFactors[t] = 'Normal';
+  return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [] };
 }
 
 export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChangeClase, onChangeSubclase, onUpdateSlot, onUpdateSet, onLoadPreset }: EnemyArmorEditorProps) {
@@ -119,7 +121,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                   {ALL_DAMAGE_TYPES.map((t) => (
                     <Select
                       key={t}
-                      label={DAMAGE_TYPE_LABELS[t]}
+                      label={`${DAMAGE_TYPE_ICONS[t]} ${DAMAGE_TYPE_LABELS[t]}`}
                       tooltip={`Factor de proteccion contra ${DAMAGE_TYPE_LABELS[t]}. Mejor calidad = mayor reduccion.`}
                       value={piece.protectionFactors[t] || ''}
                       onChange={(e) => {

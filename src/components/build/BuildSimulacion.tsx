@@ -7,7 +7,7 @@ import { useArmor } from '@/hooks/useArmor';
 import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { simulateHits } from '@/lib/engine/simulation';
 import { DEFAULT_WEAPONS } from '@/data/default-weapons';
-import { ARMOR_CLASSES, CLASE_SUBCLASES, SUBCLASE_MAIN_STAT, CRIT_BASE } from '@/lib/engine/constants';
+import { ARMOR_CLASSES, CLASE_SUBCLASES, SUBCLASE_MAIN_STAT, CRIT_BASE, ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import { calcWeaponDamage } from '@/lib/engine/damage';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -46,7 +46,9 @@ const EMPTY_JEWELRY: JewelrySet = {
 };
 
 function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
-  return { slot, pba: 0, bcmt: 0, protectionFactors: {}, bonusProteccionPct: {}, bonuses: [] };
+  const protectionFactors: Record<string, string> = {};
+  for (const t of ALL_DAMAGE_TYPES) protectionFactors[t] = 'Normal';
+  return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [] };
 }
 
 export function BuildSimulacion() {

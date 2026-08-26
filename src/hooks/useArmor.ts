@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
 import type { ArmorPiece, ArmorSet, ArmorSlot } from '@/types/armor';
+import { ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
 
 const DEFAULT_ARMOR_SET: ArmorSet = {
   pieces: {},
@@ -15,7 +16,9 @@ const DEFAULT_ARMOR_SET: ArmorSet = {
 };
 
 function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
-  return { slot, pba: 0, bcmt: 0, protectionFactors: {}, bonusProteccionPct: {}, bonuses: [] };
+  const protectionFactors: Record<string, string> = {};
+  for (const t of ALL_DAMAGE_TYPES) protectionFactors[t] = 'Normal';
+  return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [] };
 }
 
 interface OldArmorPiece {

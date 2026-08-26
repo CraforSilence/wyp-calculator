@@ -93,6 +93,16 @@ export const DAMAGE_TYPE_LABELS: Record<DamageTypeName, string> = {
   fuego: 'Fuego',
 };
 
+// Iconos/emojis por tipo de daño para UI
+export const DAMAGE_TYPE_ICONS: Record<DamageTypeName, string> = {
+  punzante: '\u{1F3F9}',   // arco/flecha
+  cortante: '\u{2694}\uFE0F', // espadas cruzadas
+  aplastante: '\u{1F528}', // martillo
+  fuego: '\u{1F525}',      // fuego
+  hielo: '\u{2744}\uFE0F', // copo de nieve
+  electrico: '\u{26A1}',   // rayo
+};
+
 export const ARMOR_SLOT_LABELS: Record<ArmorSlot, string> = {
   pechera: 'Pechera',
   casco: 'Casco',
