@@ -5,7 +5,7 @@ import { useCharacter } from '@/hooks/useCharacter';
 import { useJewelry } from '@/hooks/useJewelry';
 import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { calcWeaponDamage, calcDualDamage } from '@/lib/engine/damage';
-import { DAMAGE_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
+import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import { Card } from '@/components/ui/Card';
 import type { DamageTypeName, WeaponCalcResult } from '@/types/weapon';
 
@@ -105,7 +105,7 @@ function DamageSummary({ calc }: { calc: WeaponCalcResult }) {
           <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
             {Object.entries(calc.specialDamagePerType).map(([tipo, valor]) => (
               <div key={tipo}>
-                <span className="text-zinc-400">{DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo}:</span>{' '}
+                <span className="text-zinc-400">{DAMAGE_TYPE_ICONS[tipo as DamageTypeName] || ''} {DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo}:</span>{' '}
                 <span className="text-purple-400 font-semibold">+{valor}</span>
               </div>
             ))}
@@ -124,7 +124,8 @@ function DamageBreakdown({ calc }: { calc: WeaponCalcResult }) {
           const prom = (min + max) / 2;
           const maxDmg = Math.max(...Object.values(calc.desglose).map(([, m]) => m), 1);
           const pct = (max / maxDmg) * 100;
-          const label = DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo;
+          const icon = DAMAGE_TYPE_ICONS[tipo as DamageTypeName] || '';
+          const label = `${icon} ${DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo}`;
           const isPhysical = ['punzante', 'aplastante', 'cortante'].includes(tipo);
 
           return (

@@ -5,7 +5,7 @@ import { useCharacter } from '@/hooks/useCharacter';
 import { useArmor } from '@/hooks/useArmor';
 import { calcTotalProtection } from '@/lib/engine/armor';
 import {
-  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS,
+  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS,
   PHYSICAL_DAMAGE_TYPES, ARMOR_SLOT_LABELS, CLASE_SUBCLASES,
   ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS,
 } from '@/lib/engine/constants';
@@ -84,7 +84,7 @@ export function BuildProtecciones() {
             return (
               <div key={t}>
                 <div className="flex items-center justify-between text-sm mb-0.5">
-                  <span className="text-zinc-300">{DAMAGE_TYPE_LABELS[t]}</span>
+                  <span className="text-zinc-300">{DAMAGE_TYPE_ICONS[t]} {DAMAGE_TYPE_LABELS[t]}</span>
                   <span className={`font-bold ${val > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-600'}`}>
                     {Math.round(val)}
                   </span>
@@ -109,7 +109,7 @@ export function BuildProtecciones() {
               <tr className="text-zinc-500 border-b border-zinc-800">
                 <th className="text-left py-1.5 pr-2 font-medium">Pieza</th>
                 {ALL_DAMAGE_TYPES.map((t) => (
-                  <th key={t} className="text-right py-1.5 px-1 font-medium">{DAMAGE_TYPE_LABELS[t].slice(0, 4)}</th>
+                  <th key={t} className="text-right py-1.5 px-1 font-medium" title={DAMAGE_TYPE_LABELS[t]}>{DAMAGE_TYPE_ICONS[t]}</th>
                 ))}
               </tr>
             </thead>

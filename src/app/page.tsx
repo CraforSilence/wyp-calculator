@@ -24,7 +24,7 @@ export default function BuildPage() {
   const [activeTab, setActiveTab] = useState<TabId>('build');
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-6xl mx-auto">
       <PageHeader
         title="Build"
         description="Configura tu personaje completo: clase, arma, joyeria y armadura."

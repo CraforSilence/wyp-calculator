@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
 import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_CATEGORIES, JEWELRY_ICONS } from '@/lib/engine/constants';
+import { HelpPopover } from '@/components/ui/HelpPopover';
 import type { JewelrySlot, JewelryBonusType } from '@/types/jewelry';
 
 const SLOT_LABELS: Record<JewelrySlot, string> = {
@@ -21,7 +22,7 @@ export function BuildJoyeria() {
 
   return (
     <div>
-      <div className="grid gap-4">
+      <div className="grid gap-4 md:grid-cols-3">
         {(['anillo1', 'anillo2', 'amuleto'] as JewelrySlot[]).map((slot) => {
           const piece = jewelry[slot];
           const usedTypes = piece.bonuses.map((b) => b.type);
@@ -48,6 +49,7 @@ export function BuildJoyeria() {
                       <div className="flex-1">
                         <Select
                           label={idx === 0 ? 'Tipo' : undefined}
+                          tooltip={idx === 0 ? 'Tipo de bonus: atributo, resistencia, critico, dano extra, etc. Se suman al total del personaje.' : undefined}
                           value={bonus.type}
                           onChange={(e) =>
                             updateBonus(slot, idx, {
@@ -61,6 +63,7 @@ export function BuildJoyeria() {
                       <div className="w-24">
                         <Input
                           label={idx === 0 ? 'Valor' : undefined}
+                          tooltip={idx === 0 ? 'Valor numerico del bonus tal como aparece en el tooltip del item.' : undefined}
                           type="number"
                           min={0}
                           max={999}
