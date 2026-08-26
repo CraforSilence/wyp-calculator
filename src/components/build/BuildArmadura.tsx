@@ -6,23 +6,28 @@ import { useArmor } from '@/hooks/useArmor';
 import { calcTotalProtection } from '@/lib/engine/armor';
 import {
   ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
-  PHYSICAL_DAMAGE_TYPES, ARMOR_SLOTS_POR_CLASE, CLASE_SUBCLASES,
-  ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, ARMOR_SLOT_ICONS,
+  PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOTS_POR_CLASE, CLASE_SUBCLASES,
+  ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, ARMOR_SLOT_ICONS, SHIELD_ONLY_BONUS_TYPES,
 } from '@/lib/engine/constants';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import type { ArmorSlot, ArmorBonusType, ArmorBonus, ProtectionQuality } from '@/types/armor';
+import { HelpPopover } from '@/components/ui/HelpPopover';
+import type { ArmorSlot, ArmorBonusType, ArmorBonus, ArmorUpgrade, ProtectionQuality } from '@/types/armor';
+import type { DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 
 const QUALITY_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'N/A' },
-  { value: 'Muy Mala', label: 'Muy Mala (0.2)' },
-  { value: 'Mala', label: 'Mala (0.35)' },
-  { value: 'Normal', label: 'Normal (0.5)' },
-  { value: 'Buena', label: 'Buena (0.65)' },
-  { value: 'Muy Buena', label: 'Muy Buena (0.8)' },
+  { value: 'Muy Mala', label: 'Muy Mala' },
+  { value: 'Mala', label: 'Mala' },
+  { value: 'Normal', label: 'Normal' },
+  { value: 'Buena', label: 'Buena' },
+  { value: 'Muy Buena', label: 'Muy Buena' },
 ];
+
+// Orden intercalado: físicos a la izquierda, mágicos a la derecha en grid-cols-2
+const DAMAGE_TYPES_PAIRED = PHYSICAL_DAMAGE_TYPES.flatMap((p, i) => [p, MAGICAL_DAMAGE_TYPES[i]]);
 
 const MAX_BONUSES = 5;
 
@@ -84,6 +89,7 @@ export function BuildArmadura() {
           const piece = armorSet.pieces[slot];
           const isEmpty = !piece || piece.pba === 0;
           const bonuses: ArmorBonus[] = piece?.bonuses || [];
+          const upgrades: ArmorUpgrade[] = piece?.upgrades || [];
           const usedTypes = bonuses.map((b) => b.type);
 
           return (
@@ -120,45 +126,29 @@ export function BuildArmadura() {
                 <div>
                   <span className="text-xs font-medium text-zinc-500 block mb-1">Calidad de Proteccion</span>
                   <div className="grid grid-cols-2 gap-1.5">
-                    {ALL_DAMAGE_TYPES.map((t) => (
-                      <Select
-                        key={t}
-                        label={`${DAMAGE_TYPE_ICONS[t]} ${DAMAGE_TYPE_LABELS[t]}`}
-                        value={piece?.protectionFactors[t] || ''}
-                        onChange={(e) => {
-                          const val = e.target.value as ProtectionQuality | '';
-                          const factors = { ...(piece?.protectionFactors || {}) };
-                          if (val) factors[t] = val as ProtectionQuality;
-                          else delete factors[t];
-                          updateSlot(slot, { protectionFactors: factors });
-                        }}
-                        options={QUALITY_OPTIONS}
-                      />
+                    {DAMAGE_TYPES_PAIRED.map((t) => (
+                      <div key={t} className="flex items-center gap-1.5">
+                        <span className="text-sm shrink-0" title={DAMAGE_TYPE_LABELS[t]}>{DAMAGE_TYPE_ICONS[t]}</span>
+                        <select
+                          className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors"
+                          value={piece?.protectionFactors[t] || ''}
+                          title={DAMAGE_TYPE_LABELS[t]}
+                          onChange={(e) => {
+                            const val = e.target.value as ProtectionQuality | '';
+                            const factors = { ...(piece?.protectionFactors || {}) };
+                            if (val) factors[t] = val as ProtectionQuality;
+                            else delete factors[t];
+                            updateSlot(slot, { protectionFactors: factors });
+                          }}
+                        >
+                          {QUALITY_OPTIONS.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </div>
                     ))}
                   </div>
                 </div>
-
-                {!isEmpty && (
-                  <div>
-                    <span className="text-xs font-medium text-zinc-500 block mb-1">Bonus Proteccion %</span>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {ALL_DAMAGE_TYPES.map((t) => (
-                        <Input
-                          key={t}
-                          label={DAMAGE_TYPE_LABELS[t]}
-                          type="number"
-                          min={0}
-                          value={piece?.bonusProteccionPct[t] || 0}
-                          onChange={(e) => {
-                            const bonusProt = { ...(piece?.bonusProteccionPct || {}) };
-                            bonusProt[t] = Number(e.target.value);
-                            updateSlot(slot, { bonusProteccionPct: bonusProt });
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
 
                 {/* Bonus de pieza */}
                 <div>
@@ -167,7 +157,10 @@ export function BuildArmadura() {
                     {bonuses.length < MAX_BONUSES && (
                       <button
                         onClick={() => {
-                          const available = ARMOR_BONUS_TYPES.find((t) => !usedTypes.includes(t));
+                          const slotBonusTypes = ARMOR_BONUS_TYPES.filter(
+                            (t) => slot === 'escudo' || !SHIELD_ONLY_BONUS_TYPES.includes(t)
+                          );
+                          const available = slotBonusTypes.find((t) => !usedTypes.includes(t));
                           if (available) {
                             const newBonuses = [...bonuses, { type: available, value: 0 }];
                             updateSlot(slot, { bonuses: newBonuses });
@@ -181,7 +174,10 @@ export function BuildArmadura() {
                   </div>
                   <div className="flex flex-col gap-1.5">
                     {bonuses.map((bonus, idx) => {
-                      const availableTypes = ARMOR_BONUS_TYPES.filter(
+                      const slotBonusTypes = ARMOR_BONUS_TYPES.filter(
+                        (t) => slot === 'escudo' || !SHIELD_ONLY_BONUS_TYPES.includes(t)
+                      );
+                      const availableTypes = slotBonusTypes.filter(
                         (t) => t === bonus.type || !usedTypes.includes(t)
                       );
                       return (
@@ -190,8 +186,9 @@ export function BuildArmadura() {
                             <Select
                               value={bonus.type}
                               onChange={(e) => {
+                                const newType = e.target.value as ArmorBonusType;
                                 const newBonuses = [...bonuses];
-                                newBonuses[idx] = { ...newBonuses[idx], type: e.target.value as ArmorBonusType };
+                                newBonuses[idx] = { type: newType, value: 0 };
                                 updateSlot(slot, { bonuses: newBonuses });
                               }}
                               options={availableTypes.map((t) => ({ value: t, label: ARMOR_BONUS_LABELS[t] }))}
@@ -227,6 +224,67 @@ export function BuildArmadura() {
                     )}
                   </div>
                 </div>
+
+                {/* Mejoras de armadura */}
+                {!isEmpty && (
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-medium text-zinc-500">Mejoras <HelpPopover text="Mejoras de armadura. Cada una agrega Resistir +1% o +2% a un tipo de dano. Maximo 4 por pieza." /></span>
+                      {upgrades.length < 4 && (
+                        <button
+                          onClick={() => {
+                            const newUpgrades = [...upgrades, { type: 'punzante' as DamageTypeName, value: 1 }];
+                            updateSlot(slot, { upgrades: newUpgrades });
+                          }}
+                          className="text-xs text-amber-400 hover:text-amber-300 transition-colors"
+                        >
+                          + Mejora
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      {upgrades.map((upgrade, idx) => (
+                        <div key={idx} className="flex items-center gap-1.5">
+                          <div className="flex-1 min-w-0">
+                            <Select
+                              value={upgrade.type}
+                              onChange={(e) => {
+                                const newUpgrades = [...upgrades];
+                                newUpgrades[idx] = { ...newUpgrades[idx], type: e.target.value as DamageTypeName };
+                                updateSlot(slot, { upgrades: newUpgrades });
+                              }}
+                              options={ALL_DAMAGE_TYPES.map((t) => ({ value: t, label: DAMAGE_TYPE_LABELS[t] }))}
+                            />
+                          </div>
+                          <div className="w-16 shrink-0">
+                            <Select
+                              value={String(upgrade.value)}
+                              onChange={(e) => {
+                                const newUpgrades = [...upgrades];
+                                newUpgrades[idx] = { ...newUpgrades[idx], value: Number(e.target.value) };
+                                updateSlot(slot, { upgrades: newUpgrades });
+                              }}
+                              options={[
+                                { value: '1', label: '+1%' },
+                                { value: '2', label: '+2%' },
+                              ]}
+                            />
+                          </div>
+                          <button
+                            onClick={() => {
+                              const newUpgrades = upgrades.filter((_, j) => j !== idx);
+                              updateSlot(slot, { upgrades: newUpgrades });
+                            }}
+                            className="shrink-0 w-7 h-7 flex items-center justify-center text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded transition-colors"
+                            title="Eliminar mejora"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </Card>
           );
@@ -244,7 +302,7 @@ export function BuildArmadura() {
               const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(t);
               return (
                 <div key={t} className="text-center">
-                  <div className="text-xs text-zinc-500 mb-1">{DAMAGE_TYPE_LABELS[t]}</div>
+                  <div className="text-xs text-zinc-500 mb-1">{DAMAGE_TYPE_ICONS[t]} {DAMAGE_TYPE_LABELS[t]}</div>
                   <div className={`text-lg font-bold ${val > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-600'}`}>
                     {Math.round(val)}
                   </div>
@@ -294,6 +352,7 @@ export function BuildArmadura() {
             />
             <Input
               label="Resistencia Fisica %"
+              tooltip="Reduccion porcentual general a TODO el dano fisico, despues de la armadura."
               type="number"
               min={0}
               max={100}
@@ -302,6 +361,7 @@ export function BuildArmadura() {
             />
             <Input
               label="Resistencia Magica %"
+              tooltip="Reduccion porcentual general a TODO el dano magico, despues de la armadura."
               type="number"
               min={0}
               max={100}
@@ -311,7 +371,7 @@ export function BuildArmadura() {
           </div>
 
           <div>
-            <span className="text-xs font-medium text-zinc-400 block mb-2">Resistencia por Tipo %</span>
+            <span className="text-xs font-medium text-zinc-400 block mb-2">Resistencia por Tipo % <HelpPopover text="Reduccion porcentual especifica por tipo de dano. Se aplica despues de la proteccion de armadura." /></span>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
               {ALL_DAMAGE_TYPES.map((t) => (
                 <Input
@@ -330,6 +390,7 @@ export function BuildArmadura() {
           <div className="grid grid-cols-2 gap-3">
             <Input
               label="Reduccion Melee %"
+              tooltip="Reduce el dano final de ataques cuerpo a cuerpo (espadas, mazas, hachas, etc.)."
               type="number"
               min={0}
               max={100}
@@ -338,6 +399,7 @@ export function BuildArmadura() {
             />
             <Input
               label="Reduccion Rango %"
+              tooltip="Reduce el dano final de ataques a distancia (arcos, baculos, etc.)."
               type="number"
               min={0}
               max={100}
@@ -347,7 +409,7 @@ export function BuildArmadura() {
           </div>
 
           <div>
-            <span className="text-xs font-medium text-zinc-400 block mb-2">Barrera Magica por Tipo</span>
+            <span className="text-xs font-medium text-zinc-400 block mb-2">Barrera Magica por Tipo <HelpPopover text="Puntos de barrera magica que absorben dano de ese tipo antes de que llegue a tu vida. Se consumen con cada golpe." /></span>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
               {ALL_DAMAGE_TYPES.map((t) => (
                 <Input

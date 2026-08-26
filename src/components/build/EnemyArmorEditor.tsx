@@ -7,6 +7,7 @@ import { HelpTip } from '@/components/ui/HelpTip';
 import {
   ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
   ARMOR_SLOTS_POR_CLASE, ARMOR_SLOT_ICONS, CLASE_SUBCLASES,
+  PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES,
 } from '@/lib/engine/constants';
 import { ARMOR_PRESETS } from '@/data/armor-presets';
 import type { ArmorSet, ArmorSlot, ArmorPiece, ProtectionQuality } from '@/types/armor';
@@ -20,6 +21,9 @@ const QUALITY_OPTIONS: { value: string; label: string }[] = [
   { value: 'Buena', label: 'Buena' },
   { value: 'Muy Buena', label: 'Muy Buena' },
 ];
+
+// Orden intercalado: físicos a la izquierda, mágicos a la derecha en grid-cols-2
+const DAMAGE_TYPES_PAIRED = PHYSICAL_DAMAGE_TYPES.flatMap((p, i) => [p, MAGICAL_DAMAGE_TYPES[i]]);
 
 const CLASE_OPTIONS: { value: Clase; label: string }[] = [
   { value: 'Guerrero', label: 'Guerrero' },
@@ -41,7 +45,7 @@ interface EnemyArmorEditorProps {
 function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
   const protectionFactors: Record<string, string> = {};
   for (const t of ALL_DAMAGE_TYPES) protectionFactors[t] = 'Normal';
-  return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [] };
+  return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [], upgrades: [] };
 }
 
 export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChangeClase, onChangeSubclase, onUpdateSlot, onUpdateSet, onLoadPreset }: EnemyArmorEditorProps) {
@@ -117,22 +121,27 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                     onChange={(e) => onUpdateSlot(slot, { bcmt: Number(e.target.value) })}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-1">
-                  {ALL_DAMAGE_TYPES.map((t) => (
-                    <Select
-                      key={t}
-                      label={`${DAMAGE_TYPE_ICONS[t]} ${DAMAGE_TYPE_LABELS[t]}`}
-                      tooltip={`Factor de proteccion contra ${DAMAGE_TYPE_LABELS[t]}. Mejor calidad = mayor reduccion.`}
-                      value={piece.protectionFactors[t] || ''}
-                      onChange={(e) => {
-                        const val = e.target.value as ProtectionQuality | '';
-                        const factors = { ...piece.protectionFactors };
-                        if (val) factors[t] = val as ProtectionQuality;
-                        else delete factors[t];
-                        onUpdateSlot(slot, { protectionFactors: factors });
-                      }}
-                      options={QUALITY_OPTIONS}
-                    />
+                <div className="grid grid-cols-2 gap-1.5">
+                  {DAMAGE_TYPES_PAIRED.map((t) => (
+                    <div key={t} className="flex items-center gap-1.5">
+                      <span className="text-sm shrink-0" title={DAMAGE_TYPE_LABELS[t]}>{DAMAGE_TYPE_ICONS[t]}</span>
+                      <select
+                        className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors"
+                        value={piece.protectionFactors[t] || ''}
+                        title={`${DAMAGE_TYPE_LABELS[t]}: Factor de proteccion`}
+                        onChange={(e) => {
+                          const val = e.target.value as ProtectionQuality | '';
+                          const factors = { ...piece.protectionFactors };
+                          if (val) factors[t] = val as ProtectionQuality;
+                          else delete factors[t];
+                          onUpdateSlot(slot, { protectionFactors: factors });
+                        }}
+                      >
+                        {QUALITY_OPTIONS.map((opt) => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
                   ))}
                 </div>
               </div>
@@ -176,7 +185,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
               {ALL_DAMAGE_TYPES.map((t) => (
                 <Input
                   key={t}
-                  label={DAMAGE_TYPE_LABELS[t]}
+                  label={`${DAMAGE_TYPE_ICONS[t]} ${DAMAGE_TYPE_LABELS[t]}`}
                   type="number" min={0} max={100}
                   value={armorSet.typeResistance[t] ?? 0}
                   onChange={(e) => onUpdateSet({
@@ -197,7 +206,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
               {ALL_DAMAGE_TYPES.map((t) => (
                 <Input
                   key={t}
-                  label={DAMAGE_TYPE_LABELS[t]}
+                  label={`${DAMAGE_TYPE_ICONS[t]} ${DAMAGE_TYPE_LABELS[t]}`}
                   type="number" min={0}
                   value={armorSet.barrierPoints[t] ?? 0}
                   onChange={(e) => onUpdateSet({

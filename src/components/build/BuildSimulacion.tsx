@@ -48,7 +48,7 @@ const EMPTY_JEWELRY: JewelrySet = {
 function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
   const protectionFactors: Record<string, string> = {};
   for (const t of ALL_DAMAGE_TYPES) protectionFactors[t] = 'Normal';
-  return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [] };
+  return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [], upgrades: [] };
 }
 
 export function BuildSimulacion() {
