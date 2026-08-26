@@ -74,8 +74,8 @@ export function calcWeaponDamage(
   const mainStat = SUBCLASE_MAIN_STAT[character.subclase];
   const attributeMultiplier = ATTRIBUTE_MULTIPLIERS[character.subclase];
 
-  // Antes de Paso 1: Sumar bonus de stats de joyería (STR/DXT/INT) al stat principal
-  const statBonus = jBonus[mainStat] || 0;
+  // Antes de Paso 1: Sumar bonus de stats de joyería (STR/DXT/INT + Atributo de Clase) al stat principal
+  const statBonus = (jBonus[mainStat] || 0) + (jBonus.classAttribute || 0);
   const mainStatValue = (character.stats[mainStat] + statBonus) * (1 + atributoClasePct / 100);
 
   // Paso 1: Daño base total (max)

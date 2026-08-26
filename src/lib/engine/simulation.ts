@@ -6,7 +6,50 @@ import type { SimulationHit, SimulationResult } from '@/types/simulation';
 import { calcWeaponDamage } from './damage';
 import { calcTotalProtection, calcAverageProtectionFactors } from './armor';
 import { applyDamageReduction } from './resistance';
-import { ARMOR_CLASSES } from './constants';
+import { ARMOR_CLASSES, PHYSICAL_DAMAGE_TYPES } from './constants';
+
+/** Maps armor bonus resistance types to their ArmorSet field targets */
+const RESISTANCE_BONUS_MAP: Record<string, { field: 'generalResistance' | 'typeResistance'; key: string }> = {
+  resistirFisico: { field: 'generalResistance', key: 'fisico' },
+  resistirMagico: { field: 'generalResistance', key: 'magico' },
+  resistirFuego: { field: 'typeResistance', key: 'fuego' },
+  resistirHielo: { field: 'typeResistance', key: 'hielo' },
+  resistirElectricidad: { field: 'typeResistance', key: 'electrico' },
+  resistirAplastante: { field: 'typeResistance', key: 'aplastante' },
+  resistirCortante: { field: 'typeResistance', key: 'cortante' },
+  resistirPunzante: { field: 'typeResistance', key: 'punzante' },
+};
+
+/**
+ * Builds an effective ArmorSet by adding piece-level resistance bonuses
+ * to the ArmorSet's resistance/reduction fields.
+ */
+function buildEffectiveArmorSet(armorSet: ArmorSet): ArmorSet {
+  const effective: ArmorSet = {
+    ...armorSet,
+    generalResistance: { ...armorSet.generalResistance },
+    typeResistance: { ...armorSet.typeResistance },
+    meleeDmgReductionPct: armorSet.meleeDmgReductionPct,
+    rangedDmgReductionPct: armorSet.rangedDmgReductionPct,
+  };
+
+  for (const piece of Object.values(armorSet.pieces)) {
+    if (!piece) continue;
+    for (const bonus of piece.bonuses || []) {
+      const mapping = RESISTANCE_BONUS_MAP[bonus.type];
+      if (mapping) {
+        if (mapping.field === 'generalResistance') {
+          effective.generalResistance[mapping.key as 'fisico' | 'magico'] += bonus.value;
+        } else {
+          effective.typeResistance[mapping.key as DamageTypeName] =
+            (effective.typeResistance[mapping.key as DamageTypeName] || 0) + bonus.value;
+        }
+      }
+    }
+  }
+
+  return effective;
+}
 
 /**
  * Simulates N hits of a weapon against an armor set.
@@ -21,9 +64,10 @@ export function simulateHits(
   defenderSubclase?: Subclase
 ): SimulationResult {
   const weaponResult = calcWeaponDamage(weapon, character, jewelry);
+  const effectiveArmor = buildEffectiveArmorSet(armorSet);
   const armorClass = ARMOR_CLASSES[defenderSubclase || character.subclase];
-  const protection = calcTotalProtection(armorSet, armorClass);
-  const avgPF = calcAverageProtectionFactors(armorSet);
+  const protection = calcTotalProtection(effectiveArmor, armorClass);
+  const avgPF = calcAverageProtectionFactors(effectiveArmor);
 
   const critChance = weaponResult.critTotalPct / 100;
   const critMult = weaponResult.critMult;
@@ -64,7 +108,7 @@ export function simulateHits(
     }
 
     // Apply damage reduction with real PF values
-    const hit = applyDamageReduction(rawDamage, specialDamage, protection, armorSet, isMelee, avgPF);
+    const hit = applyDamageReduction(rawDamage, specialDamage, protection, effectiveArmor, isMelee, avgPF);
     hit.hitNumber = i + 1;
     hit.isCrit = isCrit;
 

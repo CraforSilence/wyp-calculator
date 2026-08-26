@@ -78,8 +78,14 @@ export function applyDamageReduction(
       resistanceApplied[type] = (resistanceApplied[type] || 0) + genReduc;
     }
 
-    // Step 3d: Per-type resistance
-    const typeRes = armorSet.typeResistance[type as keyof typeof armorSet.typeResistance] ?? 0;
+    // Step 3d: Per-type resistance (includes armor piece upgrades)
+    let typeRes = armorSet.typeResistance[type as keyof typeof armorSet.typeResistance] ?? 0;
+    for (const piece of Object.values(armorSet.pieces)) {
+      if (!piece?.upgrades) continue;
+      for (const upgrade of piece.upgrades) {
+        if (upgrade.type === type) typeRes += upgrade.value;
+      }
+    }
     if (typeRes > 0 && damage[type] > 0) {
       const typeReduc = damage[type] * typeRes / 100;
       damage[type] -= typeReduc;
