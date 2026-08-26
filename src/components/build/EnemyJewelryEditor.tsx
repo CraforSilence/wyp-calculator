@@ -75,7 +75,7 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
       )}
 
       {/* Jewelry slots */}
-      <div className="grid gap-4">
+      <div className="grid gap-4 md:grid-cols-3">
         {(['anillo1', 'anillo2', 'amuleto'] as JewelrySlot[]).map((slot) => {
           const piece = jewelry[slot];
           const usedTypes = piece.bonuses.map((b) => b.type);

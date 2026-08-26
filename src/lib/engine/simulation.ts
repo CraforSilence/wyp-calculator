@@ -6,6 +6,7 @@ import type { SimulationHit, SimulationResult } from '@/types/simulation';
 import { calcWeaponDamage } from './damage';
 import { calcTotalProtection, calcAverageProtectionFactors } from './armor';
 import { applyDamageReduction } from './resistance';
+import { aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import { ARMOR_CLASSES, PHYSICAL_DAMAGE_TYPES } from './constants';
 
 /** Maps armor bonus resistance types to their ArmorSet field targets */
@@ -22,9 +23,9 @@ const RESISTANCE_BONUS_MAP: Record<string, { field: 'generalResistance' | 'typeR
 
 /**
  * Builds an effective ArmorSet by adding piece-level resistance bonuses
- * to the ArmorSet's resistance/reduction fields.
+ * and defender jewelry defensive bonuses to the ArmorSet's fields.
  */
-function buildEffectiveArmorSet(armorSet: ArmorSet): ArmorSet {
+function buildEffectiveArmorSet(armorSet: ArmorSet, defenderJewelry?: JewelrySet | null): ArmorSet {
   const effective: ArmorSet = {
     ...armorSet,
     generalResistance: { ...armorSet.generalResistance },
@@ -33,6 +34,7 @@ function buildEffectiveArmorSet(armorSet: ArmorSet): ArmorSet {
     rangedDmgReductionPct: armorSet.rangedDmgReductionPct,
   };
 
+  // Aggregate armor piece resistance bonuses
   for (const piece of Object.values(armorSet.pieces)) {
     if (!piece) continue;
     for (const bonus of piece.bonuses || []) {
@@ -45,6 +47,17 @@ function buildEffectiveArmorSet(armorSet: ArmorSet): ArmorSet {
             (effective.typeResistance[mapping.key as DamageTypeName] || 0) + bonus.value;
         }
       }
+    }
+  }
+
+  // Apply defender jewelry defensive bonuses (reduccionMelee/reduccionRango)
+  if (defenderJewelry) {
+    const jBonus = aggregateJewelryBonuses(defenderJewelry);
+    if (jBonus.reduccionMelee) {
+      effective.meleeDmgReductionPct += jBonus.reduccionMelee;
+    }
+    if (jBonus.reduccionRango) {
+      effective.rangedDmgReductionPct += jBonus.reduccionRango;
     }
   }
 
@@ -61,10 +74,11 @@ export function simulateHits(
   jewelry: JewelrySet | null,
   armorSet: ArmorSet,
   numHits: number = 10,
-  defenderSubclase?: Subclase
+  defenderSubclase?: Subclase,
+  defenderJewelry?: JewelrySet | null
 ): SimulationResult {
   const weaponResult = calcWeaponDamage(weapon, character, jewelry);
-  const effectiveArmor = buildEffectiveArmorSet(armorSet);
+  const effectiveArmor = buildEffectiveArmorSet(armorSet, defenderJewelry);
   const armorClass = ARMOR_CLASSES[defenderSubclase || character.subclase];
   const protection = calcTotalProtection(effectiveArmor, armorClass);
   const avgPF = calcAverageProtectionFactors(effectiveArmor);

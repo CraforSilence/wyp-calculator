@@ -12,7 +12,9 @@ import { calcWeaponDamage } from '@/lib/engine/damage';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Collapsible } from '@/components/ui/Collapsible';
-import { HelpTip } from '@/components/ui/HelpTip';
+import { HelpPopover } from '@/components/ui/HelpPopover';
+import { Input } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Select';
 import { EnemyArmorEditor } from './EnemyArmorEditor';
 import { EnemyJewelryEditor } from './EnemyJewelryEditor';
 import { SimResultados } from './SimResultados';
@@ -121,14 +123,14 @@ export function BuildSimulacion() {
   // --- Simulate offensive ---
   const handleSimOffensive = () => {
     if (!hasWeapon) return;
-    const sim = simulateHits(myWeapon, character, jewelry, enemyArmor, 10, enemySubclase);
+    const sim = simulateHits(myWeapon, character, jewelry, enemyArmor, 10, enemySubclase, enemyJewelry);
     setOffResult(sim);
   };
 
   // --- Simulate defensive ---
   const handleSimDefensive = () => {
     if (!enemyWeapon) return;
-    const sim = simulateHits(enemyWeapon, enemyAttackerProfile, enemyJewelry, myArmor, 10, character.subclase);
+    const sim = simulateHits(enemyWeapon, enemyAttackerProfile, enemyJewelry, myArmor, 10, character.subclase, jewelry);
     setDefResult(sim);
   };
 
@@ -187,7 +189,7 @@ export function BuildSimulacion() {
           {hasWeapon && (
             <>
               {/* Tu arma - resumen */}
-              <Card title={<span>Tu Arma<HelpTip text="Resumen de tu arma con tu build actual. Los valores incluyen bonuses de joyeria y atributos." /></span>}>
+              <Card title={<span className="flex items-center gap-1">Tu Arma <HelpPopover text="Resumen de tu arma con tu build actual. Los valores incluyen bonuses de joyeria y atributos." /></span>}>
                 {myWeaponCalc && (
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 text-center text-sm">
                     <div>
@@ -270,7 +272,7 @@ export function BuildSimulacion() {
           {myArmorPieceCount > 0 && (
             <>
               {/* Tu armadura - resumen */}
-              <Card title={<span>Tu Armadura<HelpTip text="Tu armadura configurada en el tab Armadura. CA = Clase de Armadura (multiplicador de defensa)." /></span>}>
+              <Card title={<span className="flex items-center gap-1">Tu Armadura <HelpPopover text="Tu armadura configurada en el tab Armadura. CA = Clase de Armadura (multiplicador de defensa)." /></span>}>
                 <div className="text-sm text-zinc-400">
                   {myArmorPieceCount} piezas configuradas &middot; CA: {ARMOR_CLASSES[character.subclase]}
                   {myArmor.bonusArmaduraPct > 0 && <span> &middot; Armadura +{myArmor.bonusArmaduraPct}%</span>}
@@ -280,45 +282,36 @@ export function BuildSimulacion() {
               </Card>
 
               {/* Perfil atacante enemigo */}
-              <Card title={<span>Perfil Atacante Enemigo<HelpTip text="Define la clase, subclase y stat principal del enemigo que te ataca. Afecta el dano que genera su arma." /></span>}>
-                <div className="flex gap-3 flex-wrap items-end">
-                  <div className="w-32">
-                    <label className="text-xs text-zinc-400 font-medium block mb-1">Clase</label>
-                    <select
-                      value={defEnemyClase}
-                      onChange={(e) => handleChangeDefEnemyClase(e.target.value as Clase)}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
-                    >
-                      <option value="Guerrero">Guerrero</option>
-                      <option value="Arquero">Arquero</option>
-                      <option value="Mago">Mago</option>
-                    </select>
-                  </div>
-                  <div className="w-36">
-                    <label className="text-xs text-zinc-400 font-medium block mb-1">Subclase</label>
-                    <select
-                      value={defEnemySubclase}
-                      onChange={(e) => setDefEnemySubclase(e.target.value as Subclase)}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
-                    >
-                      {CLASE_SUBCLASES[defEnemyClase].map((sc) => (
-                        <option key={sc} value={sc}>{sc}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="w-28">
-                    <label className="text-xs text-zinc-400 font-medium block mb-1">{SUBCLASE_MAIN_STAT[defEnemySubclase]}</label>
-                    <input
-                      type="number"
-                      min={20}
-                      max={120}
-                      value={defEnemyMainStat}
-                      onChange={(e) => setDefEnemyMainStat(Number(e.target.value))}
-                      className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
-                    />
-                  </div>
-                  <div className="text-xs text-zinc-500 self-center">
-                    Mult: {ARMOR_CLASSES[defEnemySubclase]}x
+              <Card title={<span className="flex items-center gap-1">Perfil Atacante Enemigo <HelpPopover text="Define la clase, subclase y stat principal del enemigo que te ataca. Afecta el dano que genera su arma." /></span>}>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <Select
+                    label="Clase"
+                    value={defEnemyClase}
+                    onChange={(e) => handleChangeDefEnemyClase(e.target.value as Clase)}
+                    options={[
+                      { value: 'Guerrero', label: 'Guerrero' },
+                      { value: 'Arquero', label: 'Arquero' },
+                      { value: 'Mago', label: 'Mago' },
+                    ]}
+                  />
+                  <Select
+                    label="Subclase"
+                    value={defEnemySubclase}
+                    onChange={(e) => setDefEnemySubclase(e.target.value as Subclase)}
+                    options={CLASE_SUBCLASES[defEnemyClase].map((sc) => ({ value: sc, label: sc }))}
+                  />
+                  <Input
+                    label={SUBCLASE_MAIN_STAT[defEnemySubclase]}
+                    tooltip="Stat principal del enemigo. Afecta directamente el dano de su arma."
+                    type="number"
+                    min={20}
+                    max={120}
+                    value={defEnemyMainStat}
+                    onChange={(e) => setDefEnemyMainStat(Number(e.target.value))}
+                  />
+                  <div className="flex flex-col gap-1 justify-end">
+                    <span className="text-xs text-zinc-400 font-medium">CA Enemigo</span>
+                    <span className="text-sm text-zinc-200 bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5">{ARMOR_CLASSES[defEnemySubclase]}x</span>
                   </div>
                 </div>
               </Card>
