@@ -11,12 +11,22 @@ export type GeneralDamageType = 'fisico' | 'magico';
 
 export type ArmorBonusType =
   | 'vida' | 'mana' | 'constitucion' | 'fuerza'
+  | 'concentracion' | 'inteligencia' | 'destreza'
   | 'velocidadAtaque' | 'velocidadIncantacion'
-  | 'armaduraPct';
+  | 'armaduraPct'
+  | 'resistirFisico' | 'resistirMagico'
+  | 'resistirFuego' | 'resistirHielo' | 'resistirElectricidad'
+  | 'resistirAplastante' | 'resistirCortante' | 'resistirPunzante'
+  | 'bloqueo';
 
 export interface ArmorBonus {
   type: ArmorBonusType;
   value: number;
+}
+
+export interface ArmorUpgrade {
+  type: DamageTypeName;
+  value: number; // 1 or 2
 }
 
 export interface ArmorPiece {
@@ -26,6 +36,7 @@ export interface ArmorPiece {
   protectionFactors: Partial<Record<DamageTypeName, ProtectionQuality>>;
   bonusProteccionPct: Partial<Record<DamageTypeName, number>>;
   bonuses: ArmorBonus[];
+  upgrades: ArmorUpgrade[];
 }
 
 export interface ArmorSet {

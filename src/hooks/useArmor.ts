@@ -18,7 +18,7 @@ const DEFAULT_ARMOR_SET: ArmorSet = {
 function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
   const protectionFactors: Record<string, string> = {};
   for (const t of ALL_DAMAGE_TYPES) protectionFactors[t] = 'Normal';
-  return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [] };
+  return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [], upgrades: [] };
 }
 
 interface OldArmorPiece {
@@ -32,13 +32,17 @@ interface OldArmorPiece {
   bonusArmaduraPct?: number;
 }
 
-/** Ensure every piece has a bonuses array (handles data saved before bonuses existed) */
-function ensureBonuses(pieces: Partial<Record<ArmorSlot, ArmorPiece>>): Partial<Record<ArmorSlot, ArmorPiece>> {
+/** Ensure every piece has bonuses and upgrades arrays (handles data saved before they existed) */
+function ensurePieceFields(pieces: Partial<Record<ArmorSlot, ArmorPiece>>): Partial<Record<ArmorSlot, ArmorPiece>> {
   let changed = false;
   const result = { ...pieces };
   for (const [slot, piece] of Object.entries(result)) {
-    if (piece && !Array.isArray(piece.bonuses)) {
-      result[slot as ArmorSlot] = { ...piece, bonuses: [] };
+    if (piece && (!Array.isArray(piece.bonuses) || !Array.isArray(piece.upgrades))) {
+      result[slot as ArmorSlot] = {
+        ...piece,
+        bonuses: Array.isArray(piece.bonuses) ? piece.bonuses : [],
+        upgrades: Array.isArray(piece.upgrades) ? piece.upgrades : [],
+      };
       changed = true;
     }
   }
@@ -60,6 +64,7 @@ function migrateOldFormat(raw: Record<string, unknown>): ArmorSet | undefined {
           protectionFactors: old.protectionFactors || {},
           bonusProteccionPct: old.bonusProteccionPct || {},
           bonuses: [],
+          upgrades: [],
         };
       }
     }
@@ -74,11 +79,12 @@ function migrateOldFormat(raw: Record<string, unknown>): ArmorSet | undefined {
     };
   }
 
-  // Dict format but pieces may lack bonuses field
+  // Dict format but pieces may lack bonuses/upgrades fields
   if (pieces && typeof pieces === 'object') {
-    const migrated = ensureBonuses(pieces as Partial<Record<ArmorSlot, ArmorPiece>>);
+    const migrated = ensurePieceFields(pieces as Partial<Record<ArmorSlot, ArmorPiece>>);
     if (migrated !== pieces) {
-      return { ...(raw as unknown as ArmorSet), pieces: migrated };
+      const { armorUpgrades: _removed, ...rest } = raw as Record<string, unknown>;
+      return { ...(rest as unknown as ArmorSet), pieces: migrated };
     }
   }
 

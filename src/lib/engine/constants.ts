@@ -79,8 +79,8 @@ export const PROTECTION_FACTORS: Record<ProtectionQuality, number> = {
 };
 
 // Tipos de daño físico y mágico
-export const PHYSICAL_DAMAGE_TYPES: DamageTypeName[] = ['punzante', 'aplastante', 'cortante'];
-export const MAGICAL_DAMAGE_TYPES: DamageTypeName[] = ['electrico', 'hielo', 'fuego'];
+export const PHYSICAL_DAMAGE_TYPES: DamageTypeName[] = ['cortante', 'punzante', 'aplastante'];
+export const MAGICAL_DAMAGE_TYPES: DamageTypeName[] = ['fuego', 'hielo', 'electrico'];
 export const ALL_DAMAGE_TYPES: DamageTypeName[] = [...PHYSICAL_DAMAGE_TYPES, ...MAGICAL_DAMAGE_TYPES];
 
 // Labels para UI
@@ -134,9 +134,11 @@ export const JEWELRY_BONUS_TYPES: JewelryBonusType[] = [
   'dano_electrico', 'dano_hielo', 'dano_fuego',
   'vida', 'mana',
   'STR', 'DXT', 'INT', 'CON',
+  'classAttribute',
   'attackSpeed', 'castSpeed',
   'weaponDmgPct',
   'critChance',
+  'reduccionMelee', 'reduccionRango',
 ];
 
 // Labels para bonus de joyería
@@ -153,27 +155,39 @@ export const JEWELRY_BONUS_LABELS: Record<JewelryBonusType, string> = {
   DXT: 'Destreza',
   INT: 'Inteligencia',
   CON: 'Constitución',
+  classAttribute: 'Atributo de Clase',
   attackSpeed: 'Vel. Ataque %',
   castSpeed: 'Vel. Invocación %',
   weaponDmgPct: '% Daño de Arma',
   critChance: 'Chance de Crítico %',
+  reduccionMelee: 'Daño Melee recibido -%',
+  reduccionRango: 'Daño Rango recibido -%',
 };
 
 // Categorías de bonus de joyería para el resumen
 export const JEWELRY_BONUS_CATEGORIES: Record<string, JewelryBonusType[]> = {
   'Daño': ['dano_punzante', 'dano_aplastante', 'dano_cortante', 'dano_electrico', 'dano_hielo', 'dano_fuego'],
-  'Stats': ['STR', 'DXT', 'INT', 'CON'],
+  'Stats': ['STR', 'DXT', 'INT', 'CON', 'classAttribute'],
   'Velocidad': ['attackSpeed', 'castSpeed'],
   'Combate': ['critChance'],
+  'Defensa': ['reduccionMelee', 'reduccionRango'],
   'Otros': ['vida', 'mana', 'weaponDmgPct'],
 };
 
 // Tipos de bonus de armadura disponibles
 export const ARMOR_BONUS_TYPES: ArmorBonusType[] = [
   'vida', 'mana', 'constitucion', 'fuerza',
+  'concentracion', 'inteligencia', 'destreza',
   'velocidadAtaque', 'velocidadIncantacion',
   'armaduraPct',
+  'resistirFisico', 'resistirMagico',
+  'resistirFuego', 'resistirHielo', 'resistirElectricidad',
+  'resistirAplastante', 'resistirCortante', 'resistirPunzante',
+  'bloqueo',
 ];
+
+// Bonus que solo aplican a escudos
+export const SHIELD_ONLY_BONUS_TYPES: ArmorBonusType[] = ['bloqueo'];
 
 // Labels para bonus de armadura
 export const ARMOR_BONUS_LABELS: Record<ArmorBonusType, string> = {
@@ -181,9 +195,21 @@ export const ARMOR_BONUS_LABELS: Record<ArmorBonusType, string> = {
   mana: 'Mana',
   constitucion: 'Constitución',
   fuerza: 'Fuerza',
+  concentracion: 'Concentración',
+  inteligencia: 'Inteligencia',
+  destreza: 'Destreza',
   velocidadAtaque: 'Vel. Ataque %',
   velocidadIncantacion: 'Vel. Invocación %',
   armaduraPct: 'Armadura %',
+  resistirFisico: 'Res. Daño Físico %',
+  resistirMagico: 'Res. Daño Mágico %',
+  resistirFuego: 'Res. Fuego %',
+  resistirHielo: 'Res. Hielo %',
+  resistirElectricidad: 'Res. Electricidad %',
+  resistirAplastante: 'Res. Aplastante %',
+  resistirCortante: 'Res. Cortante %',
+  resistirPunzante: 'Res. Punzante %',
+  bloqueo: 'Bloqueo',
 };
 
 // Iconos por slot de armadura

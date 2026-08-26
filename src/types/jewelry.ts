@@ -5,9 +5,11 @@ export type JewelryBonusType =
   | 'dano_electrico' | 'dano_hielo' | 'dano_fuego'
   | 'vida' | 'mana'
   | 'STR' | 'DXT' | 'INT' | 'CON'
+  | 'classAttribute'
   | 'attackSpeed' | 'castSpeed'
   | 'weaponDmgPct'
-  | 'critChance';
+  | 'critChance'
+  | 'reduccionMelee' | 'reduccionRango';
 
 export interface JewelryBonus {
   type: JewelryBonusType;
