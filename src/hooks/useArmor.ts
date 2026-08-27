@@ -32,16 +32,27 @@ interface OldArmorPiece {
   bonusArmaduraPct?: number;
 }
 
-/** Ensure every piece has bonuses and upgrades arrays (handles data saved before they existed) */
+/** Ensure every piece has bonuses, upgrades, and filled protectionFactors */
 function ensurePieceFields(pieces: Partial<Record<ArmorSlot, ArmorPiece>>): Partial<Record<ArmorSlot, ArmorPiece>> {
   let changed = false;
   const result = { ...pieces };
   for (const [slot, piece] of Object.entries(result)) {
-    if (piece && (!Array.isArray(piece.bonuses) || !Array.isArray(piece.upgrades))) {
+    if (!piece) continue;
+    const needsBonuses = !Array.isArray(piece.bonuses);
+    const needsUpgrades = !Array.isArray(piece.upgrades);
+    const needsPF = ALL_DAMAGE_TYPES.some((t) => !piece.protectionFactors[t]);
+    if (needsBonuses || needsUpgrades || needsPF) {
+      const pf = { ...piece.protectionFactors };
+      if (needsPF) {
+        for (const t of ALL_DAMAGE_TYPES) {
+          if (!pf[t]) pf[t] = 'Normal';
+        }
+      }
       result[slot as ArmorSlot] = {
         ...piece,
         bonuses: Array.isArray(piece.bonuses) ? piece.bonuses : [],
         upgrades: Array.isArray(piece.upgrades) ? piece.upgrades : [],
+        protectionFactors: pf,
       };
       changed = true;
     }

@@ -18,7 +18,6 @@ import type { DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 
 const QUALITY_OPTIONS: { value: string; label: string }[] = [
-  { value: '', label: 'N/A' },
   { value: 'Muy Mala', label: 'Muy Mala' },
   { value: 'Mala', label: 'Mala' },
   { value: 'Normal', label: 'Normal' },
@@ -131,7 +130,7 @@ export function BuildArmadura() {
                         <span className="text-sm shrink-0" title={DAMAGE_TYPE_LABELS[t]}>{DAMAGE_TYPE_ICONS[t]}</span>
                         <select
                           className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors"
-                          value={piece?.protectionFactors[t] || ''}
+                          value={piece?.protectionFactors[t] || 'Normal'}
                           title={DAMAGE_TYPE_LABELS[t]}
                           onChange={(e) => {
                             const val = e.target.value as ProtectionQuality | '';
