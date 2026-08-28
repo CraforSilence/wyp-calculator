@@ -57,7 +57,47 @@ export default function RankingsPage() {
         )}
       </div>
 
-      <div className="overflow-x-auto">
+      {/* Mobile card list */}
+      <div className="sm:hidden space-y-2">
+        {results.map(({ weapon, result }, i) => (
+          <div
+            key={weapon.id}
+            onClick={() => setSelectedDetail({ weapon, result })}
+            className="bg-zinc-900 border border-zinc-800 rounded-lg p-3 cursor-pointer hover:border-zinc-700 transition-colors animate-fade-in-up"
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-zinc-500 font-mono">#{i + 1}</span>
+                  <span className="text-sm font-medium text-zinc-200 truncate">{result.nombre}</span>
+                </div>
+                <Badge variant={rarezaToBadgeVariant(weapon.rareza)} className="mt-1">{weapon.rareza}</Badge>
+              </div>
+              <div className="text-right shrink-0">
+                <div className="text-xs text-zinc-500">DPS</div>
+                <div className="text-base font-bold text-amber-400">{result.dpsEfectivo}</div>
+              </div>
+            </div>
+            <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-center">
+              <div>
+                <div className="text-zinc-500">Dano</div>
+                <div className="text-zinc-300">{result.danoMin}-{result.danoMax}</div>
+              </div>
+              <div>
+                <div className="text-zinc-500">Crit</div>
+                <div className="text-zinc-300">{result.critTotalPct}%</div>
+              </div>
+              <div>
+                <div className="text-zinc-500">Vel</div>
+                <div className="text-zinc-300">{result.velEfectiva}s</div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Desktop table */}
+      <div className="hidden sm:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">

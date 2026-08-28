@@ -10,6 +10,8 @@ import { BuildDanos } from '@/components/build/BuildDanos';
 import { BuildProtecciones } from '@/components/build/BuildProtecciones';
 import { BuildSimulacion } from '@/components/build/BuildSimulacion';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { useBuildWeapon } from '@/hooks/useBuildWeapon';
+import { useArmor } from '@/hooks/useArmor';
 
 const TABS = [
   { id: 'build', label: 'Build' },
@@ -22,6 +24,17 @@ type TabId = (typeof TABS)[number]['id'];
 
 export default function BuildPage() {
   const [activeTab, setActiveTab] = useState<TabId>('build');
+  const { hasWeapon } = useBuildWeapon();
+  const { armorSet } = useArmor();
+
+  const hasArmorData = Object.values(armorSet.pieces).some((p) => p && p.pba > 0);
+
+  const tabHasData: Record<TabId, boolean> = {
+    build: false,
+    armas: hasWeapon,
+    armadura: hasArmorData,
+    simulacion: false,
+  };
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -36,13 +49,16 @@ export default function BuildPage() {
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
+            className={`relative px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px ${
               activeTab === tab.id
                 ? 'border-amber-500 text-amber-400'
                 : 'border-transparent text-zinc-400 hover:text-zinc-200'
             }`}
           >
             {tab.label}
+            {tabHasData[tab.id] && (
+              <span className="absolute top-1.5 right-1 w-1.5 h-1.5 rounded-full bg-amber-500" />
+            )}
           </button>
         ))}
       </div>

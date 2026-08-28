@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
+import { ToastProvider } from "@/components/ui/Toast";
+import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -15,7 +17,18 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "W&P Calculator",
-  description: "Weapon and Protection Calculator - Calculadora de armas, armadura y simulador de daño para Regnum Online",
+  description: "Calculadora de armas, armadura y simulador de daño para Regnum Online",
+  openGraph: {
+    title: "W&P Calculator - Regnum Online",
+    description: "Calculadora de armas, armadura y simulador de daño para Regnum Online",
+    type: "website",
+    locale: "es_AR",
+  },
+  twitter: {
+    card: "summary",
+    title: "W&P Calculator",
+    description: "Calculadora de armas y armadura para Regnum Online",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -25,6 +38,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100">
+        <ToastProvider>
         <Navbar />
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
           {children}
@@ -47,6 +61,8 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             </p>
           </div>
         </footer>
+        <ScrollToTop />
+        </ToastProvider>
       </body>
     </html>
   );

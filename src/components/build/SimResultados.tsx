@@ -14,29 +14,29 @@ export function SimResultados({ result }: SimResultadosProps) {
   return (
     <div className="space-y-4">
       {/* Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card>
-          <div className="text-center">
-            <div className="text-xs text-zinc-500">Dano Promedio<HelpTip text="Promedio de dano final por golpe en esta simulacion." /></div>
-            <div className="text-2xl font-bold text-amber-400">{result.averageDamage}</div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger-children">
+        <Card className="border-amber-800/40">
+          <div className="text-center py-1">
+            <div className="text-xs text-zinc-500 uppercase tracking-wide">Dano Promedio<HelpTip text="Promedio de dano final por golpe en esta simulacion." /></div>
+            <div className="text-4xl font-bold text-amber-400 mt-1">{result.averageDamage}</div>
           </div>
         </Card>
         <Card>
-          <div className="text-center">
-            <div className="text-xs text-zinc-500">Dano Total<HelpTip text="Suma del dano final de todos los golpes." /></div>
-            <div className="text-2xl font-bold text-zinc-200">{result.totalDamage}</div>
+          <div className="text-center py-1">
+            <div className="text-xs text-zinc-500 uppercase tracking-wide">Dano Total<HelpTip text="Suma del dano final de todos los golpes." /></div>
+            <div className="text-2xl font-bold text-zinc-200 mt-1">{result.totalDamage}</div>
+          </div>
+        </Card>
+        <Card className="border-red-900/40">
+          <div className="text-center py-1">
+            <div className="text-xs text-zinc-500 uppercase tracking-wide">Criticos<HelpTip text="Golpes criticos obtenidos del total. Critico = dano x1.5." /></div>
+            <div className="text-2xl font-bold text-red-400 mt-1">{result.critsLanded}/{result.hits.length}</div>
           </div>
         </Card>
         <Card>
-          <div className="text-center">
-            <div className="text-xs text-zinc-500">Criticos<HelpTip text="Golpes criticos obtenidos del total. Critico = dano x1.5." /></div>
-            <div className="text-2xl font-bold text-red-400">{result.critsLanded}/{result.hits.length}</div>
-          </div>
-        </Card>
-        <Card>
-          <div className="text-center">
-            <div className="text-xs text-zinc-500">Min / Max<HelpTip text="Dano final minimo y maximo en un solo golpe." /></div>
-            <div className="text-lg font-bold text-zinc-200">
+          <div className="text-center py-1">
+            <div className="text-xs text-zinc-500 uppercase tracking-wide">Min / Max<HelpTip text="Dano final minimo y maximo en un solo golpe." /></div>
+            <div className="text-lg font-bold text-zinc-200 mt-1">
               {Math.min(...result.hits.map((h) => h.finalDamage))} / {Math.max(...result.hits.map((h) => h.finalDamage))}
             </div>
           </div>
@@ -82,6 +82,19 @@ export function SimResultados({ result }: SimResultadosProps) {
           })}
         </div>
       </Card>
+
+      {/* Reduction summary */}
+      {(() => {
+        const avgRaw = result.hits.reduce((s, h) => s + h.totalRawDamage, 0) / result.hits.length;
+        const avgFinal = result.averageDamage;
+        const reductionPct = avgRaw > 0 ? ((avgRaw - avgFinal) / avgRaw * 100).toFixed(1) : '0';
+        return (
+          <div className="text-center text-sm text-zinc-500 -mt-2">
+            Reduccion promedio: <span className="text-orange-400 font-semibold">{reductionPct}%</span>
+            {' '}({Math.round(avgRaw)} raw &rarr; {avgFinal} final)
+          </div>
+        );
+      })()}
 
       {/* Detail table */}
       <Card title={<span>Detalle<HelpTip text="Desglose completo de cada golpe: dano bruto, critico, y cada capa de reduccion aplicada." /></span>}>

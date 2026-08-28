@@ -1,7 +1,7 @@
 type BadgeVariant = 'default' | 'legendary' | 'epic' | 'magic' | 'arcane' | 'damage' | 'info';
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-zinc-700 text-zinc-300',
+  default: 'bg-zinc-800 text-zinc-300 border border-zinc-600',
   legendary: 'bg-amber-900/50 text-amber-400 border border-amber-700/50',
   epic: 'bg-purple-900/50 text-purple-400 border border-purple-700/50',
   magic: 'bg-blue-900/50 text-blue-400 border border-blue-700/50',

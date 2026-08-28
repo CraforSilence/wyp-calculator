@@ -9,6 +9,7 @@ import { WeaponCard } from '@/components/weapons/WeaponCard';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { useToast } from '@/components/ui/Toast';
 import { DEFAULT_WEAPONS } from '@/data/default-weapons';
 import type { Weapon } from '@/types/weapon';
 
@@ -19,6 +20,7 @@ export default function ArmasPage() {
     hideWeapon, showWeapon, resetWeapon, resetAll,
     duplicateAsTemp, isModified, hiddenIds, hiddenCount,
   } = useWeapons();
+  const { toast } = useToast();
   const [showForm, setShowForm] = useState(false);
   const [editingWeapon, setEditingWeapon] = useState<Weapon | null>(null);
   const [showHidden, setShowHidden] = useState(false);
@@ -46,8 +48,10 @@ export default function ArmasPage() {
   const handleSave = (weaponData: Omit<Weapon, 'id' | 'createdAt'>) => {
     if (editingWeapon) {
       updateWeapon(editingWeapon.id, weaponData);
+      toast('Arma actualizada', 'success');
     } else {
       addWeapon(weaponData);
+      toast('Arma agregada', 'success');
     }
     setShowForm(false);
     setEditingWeapon(null);
@@ -129,9 +133,12 @@ export default function ArmasPage() {
                         weapon={weapon}
                         calcResult={result}
                         onEdit={() => handleEdit(weapon)}
-                        onDelete={() => weapon.isDefault ? hideWeapon(weapon.id) : deleteWeapon(weapon.id)}
-                        onDuplicate={() => duplicateAsTemp(weapon.id)}
-                        onReset={weapon.isDefault && isModified(weapon.id) ? () => resetWeapon(weapon.id) : undefined}
+                        onDelete={() => {
+                          if (weapon.isDefault) { hideWeapon(weapon.id); toast('Arma oculta', 'info'); }
+                          else { deleteWeapon(weapon.id); toast('Arma eliminada', 'info'); }
+                        }}
+                        onDuplicate={() => { duplicateAsTemp(weapon.id); toast('Arma duplicada', 'success'); }}
+                        onReset={weapon.isDefault && isModified(weapon.id) ? () => { resetWeapon(weapon.id); toast('Arma reseteada', 'info'); } : undefined}
                         isModified={weapon.isDefault ? isModified(weapon.id) : false}
                       />
                     ))}

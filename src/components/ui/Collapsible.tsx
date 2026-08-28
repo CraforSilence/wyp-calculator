@@ -23,7 +23,7 @@ export function Collapsible({ title, icon, defaultOpen = false, children }: Coll
           {title}
         </h3>
         <svg
-          className={`w-4 h-4 text-zinc-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -32,7 +32,19 @@ export function Collapsible({ title, icon, defaultOpen = false, children }: Coll
           <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
         </svg>
       </button>
-      {open && <div className="px-4 pb-4">{children}</div>}
+
+      {/* Grid-rows animation wrapper */}
+      <div
+        className={`grid transition-[grid-template-rows] duration-200 ease-out ${
+          open ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+        }`}
+      >
+        <div className="overflow-hidden min-h-0">
+          <div className="px-4 pb-4">
+            {children}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

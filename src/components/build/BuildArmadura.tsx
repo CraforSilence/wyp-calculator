@@ -305,12 +305,17 @@ export function BuildArmadura() {
                   <div className={`text-lg font-bold ${val > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-600'}`}>
                     {Math.round(val)}
                   </div>
-                  <div className="h-1 bg-zinc-800 rounded-full mt-1 overflow-hidden">
+                  <div className="h-2.5 bg-zinc-800 rounded-full mt-1 overflow-hidden">
                     <div
-                      className={`h-full rounded-full ${isPhysical ? 'bg-orange-600' : 'bg-blue-600'}`}
+                      className={`h-full rounded-full transition-all duration-300 ${isPhysical ? 'bg-orange-600' : 'bg-blue-600'}`}
                       style={{ width: `${pct}%` }}
                     />
                   </div>
+                  {val > 0 && (
+                    <div className={`text-xs mt-0.5 ${isPhysical ? 'text-orange-500' : 'text-blue-500'}`}>
+                      {pct.toFixed(0)}%
+                    </div>
+                  )}
                 </div>
               );
             })}
