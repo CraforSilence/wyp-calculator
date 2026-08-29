@@ -13,7 +13,8 @@ export type ArmorBonusType =
   | 'vida' | 'mana' | 'constitucion' | 'fuerza'
   | 'concentracion' | 'inteligencia' | 'destreza'
   | 'velocidadAtaque' | 'velocidadIncantacion'
-  | 'armaduraPct'
+  | 'critChance'
+  | 'armaduraPct' | 'rangoAtaque' | 'velocidadMovimiento' | 'velocidadMovimientoBZ' | 'bonusCuracion'
   | 'resistirFisico' | 'resistirMagico'
   | 'resistirFuego' | 'resistirHielo' | 'resistirElectricidad'
   | 'resistirAplastante' | 'resistirCortante' | 'resistirPunzante'
@@ -52,4 +53,14 @@ export interface ArmorSet {
 export interface ProtectionResult {
   perType: Record<string, number>;
   perPiece: Record<string, Record<string, number>>;
+}
+
+export interface DefaultArmorSet {
+  id: string;
+  nombre: string;
+  clase: 'Guerrero' | 'Arquero' | 'Mago';
+  subclase?: string;
+  pieces: Partial<Record<ArmorSlot, ArmorPiece>>;
+  bonusConjunto: ArmorBonus[];
+  bonusConjuntoPorSubclase?: Partial<Record<string, ArmorBonus[]>>;
 }

@@ -7,7 +7,7 @@ import { HelpTip } from '@/components/ui/HelpTip';
 import {
   ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
   ARMOR_SLOTS_POR_CLASE, ARMOR_SLOT_ICONS, CLASE_SUBCLASES,
-  PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES,
+  PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOT_LABEL_OVERRIDES,
 } from '@/lib/engine/constants';
 import { ARMOR_PRESETS } from '@/data/armor-presets';
 import type { ArmorSet, ArmorSlot, ArmorPiece, ProtectionQuality } from '@/types/armor';
@@ -102,8 +102,8 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
           return (
             <Card key={slot} title={
               <span className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={ARMOR_SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
-                {ARMOR_SLOT_LABELS[slot]}
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={ARMOR_SLOT_LABEL_OVERRIDES[enemyClase]?.[slot] ?? ARMOR_SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
+                {ARMOR_SLOT_LABEL_OVERRIDES[enemyClase]?.[slot] ?? ARMOR_SLOT_LABELS[slot]}
               </span>
             } className={isEmpty ? 'opacity-60' : ''}>
               <div className="space-y-2">

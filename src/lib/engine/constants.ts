@@ -114,11 +114,15 @@ export const ARMOR_SLOT_LABELS: Record<ArmorSlot, string> = {
   tunica: 'Túnica',
 };
 
+export const ARMOR_SLOT_LABEL_OVERRIDES: Partial<Record<Clase, Partial<Record<ArmorSlot, string>>>> = {
+  'Mago': { casco: 'Sombrero', guanteletes: 'Guantes' },
+};
+
 // Slots de armadura por clase
 export const ARMOR_SLOTS_POR_CLASE: Record<Clase, ArmorSlot[]> = {
   'Guerrero': ['pechera', 'casco', 'perneras', 'hombreras', 'guanteletes', 'escudo'],
   'Arquero': ['pechera', 'casco', 'perneras', 'hombreras', 'guanteletes'],
-  'Mago': ['tunica', 'casco', 'brazalete'],
+  'Mago': ['tunica', 'casco', 'guanteletes', 'brazalete'],
 };
 
 // Subcategorías por clase
@@ -179,7 +183,8 @@ export const ARMOR_BONUS_TYPES: ArmorBonusType[] = [
   'vida', 'mana', 'constitucion', 'fuerza',
   'concentracion', 'inteligencia', 'destreza',
   'velocidadAtaque', 'velocidadIncantacion',
-  'armaduraPct',
+  'critChance',
+  'armaduraPct', 'rangoAtaque', 'velocidadMovimiento', 'velocidadMovimientoBZ', 'bonusCuracion',
   'resistirFisico', 'resistirMagico',
   'resistirFuego', 'resistirHielo', 'resistirElectricidad',
   'resistirAplastante', 'resistirCortante', 'resistirPunzante',
@@ -200,7 +205,12 @@ export const ARMOR_BONUS_LABELS: Record<ArmorBonusType, string> = {
   destreza: 'Destreza',
   velocidadAtaque: 'Vel. Ataque %',
   velocidadIncantacion: 'Vel. Invocación %',
+  critChance: 'Chance de Crítico %',
   armaduraPct: 'Armadura %',
+  rangoAtaque: 'Rango de Ataque %',
+  velocidadMovimiento: 'Vel. Movimiento %',
+  velocidadMovimientoBZ: 'Vel. Movimiento % (BZ)',
+  bonusCuracion: 'Bonus de Curación %',
   resistirFisico: 'Res. Daño Físico %',
   resistirMagico: 'Res. Daño Mágico %',
   resistirFuego: 'Res. Fuego %',

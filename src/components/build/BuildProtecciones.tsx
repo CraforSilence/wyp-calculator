@@ -7,7 +7,7 @@ import { calcTotalProtection } from '@/lib/engine/armor';
 import {
   ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS,
   PHYSICAL_DAMAGE_TYPES, ARMOR_SLOT_LABELS, CLASE_SUBCLASES,
-  ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS,
+  ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, ARMOR_SLOT_LABEL_OVERRIDES,
 } from '@/lib/engine/constants';
 import { Card } from '@/components/ui/Card';
 import type { ArmorSlot, ArmorBonusType } from '@/types/armor';
@@ -116,7 +116,7 @@ export function BuildProtecciones() {
             <tbody>
               {Object.entries(protection.perPiece).map(([slot, values]) => (
                 <tr key={slot} className="border-b border-zinc-800/50">
-                  <td className="py-1.5 pr-2 text-zinc-300">{ARMOR_SLOT_LABELS[slot as ArmorSlot] || slot}</td>
+                  <td className="py-1.5 pr-2 text-zinc-300">{ARMOR_SLOT_LABEL_OVERRIDES[clase]?.[slot as ArmorSlot] ?? ARMOR_SLOT_LABELS[slot as ArmorSlot] ?? slot}</td>
                   {ALL_DAMAGE_TYPES.map((t) => {
                     const v = values[t] || 0;
                     const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(t);

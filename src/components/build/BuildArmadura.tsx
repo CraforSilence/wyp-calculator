@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useArmor } from '@/hooks/useArmor';
 import { calcTotalProtection } from '@/lib/engine/armor';
@@ -8,12 +8,14 @@ import {
   ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
   PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOTS_POR_CLASE, CLASE_SUBCLASES,
   ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, ARMOR_SLOT_ICONS, SHIELD_ONLY_BONUS_TYPES,
+  ARMOR_SLOT_LABEL_OVERRIDES,
 } from '@/lib/engine/constants';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { HelpPopover } from '@/components/ui/HelpPopover';
-import type { ArmorSlot, ArmorBonusType, ArmorBonus, ArmorUpgrade, ProtectionQuality } from '@/types/armor';
+import { DEFAULT_ARMOR_SETS } from '@/data/default-armor';
+import type { ArmorSlot, ArmorBonusType, ArmorBonus, ArmorUpgrade, ProtectionQuality, DefaultArmorSet } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 
@@ -50,7 +52,8 @@ function aggregateArmorBonuses(armorSet: ReturnType<typeof useArmor>['armorSet']
 
 export function BuildArmadura() {
   const { character } = useCharacter();
-  const { armorSet, updateSlot, updateSet } = useArmor();
+  const { armorSet, updateSlot, updateSet, loadPieces } = useArmor();
+  const [activePreset, setActivePreset] = useState<DefaultArmorSet | null>(null);
 
   const clase = getClase(character.subclase);
   const slots = ARMOR_SLOTS_POR_CLASE[clase];
@@ -68,6 +71,24 @@ export function BuildArmadura() {
   const bonusTotals = useMemo(() => aggregateArmorBonuses(armorSet), [armorSet]);
   const hasBonusTotals = Object.values(bonusTotals).some((v) => v && v > 0);
 
+  const totalResistances = useMemo(() => {
+    const res: Partial<Record<DamageTypeName, number>> = {};
+    for (const t of ALL_DAMAGE_TYPES) {
+      let total = (armorSet.typeResistance[t] ?? 0);
+      for (const piece of Object.values(armorSet.pieces)) {
+        if (!piece?.upgrades) continue;
+        for (const upgrade of piece.upgrades) {
+          if (upgrade.type === t) total += upgrade.value;
+        }
+      }
+      if (total > 0) res[t] = total;
+    }
+    return res;
+  }, [armorSet]);
+  const hasResistances = Object.values(totalResistances).some((v) => v && v > 0)
+    || armorSet.generalResistance.fisico > 0
+    || armorSet.generalResistance.magico > 0;
+
   return (
     <div>
       <p className="text-xs text-zinc-500 mb-4">
@@ -81,6 +102,29 @@ export function BuildArmadura() {
           <div><span className="text-amber-400 font-semibold">BCMT</span> <span className="text-zinc-500">— Bonus Calidad-Material-Tipo. Valor "(+X)" junto al PBA.</span></div>
         </div>
       </Card>
+
+      {/* Precargar set */}
+      {DEFAULT_ARMOR_SETS.filter((s) => s.clase === clase && (!s.subclase || s.subclase === character.subclase)).length > 0 && (
+        <Card className="mb-4">
+          <label className="text-xs text-zinc-400 font-medium mb-1 block">Precargar set de armadura</label>
+          <select
+            value={activePreset?.id || ''}
+            onChange={(e) => {
+              const found = DEFAULT_ARMOR_SETS.find((s) => s.id === e.target.value);
+              if (found) {
+                loadPieces(found.pieces);
+                setActivePreset(found);
+              }
+            }}
+            className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
+          >
+            <option value="" disabled>Elegir set para cargar...</option>
+            {DEFAULT_ARMOR_SETS.filter((s) => s.clase === clase && (!s.subclase || s.subclase === character.subclase)).map((s) => (
+              <option key={s.id} value={s.id}>{s.nombre}</option>
+            ))}
+          </select>
+        </Card>
+      )}
 
       {/* Armor slot cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-4">
@@ -96,8 +140,8 @@ export function BuildArmadura() {
               key={slot}
               title={
                 <span className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={ARMOR_SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
-                  {ARMOR_SLOT_LABELS[slot]}
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={(ARMOR_SLOT_LABEL_OVERRIDES[clase]?.[slot] ?? ARMOR_SLOT_LABELS[slot])} className="w-full h-full object-contain" /></span>
+                  {(ARMOR_SLOT_LABEL_OVERRIDES[clase]?.[slot] ?? ARMOR_SLOT_LABELS[slot])}
                 </span>
               }
               className={isEmpty ? 'opacity-60' : ''}
@@ -323,6 +367,44 @@ export function BuildArmadura() {
         </Card>
       )}
 
+      {/* Resistencias Totales */}
+      {hasResistances && (
+        <Card title="Resistencias Totales (post-armadura)" className="mb-4">
+          {(armorSet.generalResistance.fisico > 0 || armorSet.generalResistance.magico > 0) && (
+            <div className="flex gap-6 mb-3 text-sm">
+              {armorSet.generalResistance.fisico > 0 && (
+                <div><span className="text-zinc-400">Fisica general:</span> <span className="text-orange-400 font-semibold">{armorSet.generalResistance.fisico}%</span></div>
+              )}
+              {armorSet.generalResistance.magico > 0 && (
+                <div><span className="text-zinc-400">Magica general:</span> <span className="text-blue-400 font-semibold">{armorSet.generalResistance.magico}%</span></div>
+              )}
+            </div>
+          )}
+          <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
+            {ALL_DAMAGE_TYPES.map((t) => {
+              const val = totalResistances[t] || 0;
+              const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(t);
+              const baseRes = armorSet.typeResistance[t] ?? 0;
+              const upgradeRes = val - baseRes;
+              return (
+                <div key={t} className="text-center">
+                  <div className="text-xs text-zinc-500 mb-1">{DAMAGE_TYPE_ICONS[t]} {DAMAGE_TYPE_LABELS[t]}</div>
+                  <div className={`text-lg font-bold ${val > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-600'}`}>
+                    {val}%
+                  </div>
+                  {upgradeRes > 0 && (
+                    <div className="text-xs text-zinc-500">
+                      {baseRes > 0 && <span>{baseRes}% base</span>}
+                      {baseRes > 0 && ' + '}<span className="text-amber-400">+{upgradeRes}% mejoras</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      )}
+
       {/* Bonus totals summary */}
       {hasBonusTotals && (
         <Card title="Bonus Totales de Armadura" className="mb-4">
@@ -336,6 +418,34 @@ export function BuildArmadura() {
           </div>
         </Card>
       )}
+
+      {/* Bonus de Conjunto */}
+      {activePreset && (() => {
+        const subclaseBonuses = activePreset.bonusConjuntoPorSubclase?.[character.subclase];
+        const bonuses = subclaseBonuses || activePreset.bonusConjunto;
+        if (bonuses.length === 0) return null;
+        return (
+          <Card
+            title={
+              <span className="flex items-center gap-2">
+                <span className="text-emerald-400">&#9670;</span>
+                Bonus de Conjunto — {activePreset.nombre}
+                {subclaseBonuses && <span className="text-xs text-zinc-500 font-normal">({character.subclase})</span>}
+              </span>
+            }
+            className="mb-4 border-emerald-800/50"
+          >
+            <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+              {bonuses.map((bonus, idx) => (
+                <div key={idx}>
+                  <span className="text-zinc-400">{ARMOR_BONUS_LABELS[bonus.type]}:</span>{' '}
+                  <span className="text-emerald-400 font-semibold">+{bonus.value}</span>
+                </div>
+              ))}
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* Modificadores */}
       <Card title="Modificadores (habilidades activas)">

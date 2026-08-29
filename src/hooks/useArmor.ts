@@ -134,5 +134,12 @@ export function useArmor() {
     setArmorSet((prev) => ({ ...prev, ...updates }));
   }, [setArmorSet]);
 
-  return { armorSet, updateSlot, clearSlot, updateSet };
+  const loadPieces = useCallback((pieces: Partial<Record<ArmorSlot, ArmorPiece>>) => {
+    setArmorSet((prev) => ({
+      ...prev,
+      pieces: ensurePieceFields(pieces),
+    }));
+  }, [setArmorSet]);
+
+  return { armorSet, updateSlot, clearSlot, updateSet, loadPieces };
 }
