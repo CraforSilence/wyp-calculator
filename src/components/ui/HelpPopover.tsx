@@ -26,7 +26,7 @@ export function HelpPopover({ text }: HelpPopoverProps) {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold rounded-full border border-zinc-600 text-zinc-400 hover:text-amber-400 hover:border-amber-500 transition-colors leading-none"
+        className="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold rounded-full bg-zinc-700/50 border border-zinc-600 text-zinc-400 hover:text-amber-400 hover:border-amber-500 transition-colors leading-none"
         aria-label="Ayuda"
       >
         ?
