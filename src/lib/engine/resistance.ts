@@ -38,6 +38,7 @@ export function applyDamageReduction(
       resistanceApplied: {},
       specialDamage,
       barrierReduction: 0,
+      finalDamagePerType: {},
       finalDamage: 0,
       isCrit: false,
       minimumDamageEnforced: false,
@@ -132,6 +133,27 @@ export function applyDamageReduction(
   // Step 3j: Floor at 0, then ceil
   const finalDamage = Math.max(0, Math.ceil(totalDamage));
 
+  // Build per-type final damage (regular + special per type, then distribute global reductions proportionally)
+  const perTypePre: Record<string, number> = {};
+  for (const type of damageTypes) {
+    perTypePre[type] = Math.max(0, damage[type]) + (processedSpecial[type] || 0);
+  }
+  // Add special-only types not in damageTypes
+  for (const type of Object.keys(processedSpecial)) {
+    if (!(type in perTypePre)) {
+      perTypePre[type] = processedSpecial[type];
+    }
+  }
+  const sumPre = Object.values(perTypePre).reduce((s, v) => s + v, 0);
+  const finalDamagePerType: Record<string, number> = {};
+  if (sumPre > 0 && finalDamage > 0) {
+    for (const [type, val] of Object.entries(perTypePre)) {
+      if (val > 0) {
+        finalDamagePerType[type] = Math.round((val / sumPre) * finalDamage);
+      }
+    }
+  }
+
   return {
     hitNumber: 0,
     rawDamage: incomingDamage,
@@ -140,6 +162,7 @@ export function applyDamageReduction(
     resistanceApplied,
     specialDamage: processedSpecial,
     barrierReduction,
+    finalDamagePerType,
     finalDamage,
     isCrit: false,
     minimumDamageEnforced,

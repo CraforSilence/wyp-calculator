@@ -6,6 +6,7 @@ export interface SimulationHit {
   resistanceApplied: Record<string, number>;
   specialDamage: Record<string, number>;
   barrierReduction: number;
+  finalDamagePerType: Record<string, number>;
   finalDamage: number;
   isCrit: boolean;
   minimumDamageEnforced: boolean;

@@ -2,7 +2,9 @@
 
 import { Card } from '@/components/ui/Card';
 import { HelpTip } from '@/components/ui/HelpTip';
+import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS } from '@/lib/engine/constants';
 import type { SimulationResult } from '@/types/simulation';
+import type { DamageTypeName } from '@/types/weapon';
 
 interface SimResultadosProps {
   result: SimulationResult;
@@ -93,6 +95,52 @@ export function SimResultados({ result }: SimResultadosProps) {
             Reduccion promedio: <span className="text-orange-400 font-semibold">{reductionPct}%</span>
             {' '}({Math.round(avgRaw)} raw &rarr; {avgFinal} final)
           </div>
+        );
+      })()}
+
+      {/* Per-type damage breakdown */}
+      {(() => {
+        // Aggregate average final damage per type across all hits
+        const typeTotals: Record<string, number> = {};
+        for (const hit of result.hits) {
+          for (const [type, val] of Object.entries(hit.finalDamagePerType)) {
+            typeTotals[type] = (typeTotals[type] || 0) + val;
+          }
+        }
+        const numHits = result.hits.length;
+        const types = Object.keys(typeTotals).filter((t) => typeTotals[t] > 0);
+        if (types.length === 0) return null;
+        const maxVal = Math.max(...types.map((t) => typeTotals[t] / numHits));
+        return (
+          <Card title={<span>Dano por tipo (promedio)<HelpTip text="Desglose del dano final promedio por tipo de dano. Muestra cuanto dano de cada tipo pasa las defensas enemigas." /></span>}>
+            <div className="space-y-1.5">
+              {types
+                .sort((a, b) => typeTotals[b] - typeTotals[a])
+                .map((type) => {
+                  const avg = Math.round(typeTotals[type] / numHits);
+                  const pct = maxVal > 0 ? (typeTotals[type] / numHits / maxVal) * 100 : 0;
+                  const icon = DAMAGE_TYPE_ICONS[type as DamageTypeName] || '';
+                  const label = DAMAGE_TYPE_LABELS[type as DamageTypeName] || type;
+                  return (
+                    <div key={type} className="flex items-center gap-2">
+                      <div className="w-24 text-xs text-zinc-400 flex items-center gap-1 shrink-0">
+                        <span>{icon}</span>
+                        <span>{label}</span>
+                      </div>
+                      <div className="flex-1 h-5 bg-zinc-800 rounded-full overflow-hidden relative">
+                        <div
+                          className="absolute h-full bg-amber-600/70 rounded-full"
+                          style={{ width: `${pct}%` }}
+                        />
+                        <div className="absolute inset-0 flex items-center px-2 text-xs font-medium text-white">
+                          {avg}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </Card>
         );
       })()}
 
