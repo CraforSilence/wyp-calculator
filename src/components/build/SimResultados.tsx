@@ -91,7 +91,8 @@ export function SimResultados({ result }: SimResultadosProps) {
       </div>
 
       {/* Hits visual with expandable per-type breakdown */}
-      <Card title={<span>Golpes<HelpTip text="Barra gris = dano bruto. Barra color = dano final. Rojo = critico. Click en un golpe para ver desglose por tipo." /></span>}>
+      <Card title={<span>Golpes<HelpTip text="Barra gris = dano bruto. Barra color = dano final. Rojo = critico." /></span>}>
+        <p className="text-xs text-zinc-500 mb-2">Hace click en un golpe para ver el desglose de dano por tipo.</p>
         <div className="space-y-1">
           {result.hits.map((hit) => {
             const pct = (hit.totalRawDamage / maxDmg) * 100;
