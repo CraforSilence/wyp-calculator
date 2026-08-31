@@ -9,7 +9,7 @@ import {
   ARMOR_SLOTS_POR_CLASE, ARMOR_SLOT_ICONS, CLASE_SUBCLASES,
   PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOT_LABEL_OVERRIDES,
 } from '@/lib/engine/constants';
-import { ARMOR_PRESETS } from '@/data/armor-presets';
+import { DEFAULT_ARMOR_SETS } from '@/data/default-armor';
 import type { ArmorSet, ArmorSlot, ArmorPiece, ProtectionQuality } from '@/types/armor';
 import type { Clase, Subclase } from '@/types/character';
 
@@ -74,23 +74,38 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
             options={subclaseOptions}
           />
         </div>
-        {ARMOR_PRESETS.length > 0 && onLoadPreset && (
-          <div className="flex-1 min-w-[180px]">
-            <Select
-              label="Cargar precargado"
-              tooltip="Carga una configuracion de armadura predefinida."
-              value=""
-              onChange={(e) => {
-                const preset = ARMOR_PRESETS.find((p) => p.id === e.target.value);
-                if (preset) onLoadPreset(preset.armorSet, preset.clase, preset.subclase);
-              }}
-              options={[
-                { value: '', label: 'Seleccionar...' },
-                ...ARMOR_PRESETS.map((p) => ({ value: p.id, label: `${p.nombre} (${p.subclase})` })),
-              ]}
-            />
-          </div>
-        )}
+        {onLoadPreset && (() => {
+          const filteredSets = DEFAULT_ARMOR_SETS.filter((s) =>
+            s.clase === enemyClase && (!s.subclase || s.subclase === enemySubclase)
+          );
+          return filteredSets.length > 0 ? (
+            <div className="flex-1 min-w-[180px]">
+              <Select
+                label="Cargar set"
+                tooltip="Carga un set de armadura predefinido para esta subclase."
+                value=""
+                onChange={(e) => {
+                  const set = DEFAULT_ARMOR_SETS.find((s) => s.id === e.target.value);
+                  if (!set) return;
+                  const armorSet: ArmorSet = {
+                    pieces: { ...set.pieces },
+                    bonusArmaduraPct: 0,
+                    generalResistance: { fisico: 0, magico: 0 },
+                    typeResistance: {},
+                    barrierPoints: {},
+                    meleeDmgReductionPct: 0,
+                    rangedDmgReductionPct: 0,
+                  };
+                  onLoadPreset(armorSet, set.clase as Clase, (set.subclase || enemySubclase) as Subclase);
+                }}
+                options={[
+                  { value: '', label: 'Seleccionar set...' },
+                  ...filteredSets.map((s) => ({ value: s.id, label: s.nombre })),
+                ]}
+              />
+            </div>
+          ) : null;
+        })()}
       </div>
 
       {/* Piezas de armadura */}
