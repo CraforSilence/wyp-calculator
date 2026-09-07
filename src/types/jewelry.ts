@@ -22,3 +22,17 @@ export interface JewelryPiece {
 }
 
 export type JewelrySet = Record<JewelrySlot, JewelryPiece>;
+
+/** Tipo de slot genérico para el catálogo (sin distinción anillo1/anillo2) */
+export type JewelryItemSlot = 'anillo' | 'amuleto';
+
+/** Pieza de joyería catalogable (para la página /joyeria) */
+export interface JewelryItem {
+  id: string;
+  nombre: string;
+  slot: JewelryItemSlot;
+  bonuses: JewelryBonus[];
+  notas: string;
+  isDefault: boolean;
+  createdAt: string;
+}
