@@ -34,11 +34,16 @@ export function useWeapons() {
     return [...defaults, ...tempWeapons];
   }, [overrides, tempWeapons]);
 
+  const MAX_CUSTOM = 50;
+
   const addWeapon = useCallback((weapon: Omit<Weapon, 'id' | 'createdAt'>) => {
-    setTempWeapons((prev) => [
-      ...prev,
-      { ...weapon, id: generateId(), isDefault: false, createdAt: new Date().toISOString() } as Weapon,
-    ]);
+    setTempWeapons((prev) => {
+      if (prev.length >= MAX_CUSTOM) return prev;
+      return [
+        ...prev,
+        { ...weapon, id: generateId(), isDefault: false, createdAt: new Date().toISOString() } as Weapon,
+      ];
+    });
   }, [setTempWeapons]);
 
   const updateWeapon = useCallback((id: string, updates: Partial<Weapon>) => {
@@ -105,6 +110,7 @@ export function useWeapons() {
   }, [overrides]);
 
   const hiddenCount = hiddenIds.length;
+  const customCount = tempWeapons.length;
 
   return {
     weapons,
@@ -120,5 +126,6 @@ export function useWeapons() {
     isModified,
     hiddenIds,
     hiddenCount,
+    customCount,
   };
 }

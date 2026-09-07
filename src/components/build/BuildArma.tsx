@@ -10,6 +10,8 @@ import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE } from '@
 import { HelpPopover } from '@/components/ui/HelpPopover';
 import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { useCharacter } from '@/hooks/useCharacter';
+import { useWeapons } from '@/hooks/useWeapons';
+import { useToast } from '@/components/ui/Toast';
 import { DEFAULT_WEAPONS } from '@/data/default-weapons';
 import type { Weapon, DamageTypeName, Velocidad, Rareza, Subcategoria, ArrowSet, WeaponMode } from '@/types/weapon';
 import type { Clase } from '@/types/character';
@@ -391,11 +393,31 @@ export function BuildArma() {
     weaponMode, setWeaponMode,
     secondaryWeapon, setSecondaryWeapon,
     arrows, setArrows,
+    hasWeapon, hasSecondaryWeapon,
   } = useBuildWeapon();
   const { character } = useCharacter();
+  const { addWeapon, customCount } = useWeapons();
+  const { toast } = useToast();
 
   const isBarbaro = character.subclase === 'Bárbaro';
   const isArquero = character.clase === 'Arquero';
+
+  const MAX_CUSTOM = 50;
+  const canSave = customCount < MAX_CUSTOM;
+
+  const handleSaveWeapon = (w: Weapon) => {
+    if (!canSave) {
+      toast(`Limite de ${MAX_CUSTOM} armas personalizadas alcanzado`, 'error');
+      return;
+    }
+    if (!w.nombre.trim() || Object.keys(w.tiposDano).length === 0) {
+      toast('El arma necesita nombre y al menos un tipo de dano', 'error');
+      return;
+    }
+    const { id, isDefault, createdAt, ...data } = w;
+    addWeapon(data);
+    toast(`"${w.nombre}" guardada en Mis armas`, 'success');
+  };
 
   return (
     <div className="space-y-4">
@@ -445,12 +467,25 @@ export function BuildArma() {
               showClaseSelector={true}
             />
           </Collapsible>
+          <div className="flex gap-2">
+            <Button size="sm" variant="secondary" onClick={() => handleSaveWeapon(weapon)} disabled={!canSave || !hasWeapon}>
+              Guardar principal en Mis armas
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => handleSaveWeapon(secondaryWeapon)} disabled={!canSave || !hasSecondaryWeapon}>
+              Guardar secundaria en Mis armas
+            </Button>
+          </div>
         </div>
       ) : (
-        <WeaponForm
-          weapon={weapon}
-          onWeaponChange={(w) => setWeapon(w)}
-        />
+        <>
+          <WeaponForm
+            weapon={weapon}
+            onWeaponChange={(w) => setWeapon(w)}
+          />
+          <Button size="sm" variant="secondary" onClick={() => handleSaveWeapon(weapon)} disabled={!canSave || !hasWeapon}>
+            Guardar en Mis armas
+          </Button>
+        </>
       )}
 
       {/* Arrow section for Arquero */}

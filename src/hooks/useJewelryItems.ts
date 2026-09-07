@@ -32,11 +32,16 @@ export function useJewelryItems() {
     return [...defaults, ...customItems];
   }, [overrides, customItems]);
 
+  const MAX_CUSTOM = 50;
+
   const addItem = useCallback((item: Omit<JewelryItem, 'id' | 'createdAt'>) => {
-    setCustomItems((prev) => [
-      ...prev,
-      { ...item, id: generateId(), isDefault: false, createdAt: new Date().toISOString() } as JewelryItem,
-    ]);
+    setCustomItems((prev) => {
+      if (prev.length >= MAX_CUSTOM) return prev;
+      return [
+        ...prev,
+        { ...item, id: generateId(), isDefault: false, createdAt: new Date().toISOString() } as JewelryItem,
+      ];
+    });
   }, [setCustomItems]);
 
   const updateItem = useCallback((id: string, updates: Partial<JewelryItem>) => {

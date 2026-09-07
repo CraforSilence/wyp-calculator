@@ -32,11 +32,16 @@ export function useArmorSets() {
     return [...defaults, ...customSets];
   }, [overrides, customSets]);
 
+  const MAX_CUSTOM = 50;
+
   const addSet = useCallback((set: Omit<CatalogArmorSet, 'id' | 'createdAt'>) => {
-    setCustomSets((prev) => [
-      ...prev,
-      { ...set, id: generateId(), isDefault: false, createdAt: new Date().toISOString() } as CatalogArmorSet,
-    ]);
+    setCustomSets((prev) => {
+      if (prev.length >= MAX_CUSTOM) return prev;
+      return [
+        ...prev,
+        { ...set, id: generateId(), isDefault: false, createdAt: new Date().toISOString() } as CatalogArmorSet,
+      ];
+    });
   }, [setCustomSets]);
 
   const updateSet = useCallback((id: string, updates: Partial<CatalogArmorSet>) => {
