@@ -64,3 +64,10 @@ export interface DefaultArmorSet {
   bonusConjunto: ArmorBonus[];
   bonusConjuntoPorSubclase?: Partial<Record<string, ArmorBonus[]>>;
 }
+
+/** Set de armadura catalogable (para la página /armadura) */
+export interface CatalogArmorSet extends DefaultArmorSet {
+  notas: string;
+  isDefault: boolean;
+  createdAt: string;
+}
