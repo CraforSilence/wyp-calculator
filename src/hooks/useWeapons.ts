@@ -1,22 +1,22 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import { useSessionStorage } from './useSessionStorage';
+import { useLocalStorage } from './useLocalStorage';
 import { DEFAULT_WEAPONS } from '@/data/default-weapons';
 import { generateId } from '@/lib/utils';
 import type { Weapon } from '@/types/weapon';
 
-/** Armas temporales creadas por el usuario (sessionStorage) */
-const TEMP_KEY = 'regnum-weapons-temp';
-/** IDs de armas precargadas ocultas por el usuario (sessionStorage) */
+/** Armas personalizadas creadas por el usuario */
+const TEMP_KEY = 'regnum-weapons-custom';
+/** IDs de armas precargadas ocultas por el usuario */
 const HIDDEN_KEY = 'regnum-weapons-hidden';
-/** Modificaciones temporales sobre armas precargadas (sessionStorage) */
+/** Modificaciones sobre armas precargadas */
 const OVERRIDES_KEY = 'regnum-weapons-overrides';
 
 export function useWeapons() {
-  const [tempWeapons, setTempWeapons] = useSessionStorage<Weapon[]>(TEMP_KEY, []);
-  const [hiddenIds, setHiddenIds] = useSessionStorage<string[]>(HIDDEN_KEY, []);
-  const [overrides, setOverrides] = useSessionStorage<Record<string, Partial<Weapon>>>(OVERRIDES_KEY, {});
+  const [tempWeapons, setTempWeapons] = useLocalStorage<Weapon[]>(TEMP_KEY, []);
+  const [hiddenIds, setHiddenIds] = useLocalStorage<string[]>(HIDDEN_KEY, []);
+  const [overrides, setOverrides] = useLocalStorage<Record<string, Partial<Weapon>>>(OVERRIDES_KEY, {});
 
   // Merge: precargadas visibles (con overrides) + temporales
   const weapons = useMemo(() => {
