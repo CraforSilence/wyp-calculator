@@ -132,6 +132,16 @@ export const SUBCATEGORIAS_POR_CLASE: Record<Clase, string[]> = {
   'Mago': ['Baculo'],
 };
 
+// Subcategorías por subclase (armas específicas de cada subclase)
+export const SUBCATEGORIAS_POR_SUBCLASE: Record<Subclase, string[]> = {
+  'Caballero': ['Lanza', 'Maza', 'Espada'],
+  'Bárbaro': ['Hacha', 'Martillo', 'Florin', 'Garrote'],
+  'Cazador': ['Arco Corto'],
+  'Tirador': ['Arco Largo'],
+  'Conjurador': ['Baculo'],
+  'Brujo': ['Baculo'],
+};
+
 // Tipos de bonus de joyería disponibles
 export const JEWELRY_BONUS_TYPES: JewelryBonusType[] = [
   'dano_punzante', 'dano_aplastante', 'dano_cortante',

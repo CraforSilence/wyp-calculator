@@ -12,7 +12,9 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/Toast';
 import { DEFAULT_WEAPONS } from '@/data/default-weapons';
-import type { Weapon } from '@/types/weapon';
+import { CLASE_SUBCLASES, SUBCATEGORIAS_POR_SUBCLASE, SUBCATEGORIAS_POR_CLASE } from '@/lib/engine/constants';
+import type { Weapon, Subcategoria } from '@/types/weapon';
+import type { Clase, Subclase } from '@/types/character';
 
 export default function ArmasPage() {
   const { character } = useCharacter();
@@ -25,6 +27,9 @@ export default function ArmasPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingWeapon, setEditingWeapon] = useState<Weapon | null>(null);
   const [showHidden, setShowHidden] = useState(false);
+  const [claseFilter, setClaseFilter] = useState<'Todas' | Clase>('Todas');
+  const [subclaseFilter, setSubclaseFilter] = useState<'Todas' | Subclase>('Todas');
+  const [subcatFilter, setSubcatFilter] = useState<'Todas' | Subcategoria>('Todas');
 
   type CalcItem = { weapon: Weapon; result: ReturnType<typeof calcWeaponDamage> };
 
@@ -34,6 +39,23 @@ export default function ArmasPage() {
       result: calcWeaponDamage(w, character, null),
     }));
   }, [weapons, character]);
+
+  const subclaseOptions = claseFilter === 'Todas' ? [] : CLASE_SUBCLASES[claseFilter] ?? [];
+  const subcatOptions = useMemo(() => {
+    if (subclaseFilter !== 'Todas') return SUBCATEGORIAS_POR_SUBCLASE[subclaseFilter] ?? [];
+    if (claseFilter !== 'Todas') return SUBCATEGORIAS_POR_CLASE[claseFilter] ?? [];
+    return [];
+  }, [claseFilter, subclaseFilter]);
+
+  const filterItems = (r: CalcItem) => {
+    if (claseFilter !== 'Todas' && r.weapon.clase !== claseFilter) return false;
+    if (subclaseFilter !== 'Todas') {
+      const allowedSubcats = SUBCATEGORIAS_POR_SUBCLASE[subclaseFilter] ?? [];
+      if (!allowedSubcats.includes(r.weapon.subcategoria)) return false;
+    }
+    if (subcatFilter !== 'Todas' && r.weapon.subcategoria !== subcatFilter) return false;
+    return true;
+  };
 
   // Helper: group items by clase -> subcategoria
   const groupByClase = (items: CalcItem[]) => {
@@ -48,8 +70,8 @@ export default function ArmasPage() {
     return map;
   };
 
-  const allBaseResults = useMemo(() => calcResults.filter((r) => r.weapon.isDefault), [calcResults]);
-  const allCustomResults = useMemo(() => calcResults.filter((r) => !r.weapon.isDefault), [calcResults]);
+  const allBaseResults = useMemo(() => calcResults.filter((r) => r.weapon.isDefault).filter(filterItems), [calcResults, claseFilter, subclaseFilter, subcatFilter]);
+  const allCustomResults = useMemo(() => calcResults.filter((r) => !r.weapon.isDefault).filter(filterItems), [calcResults, claseFilter, subclaseFilter, subcatFilter]);
 
   const baseShowMore = useShowMore(allBaseResults);
   const customShowMore = useShowMore(allCustomResults);
@@ -99,6 +121,82 @@ export default function ArmasPage() {
           </div>
         }
       />
+
+      {/* Filters */}
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-zinc-500">Clase:</span>
+          {(['Todas', 'Guerrero', 'Arquero', 'Mago'] as const).map((c) => (
+            <button
+              key={c}
+              onClick={() => { setClaseFilter(c); setSubclaseFilter('Todas'); setSubcatFilter('Todas'); }}
+              className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
+                claseFilter === c
+                  ? 'bg-amber-900/30 border-amber-700 text-amber-400'
+                  : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+        {subclaseOptions.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-500">Subclase:</span>
+            <button
+              onClick={() => { setSubclaseFilter('Todas'); setSubcatFilter('Todas'); }}
+              className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
+                subclaseFilter === 'Todas'
+                  ? 'bg-cyan-900/30 border-cyan-700 text-cyan-400'
+                  : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+              }`}
+            >
+              Todas
+            </button>
+            {subclaseOptions.map((sc) => (
+              <button
+                key={sc}
+                onClick={() => { setSubclaseFilter(sc); setSubcatFilter('Todas'); }}
+                className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
+                  subclaseFilter === sc
+                    ? 'bg-cyan-900/30 border-cyan-700 text-cyan-400'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+                }`}
+              >
+                {sc}
+              </button>
+            ))}
+          </div>
+        )}
+        {subcatOptions.length > 1 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-zinc-500">Tipo:</span>
+            <button
+              onClick={() => setSubcatFilter('Todas')}
+              className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
+                subcatFilter === 'Todas'
+                  ? 'bg-emerald-900/30 border-emerald-700 text-emerald-400'
+                  : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+              }`}
+            >
+              Todas
+            </button>
+            {subcatOptions.map((sc) => (
+              <button
+                key={sc}
+                onClick={() => setSubcatFilter(sc as Subcategoria)}
+                className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
+                  subcatFilter === sc
+                    ? 'bg-emerald-900/30 border-emerald-700 text-emerald-400'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+                }`}
+              >
+                {sc}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Hidden weapons panel */}
       {showHidden && hiddenCount > 0 && (
