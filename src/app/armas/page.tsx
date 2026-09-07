@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useWeapons } from '@/hooks/useWeapons';
+import { useShowMore } from '@/hooks/useShowMore';
 import { calcWeaponDamage } from '@/lib/engine/damage';
 import { WeaponForm } from '@/components/weapons/WeaponForm';
 import { WeaponCard } from '@/components/weapons/WeaponCard';
@@ -25,6 +26,8 @@ export default function ArmasPage() {
   const [editingWeapon, setEditingWeapon] = useState<Weapon | null>(null);
   const [showHidden, setShowHidden] = useState(false);
 
+  type CalcItem = { weapon: Weapon; result: ReturnType<typeof calcWeaponDamage> };
+
   const calcResults = useMemo(() => {
     return weapons.map((w) => ({
       weapon: w,
@@ -32,10 +35,10 @@ export default function ArmasPage() {
     }));
   }, [weapons, character]);
 
-  // Group by clase -> subcategoria
-  const grouped = useMemo(() => {
-    const map = new Map<string, Map<string, typeof calcResults>>();
-    for (const item of calcResults) {
+  // Helper: group items by clase -> subcategoria
+  const groupByClase = (items: CalcItem[]) => {
+    const map = new Map<string, Map<string, CalcItem[]>>();
+    for (const item of items) {
       const { clase, subcategoria } = item.weapon;
       if (!map.has(clase)) map.set(clase, new Map());
       const subMap = map.get(clase)!;
@@ -43,7 +46,19 @@ export default function ArmasPage() {
       subMap.get(subcategoria)!.push(item);
     }
     return map;
-  }, [calcResults]);
+  };
+
+  const allBaseResults = useMemo(() => calcResults.filter((r) => r.weapon.isDefault), [calcResults]);
+  const allCustomResults = useMemo(() => calcResults.filter((r) => !r.weapon.isDefault), [calcResults]);
+
+  const baseShowMore = useShowMore(allBaseResults);
+  const customShowMore = useShowMore(allCustomResults);
+
+  const baseResults = baseShowMore.visible;
+  const customResults = customShowMore.visible;
+
+  const groupedBase = useMemo(() => groupByClase(baseResults), [baseResults]);
+  const groupedCustom = useMemo(() => groupByClase(customResults), [customResults]);
 
   const handleSave = (weaponData: Omit<Weapon, 'id' | 'createdAt'>) => {
     if (editingWeapon) {
@@ -62,14 +77,14 @@ export default function ArmasPage() {
     setShowForm(true);
   };
 
-  const tempCount = weapons.filter((w) => !w.isDefault).length;
-  const defaultCount = weapons.filter((w) => w.isDefault).length;
+  const tempCount = allCustomResults.length;
+  const defaultCount = allBaseResults.length;
 
   return (
     <div>
       <PageHeader
         title="Armas"
-        description={`${defaultCount} precargadas, ${tempCount} temporales${hiddenCount > 0 ? `, ${hiddenCount} ocultas` : ''}`}
+        description={`${defaultCount} base, ${tempCount} personalizadas${hiddenCount > 0 ? `, ${hiddenCount} ocultas` : ''}`}
         actions={
           <div className="flex gap-2">
             {hiddenCount > 0 && (
@@ -79,7 +94,7 @@ export default function ArmasPage() {
             )}
             <Button variant="secondary" size="sm" onClick={resetAll}>Reset todo</Button>
             <Button size="sm" onClick={() => { setEditingWeapon(null); setShowForm(!showForm); }}>
-              {showForm ? 'Cerrar' : '+ Arma temporal'}
+              {showForm ? 'Cerrar' : '+ Nueva arma'}
             </Button>
           </div>
         }
@@ -117,36 +132,97 @@ export default function ArmasPage() {
         </div>
       )}
 
-      <div className="space-y-6">
-        {Array.from(grouped.entries()).map(([clase, subMap]) => (
-          <div key={clase}>
-            <h2 className="text-lg font-bold text-zinc-200 mb-3">{clase}</h2>
-            {Array.from(subMap.entries()).map(([subcat, items]) => (
-              <div key={subcat} className="mb-4">
-                <h3 className="text-sm font-medium text-zinc-400 mb-2">{subcat} ({items.length})</h3>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  {items
-                    .sort((a, b) => b.result.dpsEfectivo - a.result.dpsEfectivo)
-                    .map(({ weapon, result }) => (
-                      <WeaponCard
-                        key={weapon.id}
-                        weapon={weapon}
-                        calcResult={result}
-                        onEdit={() => handleEdit(weapon)}
-                        onDelete={() => {
-                          if (weapon.isDefault) { hideWeapon(weapon.id); toast('Arma oculta', 'info'); }
-                          else { deleteWeapon(weapon.id); toast('Arma eliminada', 'info'); }
-                        }}
-                        onDuplicate={() => { duplicateAsTemp(weapon.id); toast('Arma duplicada', 'success'); }}
-                        onReset={weapon.isDefault && isModified(weapon.id) ? () => { resetWeapon(weapon.id); toast('Arma reseteada', 'info'); } : undefined}
-                        isModified={weapon.isDefault ? isModified(weapon.id) : false}
-                      />
-                    ))}
+      <div className="space-y-8">
+        {/* Mis armas (user-created) */}
+        {allCustomResults.length > 0 && (
+          <section>
+            <div className="flex items-center gap-3 mb-4 border-b border-amber-800/40 pb-2">
+              <h2 className="text-base font-bold text-amber-400">Mis armas</h2>
+              <Badge variant="damage">{allCustomResults.length}</Badge>
+            </div>
+            <div className="space-y-6">
+              {Array.from(groupedCustom.entries()).map(([clase, subMap]) => (
+                <div key={clase}>
+                  <h3 className="text-lg font-bold text-zinc-200 mb-3">{clase}</h3>
+                  {Array.from(subMap.entries()).map(([subcat, items]) => (
+                    <div key={subcat} className="mb-4">
+                      <h4 className="text-sm font-medium text-zinc-400 mb-2">{subcat} ({items.length})</h4>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {items
+                          .sort((a, b) => b.result.dpsEfectivo - a.result.dpsEfectivo)
+                          .map(({ weapon, result }) => (
+                            <WeaponCard
+                              key={weapon.id}
+                              weapon={weapon}
+                              calcResult={result}
+                              onEdit={() => handleEdit(weapon)}
+                              onDelete={() => { deleteWeapon(weapon.id); toast('Arma eliminada', 'info'); }}
+                              onDuplicate={() => { duplicateAsTemp(weapon.id); toast('Arma duplicada', 'success'); }}
+                              isModified={false}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-            ))}
-          </div>
-        ))}
+              ))}
+            </div>
+            {customShowMore.hasMore && (
+              <button
+                onClick={customShowMore.showMore}
+                className="mt-4 w-full py-2 text-sm text-amber-400 hover:text-amber-300 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-amber-800/60 transition-colors cursor-pointer"
+              >
+                Mostrar mas ({customShowMore.totalCount - customShowMore.visibleCount} restantes)
+              </button>
+            )}
+          </section>
+        )}
+
+        {/* Armas base (preloaded) */}
+        {allBaseResults.length > 0 && (
+          <section>
+            <div className="flex items-center gap-3 mb-4 border-b border-zinc-700/60 pb-2">
+              <h2 className="text-base font-bold text-zinc-400">Armas base</h2>
+              <Badge variant="info">{allBaseResults.length}</Badge>
+            </div>
+            <div className="space-y-6">
+              {Array.from(groupedBase.entries()).map(([clase, subMap]) => (
+                <div key={clase}>
+                  <h3 className="text-lg font-bold text-zinc-200 mb-3">{clase}</h3>
+                  {Array.from(subMap.entries()).map(([subcat, items]) => (
+                    <div key={subcat} className="mb-4">
+                      <h4 className="text-sm font-medium text-zinc-400 mb-2">{subcat} ({items.length})</h4>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {items
+                          .sort((a, b) => b.result.dpsEfectivo - a.result.dpsEfectivo)
+                          .map(({ weapon, result }) => (
+                            <WeaponCard
+                              key={weapon.id}
+                              weapon={weapon}
+                              calcResult={result}
+                              onEdit={() => handleEdit(weapon)}
+                              onDelete={() => { hideWeapon(weapon.id); toast('Arma oculta', 'info'); }}
+                              onDuplicate={() => { duplicateAsTemp(weapon.id); toast('Arma duplicada', 'success'); }}
+                              onReset={isModified(weapon.id) ? () => { resetWeapon(weapon.id); toast('Arma reseteada', 'info'); } : undefined}
+                              isModified={isModified(weapon.id)}
+                            />
+                          ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
+            </div>
+            {baseShowMore.hasMore && (
+              <button
+                onClick={baseShowMore.showMore}
+                className="mt-4 w-full py-2 text-sm text-zinc-400 hover:text-zinc-300 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-zinc-700 transition-colors cursor-pointer"
+              >
+                Mostrar mas ({baseShowMore.totalCount - baseShowMore.visibleCount} restantes)
+              </button>
+            )}
+          </section>
+        )}
 
         {weapons.length === 0 && (
           <div className="text-center py-12 text-zinc-500">
