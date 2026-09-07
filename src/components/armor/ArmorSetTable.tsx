@@ -8,6 +8,7 @@ import type { DamageTypeName } from '@/types/weapon';
 interface ArmorSetTableProps {
   sets: CatalogArmorSet[];
   armorClass: number;
+  subclase?: string;
   onEdit: (set: CatalogArmorSet) => void;
   onDelete: (set: CatalogArmorSet) => void;
   onDuplicate: (set: CatalogArmorSet) => void;
@@ -18,7 +19,7 @@ interface ArmorSetTableProps {
 }
 
 export function ArmorSetTable({
-  sets, armorClass, onEdit, onDelete, onDuplicate,
+  sets, armorClass, subclase, onEdit, onDelete, onDuplicate,
   onReset, isModified, selectedIds, onToggleSelect,
 }: ArmorSetTableProps) {
   if (sets.length === 0) return null;
@@ -96,17 +97,28 @@ export function ArmorSetTable({
                   {Math.round(totalProt)}
                 </td>
                 <td className="py-2 px-3">
-                  <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                    {set.bonusConjunto.map((b, i) => (
-                      <span key={i} className="text-xs">
-                        <span className="text-zinc-400">{ARMOR_BONUS_LABELS[b.type]}:</span>{' '}
-                        <span className="text-amber-400 font-medium">+{b.value}</span>
-                      </span>
-                    ))}
-                    {set.bonusConjunto.length === 0 && (
-                      <span className="text-xs text-zinc-600">-</span>
-                    )}
-                  </div>
+                  {(() => {
+                    const subclaseBonus = subclase && set.bonusConjuntoPorSubclase?.[subclase];
+                    const bonuses = subclaseBonus || set.bonusConjunto;
+                    const isSubclaseSpecific = !!subclaseBonus;
+                    const hasMultipleSubclases = set.bonusConjuntoPorSubclase && Object.keys(set.bonusConjuntoPorSubclase).length > 0;
+                    return (
+                      <div className="flex flex-wrap gap-x-3 gap-y-0.5">
+                        {bonuses.map((b, i) => (
+                          <span key={i} className="text-xs">
+                            <span className="text-zinc-400">{ARMOR_BONUS_LABELS[b.type]}:</span>{' '}
+                            <span className={`font-medium ${isSubclaseSpecific ? 'text-cyan-400' : 'text-amber-400'}`}>+{b.value}</span>
+                          </span>
+                        ))}
+                        {bonuses.length === 0 && hasMultipleSubclases && (
+                          <span className="text-xs text-zinc-500 italic">Selecciona subclase</span>
+                        )}
+                        {bonuses.length === 0 && !hasMultipleSubclases && (
+                          <span className="text-xs text-zinc-600">-</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="py-2 px-3">
                   <div className="flex items-center gap-1">

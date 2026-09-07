@@ -25,11 +25,36 @@ export default function ArmaduraPage() {
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showHidden, setShowHidden] = useState(false);
+  const [claseFilter, setClaseFilter] = useState<'Todas' | 'Guerrero' | 'Arquero' | 'Mago'>('Todas');
+  const [subclaseFilter, setSubclaseFilter] = useState<string>('Todas');
 
   const armorClass = ARMOR_CLASSES[character.subclase as Subclase] ?? 1.30;
 
-  const allBaseSets = useMemo(() => sets.filter((s) => s.isDefault), [sets]);
-  const allCustomSets = useMemo(() => sets.filter((s) => !s.isDefault), [sets]);
+  const SUBCLASES_POR_CLASE: Record<string, string[]> = {
+    Guerrero: ['Caballero', 'Bárbaro'],
+    Arquero: ['Cazador', 'Tirador'],
+    Mago: ['Conjurador', 'Brujo'],
+  };
+
+  const subclaseOptions = claseFilter === 'Todas' ? [] : SUBCLASES_POR_CLASE[claseFilter] ?? [];
+
+  const allBaseSetsUnfiltered = useMemo(() => sets.filter((s) => s.isDefault), [sets]);
+  const allCustomSetsUnfiltered = useMemo(() => sets.filter((s) => !s.isDefault), [sets]);
+
+  const filterByClaseAndSubclase = (s: CatalogArmorSet) => {
+    if (claseFilter !== 'Todas' && s.clase !== claseFilter) return false;
+    if (subclaseFilter !== 'Todas' && s.subclase && s.subclase !== subclaseFilter) return false;
+    return true;
+  };
+
+  const allBaseSets = useMemo(() =>
+    allBaseSetsUnfiltered.filter(filterByClaseAndSubclase),
+    [allBaseSetsUnfiltered, claseFilter, subclaseFilter]
+  );
+  const allCustomSets = useMemo(() =>
+    allCustomSetsUnfiltered.filter(filterByClaseAndSubclase),
+    [allCustomSetsUnfiltered, claseFilter, subclaseFilter]
+  );
   const selectedSets = useMemo(() => sets.filter((s) => selectedIds.includes(s.id)), [sets, selectedIds]);
 
   const baseShowMore = useShowMore(allBaseSets);
@@ -67,7 +92,7 @@ export default function ArmaduraPage() {
     <div>
       <PageHeader
         title="Armaduras"
-        description={`${baseCount} base, ${customCount} personalizadas${hiddenCount > 0 ? `, ${hiddenCount} ocultas` : ''} — Clase de armadura: ${armorClass.toFixed(2)} (${character.subclase})`}
+        description={`${baseCount} base${claseFilter !== 'Todas' ? ` (${claseFilter})` : ''}, ${customCount} personalizadas${hiddenCount > 0 ? `, ${hiddenCount} ocultas` : ''} — Clase: ${armorClass.toFixed(2)} (${character.subclase})`}
         actions={
           <div className="flex gap-2">
             {hiddenCount > 0 && (
@@ -84,6 +109,54 @@ export default function ArmaduraPage() {
           </div>
         }
       />
+
+      {/* Filters */}
+      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-zinc-500">Clase:</span>
+          {(['Todas', 'Guerrero', 'Arquero', 'Mago'] as const).map((c) => (
+            <button
+              key={c}
+              onClick={() => { setClaseFilter(c); setSubclaseFilter('Todas'); }}
+              className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
+                claseFilter === c
+                  ? 'bg-amber-900/30 border-amber-700 text-amber-400'
+                  : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+        {subclaseOptions.length > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-500">Subclase:</span>
+            <button
+              onClick={() => setSubclaseFilter('Todas')}
+              className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
+                subclaseFilter === 'Todas'
+                  ? 'bg-cyan-900/30 border-cyan-700 text-cyan-400'
+                  : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+              }`}
+            >
+              Todas
+            </button>
+            {subclaseOptions.map((sc) => (
+              <button
+                key={sc}
+                onClick={() => setSubclaseFilter(sc)}
+                className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
+                  subclaseFilter === sc
+                    ? 'bg-cyan-900/30 border-cyan-700 text-cyan-400'
+                    : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
+                }`}
+              >
+                {sc}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Hidden sets panel */}
       {showHidden && hiddenCount > 0 && (
@@ -136,6 +209,7 @@ export default function ArmaduraPage() {
               <ArmorSetTable
                 sets={customSets}
                 armorClass={armorClass}
+                subclase={character.subclase}
                 onEdit={() => {}}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
@@ -165,6 +239,7 @@ export default function ArmaduraPage() {
               <ArmorSetTable
                 sets={baseSets}
                 armorClass={armorClass}
+                subclase={character.subclase}
                 onEdit={() => {}}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
