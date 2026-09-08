@@ -2,6 +2,9 @@
 
 import { useState } from 'react';
 import { Collapsible } from '@/components/ui/Collapsible';
+import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
+import { ImportModal } from '@/components/ui/ImportModal';
 import { BuildPersonaje } from '@/components/build/BuildPersonaje';
 import { BuildArma } from '@/components/build/BuildArma';
 import { BuildJoyeria } from '@/components/build/BuildJoyeria';
@@ -10,8 +13,13 @@ import { BuildDanos } from '@/components/build/BuildDanos';
 import { BuildProtecciones } from '@/components/build/BuildProtecciones';
 import { BuildSimulacion } from '@/components/build/BuildSimulacion';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { useCharacter } from '@/hooks/useCharacter';
 import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { useArmor } from '@/hooks/useArmor';
+import { useJewelry } from '@/hooks/useJewelry';
+import { encodeShareCode, stripWeapon } from '@/lib/share';
+import type { ShareResult, BuildPayload } from '@/lib/share';
+import type { Weapon } from '@/types/weapon';
 
 const TABS = [
   { id: 'build', label: 'Build' },
@@ -24,10 +32,75 @@ type TabId = (typeof TABS)[number]['id'];
 
 export default function BuildPage() {
   const [activeTab, setActiveTab] = useState<TabId>('build');
-  const { hasWeapon } = useBuildWeapon();
-  const { armorSet } = useArmor();
+  const [showImport, setShowImport] = useState(false);
+  const { toast } = useToast();
+  const { character, updateCharacter } = useCharacter();
+  const {
+    weapon, setWeapon, hasWeapon,
+    weaponMode, setWeaponMode,
+    secondaryWeapon, setSecondaryWeapon,
+    arrows, setArrows,
+  } = useBuildWeapon();
+  const { armorSet, loadPieces, updateSet } = useArmor();
+  const { jewelry, updatePiece } = useJewelry();
 
   const hasArmorData = Object.values(armorSet.pieces).some((p) => p && p.pba > 0);
+
+  const handleExportBuild = () => {
+    const payload: BuildPayload = {
+      character,
+      weapon: stripWeapon(weapon),
+      weaponMode,
+      armor: armorSet,
+      jewelry,
+    };
+    if (secondaryWeapon.nombre) {
+      payload.secondaryWeapon = stripWeapon(secondaryWeapon);
+    }
+    if (arrows.nombre) {
+      payload.arrows = arrows;
+    }
+
+    const code = encodeShareCode('build', payload);
+    navigator.clipboard.writeText(code).then(
+      () => toast('Build copiado al portapapeles', 'success'),
+      () => toast('Error al copiar', 'error'),
+    );
+  };
+
+  const handleImportBuild = (result: ShareResult) => {
+    const data = result.data as BuildPayload;
+
+    // Character
+    updateCharacter(data.character);
+
+    // Weapon
+    setWeapon({ ...data.weapon, id: 'build-weapon', createdAt: '', isDefault: false } as Weapon);
+    setWeaponMode(data.weaponMode || '2manos');
+    if (data.secondaryWeapon) {
+      setSecondaryWeapon({ ...data.secondaryWeapon, id: 'build-weapon-secondary', createdAt: '', isDefault: false } as Weapon);
+    }
+    if (data.arrows) {
+      setArrows(data.arrows);
+    }
+
+    // Armor
+    if (data.armor) {
+      const { pieces, ...armorRest } = data.armor;
+      loadPieces(pieces || {});
+      updateSet(armorRest);
+    }
+
+    // Jewelry
+    if (data.jewelry) {
+      const j = data.jewelry;
+      if (j.anillo1) updatePiece('anillo1', j.anillo1.bonuses || []);
+      if (j.anillo2) updatePiece('anillo2', j.anillo2.bonuses || []);
+      if (j.amuleto) updatePiece('amuleto', j.amuleto.bonuses || []);
+    }
+
+    toast('Build importado', 'success');
+  };
 
   const tabHasData: Record<TabId, boolean> = {
     build: false,
@@ -41,6 +114,12 @@ export default function BuildPage() {
       <PageHeader
         title="Build"
         description="Configura tu personaje completo: clase, arma, joyeria y armadura."
+        actions={
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar build</Button>
+            <Button size="sm" onClick={handleExportBuild}>Exportar build</Button>
+          </div>
+        }
       />
 
       {/* Tabs */}
@@ -99,6 +178,13 @@ export default function BuildPage() {
       {activeTab === 'simulacion' && (
         <BuildSimulacion />
       )}
+
+      <ImportModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        expectedType="build"
+        onImport={handleImportBuild}
+      />
     </div>
   );
 }

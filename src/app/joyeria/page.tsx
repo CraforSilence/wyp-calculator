@@ -9,6 +9,9 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/Toast';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { encodeShareCode } from '@/lib/share';
+import type { ShareResult } from '@/lib/share';
 import { DEFAULT_JEWELRY } from '@/data/default-jewelry';
 import type { JewelryItem } from '@/types/jewelry';
 
@@ -22,6 +25,7 @@ export default function JoyeriaPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<JewelryItem | null>(null);
   const [showHidden, setShowHidden] = useState(false);
+  const [showImport, setShowImport] = useState(false);
 
   const allBaseItems = useMemo(() => items.filter((j) => j.isDefault), [items]);
   const allCustomItems = useMemo(() => items.filter((j) => !j.isDefault), [items]);
@@ -52,6 +56,21 @@ export default function JoyeriaPage() {
     setShowForm(true);
   };
 
+  const handleShare = (item: JewelryItem) => {
+    const { id, createdAt, isDefault, ...data } = item;
+    const code = encodeShareCode('jewelry', data);
+    navigator.clipboard.writeText(code).then(
+      () => toast('Codigo copiado al portapapeles', 'success'),
+      () => toast('Error al copiar', 'error'),
+    );
+  };
+
+  const handleImport = (result: ShareResult) => {
+    const data = result.data as Omit<JewelryItem, 'id' | 'createdAt'>;
+    addItem(data);
+    toast('Joya importada', 'success');
+  };
+
   const handleDelete = (item: JewelryItem) => {
     if (item.isDefault) {
       hideItem(item.id);
@@ -77,6 +96,7 @@ export default function JoyeriaPage() {
             {(customCount > 0 || hiddenCount > 0) && (
               <Button variant="secondary" size="sm" onClick={resetAll}>Reset todo</Button>
             )}
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar</Button>
             <Button size="sm" onClick={() => { setEditingItem(null); setShowForm(!showForm); }}>
               {showForm ? 'Cerrar' : '+ Nueva joya'}
             </Button>
@@ -130,6 +150,7 @@ export default function JoyeriaPage() {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onDuplicate={(item) => { duplicateAsCustom(item.id); toast('Joya duplicada', 'success'); }}
+                onShare={handleShare}
               />
             </div>
             {customShowMore.hasMore && (
@@ -156,6 +177,7 @@ export default function JoyeriaPage() {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onDuplicate={(item) => { duplicateAsCustom(item.id); toast('Joya duplicada', 'success'); }}
+                onShare={handleShare}
                 onReset={(item) => { resetItem(item.id); toast('Joya reseteada', 'info'); }}
                 isModified={isModified}
               />
@@ -178,6 +200,13 @@ export default function JoyeriaPage() {
           </div>
         )}
       </div>
+
+      <ImportModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        expectedType="jewelry"
+        onImport={handleImport}
+      />
     </div>
   );
 }

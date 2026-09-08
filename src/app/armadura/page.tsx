@@ -12,6 +12,9 @@ import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/Toast';
 import { CATALOG_ARMOR_SETS } from '@/data/catalog-armor';
 import { ARMOR_CLASSES } from '@/lib/engine/constants';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { encodeShareCode } from '@/lib/share';
+import type { ShareResult } from '@/lib/share';
 import type { CatalogArmorSet } from '@/types/armor';
 import type { Subclase } from '@/types/character';
 
@@ -25,6 +28,7 @@ export default function ArmaduraPage() {
   const { toast } = useToast();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showHidden, setShowHidden] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [claseFilter, setClaseFilter] = useState<'Todas' | 'Guerrero' | 'Arquero' | 'Mago'>('Todas');
   const [subclaseFilter, setSubclaseFilter] = useState<string>('Todas');
 
@@ -83,6 +87,21 @@ export default function ArmaduraPage() {
     setSelectedIds((prev) => prev.filter((x) => x !== set.id));
   };
 
+  const handleShare = (set: CatalogArmorSet) => {
+    const { id, createdAt, isDefault, ...data } = set;
+    const code = encodeShareCode('armor', data);
+    navigator.clipboard.writeText(code).then(
+      () => toast('Codigo copiado al portapapeles', 'success'),
+      () => toast('Error al copiar', 'error'),
+    );
+  };
+
+  const handleImport = (result: ShareResult) => {
+    const data = result.data as Omit<CatalogArmorSet, 'id' | 'createdAt' | 'isDefault'>;
+    addSet({ ...data, isDefault: false });
+    toast('Set importado', 'success');
+  };
+
   const handleDuplicate = (set: CatalogArmorSet) => {
     duplicateAsCustom(set.id);
     toast('Set duplicado', 'success');
@@ -106,6 +125,7 @@ export default function ArmaduraPage() {
               </Button>
             )}
             <Button variant="secondary" size="sm" onClick={resetAll}>Reset todo</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar</Button>
           </div>
         }
       />
@@ -213,6 +233,7 @@ export default function ArmaduraPage() {
                 onEdit={() => {}}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
+                onShare={handleShare}
                 selectedIds={selectedIds}
                 onToggleSelect={toggleSelect}
               />
@@ -243,6 +264,7 @@ export default function ArmaduraPage() {
                 onEdit={() => {}}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
+                onShare={handleShare}
                 onReset={(set) => { resetSet(set.id); toast('Set reseteado', 'info'); }}
                 isModified={isModified}
                 selectedIds={selectedIds}
@@ -267,6 +289,13 @@ export default function ArmaduraPage() {
           </div>
         )}
       </div>
+
+      <ImportModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        expectedType="armor"
+        onImport={handleImport}
+      />
     </div>
   );
 }

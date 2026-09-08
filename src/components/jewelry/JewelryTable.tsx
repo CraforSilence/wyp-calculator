@@ -13,11 +13,12 @@ interface JewelryTableProps {
   onEdit: (item: JewelryItem) => void;
   onDelete: (item: JewelryItem) => void;
   onDuplicate: (item: JewelryItem) => void;
+  onShare?: (item: JewelryItem) => void;
   onReset?: (item: JewelryItem) => void;
   isModified?: (id: string) => boolean;
 }
 
-export function JewelryTable({ items, onEdit, onDelete, onDuplicate, onReset, isModified }: JewelryTableProps) {
+export function JewelryTable({ items, onEdit, onDelete, onDuplicate, onShare, onReset, isModified }: JewelryTableProps) {
   if (items.length === 0) return null;
 
   return (
@@ -63,6 +64,17 @@ export function JewelryTable({ items, onEdit, onDelete, onDuplicate, onReset, is
                 </td>
                 <td className="py-2 px-3">
                   <div className="flex items-center gap-1">
+                    {onShare && (
+                      <button
+                        onClick={() => onShare(item)}
+                        className="p-1 text-zinc-500 hover:text-emerald-400 transition-colors"
+                        title="Compartir"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+                        </svg>
+                      </button>
+                    )}
                     <button
                       onClick={() => onEdit(item)}
                       className="p-1 text-zinc-500 hover:text-amber-400 transition-colors"

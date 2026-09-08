@@ -13,6 +13,9 @@ import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/Toast';
 import { DEFAULT_WEAPONS } from '@/data/default-weapons';
 import { CLASE_SUBCLASES, SUBCATEGORIAS_POR_SUBCLASE, SUBCATEGORIAS_POR_CLASE } from '@/lib/engine/constants';
+import { ImportModal } from '@/components/ui/ImportModal';
+import { encodeShareCode, stripWeapon } from '@/lib/share';
+import type { ShareResult } from '@/lib/share';
 import type { Weapon, Subcategoria } from '@/types/weapon';
 import type { Clase, Subclase } from '@/types/character';
 
@@ -30,6 +33,7 @@ export default function ArmasPage() {
   const [claseFilter, setClaseFilter] = useState<'Todas' | Clase>('Todas');
   const [subclaseFilter, setSubclaseFilter] = useState<'Todas' | Subclase>('Todas');
   const [subcatFilter, setSubcatFilter] = useState<'Todas' | Subcategoria>('Todas');
+  const [showImport, setShowImport] = useState(false);
 
   type CalcItem = { weapon: Weapon; result: ReturnType<typeof calcWeaponDamage> };
 
@@ -99,6 +103,20 @@ export default function ArmasPage() {
     setShowForm(true);
   };
 
+  const handleShare = (weapon: Weapon) => {
+    const code = encodeShareCode('weapon', stripWeapon(weapon));
+    navigator.clipboard.writeText(code).then(
+      () => toast('Codigo copiado al portapapeles', 'success'),
+      () => toast('Error al copiar', 'error'),
+    );
+  };
+
+  const handleImport = (result: ShareResult) => {
+    const data = result.data as Omit<Weapon, 'id' | 'createdAt'>;
+    addWeapon(data);
+    toast('Arma importada', 'success');
+  };
+
   const tempCount = allCustomResults.length;
   const defaultCount = allBaseResults.length;
 
@@ -115,6 +133,7 @@ export default function ArmasPage() {
               </Button>
             )}
             <Button variant="secondary" size="sm" onClick={resetAll}>Reset todo</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar</Button>
             <Button size="sm" onClick={() => { setEditingWeapon(null); setShowForm(!showForm); }}>
               {showForm ? 'Cerrar' : '+ Nueva arma'}
             </Button>
@@ -256,6 +275,7 @@ export default function ArmasPage() {
                               onEdit={() => handleEdit(weapon)}
                               onDelete={() => { deleteWeapon(weapon.id); toast('Arma eliminada', 'info'); }}
                               onDuplicate={() => { duplicateAsTemp(weapon.id); toast('Arma duplicada', 'success'); }}
+                              onShare={() => handleShare(weapon)}
                               isModified={false}
                             />
                           ))}
@@ -301,6 +321,7 @@ export default function ArmasPage() {
                               onEdit={() => handleEdit(weapon)}
                               onDelete={() => { hideWeapon(weapon.id); toast('Arma oculta', 'info'); }}
                               onDuplicate={() => { duplicateAsTemp(weapon.id); toast('Arma duplicada', 'success'); }}
+                              onShare={() => handleShare(weapon)}
                               onReset={isModified(weapon.id) ? () => { resetWeapon(weapon.id); toast('Arma reseteada', 'info'); } : undefined}
                               isModified={isModified(weapon.id)}
                             />
@@ -329,6 +350,13 @@ export default function ArmasPage() {
           </div>
         )}
       </div>
+
+      <ImportModal
+        open={showImport}
+        onClose={() => setShowImport(false)}
+        expectedType="weapon"
+        onImport={handleImport}
+      />
     </div>
   );
 }
