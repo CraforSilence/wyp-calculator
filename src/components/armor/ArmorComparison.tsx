@@ -4,7 +4,7 @@ import { useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { DAMAGE_TYPE_LABELS, ALL_DAMAGE_TYPES, ARMOR_BONUS_LABELS } from '@/lib/engine/constants';
 import { calcTotalProtection } from '@/lib/engine/armor';
-import type { CatalogArmorSet, ArmorBonus } from '@/types/armor';
+import type { CatalogArmorSet, ArmorBonus, ArmorBonusType } from '@/types/armor';
 
 interface ArmorComparisonProps {
   sets: CatalogArmorSet[];
@@ -38,14 +38,33 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
     return m;
   }, [results]);
 
-  // Collect all unique bonus types across selected sets
+  /** Totaliza bonuses de piezas + conjunto para un set */
+  const getTotalBonuses = (set: CatalogArmorSet): ArmorBonus[] => {
+    const totals = new Map<ArmorBonusType, number>();
+    for (const piece of Object.values(set.pieces)) {
+      if (!piece) continue;
+      for (const b of piece.bonuses) {
+        totals.set(b.type, (totals.get(b.type) || 0) + b.value);
+      }
+    }
+    for (const b of set.bonusConjunto) {
+      totals.set(b.type, (totals.get(b.type) || 0) + b.value);
+    }
+    return Array.from(totals.entries()).map(([type, value]) => ({ type, value }));
+  };
+
+  // Collect all unique bonus types across selected sets (pieces + conjunto)
+  const totalBonusesPerSet = useMemo(() => {
+    return new Map(results.map((r) => [r.set.id, getTotalBonuses(r.set)]));
+  }, [results]);
+
   const allBonusTypes = useMemo(() => {
     const types = new Set<string>();
-    for (const r of results) {
-      for (const b of r.set.bonusConjunto) types.add(b.type);
+    for (const bonuses of totalBonusesPerSet.values()) {
+      for (const b of bonuses) types.add(b.type);
     }
     return Array.from(types);
-  }, [results]);
+  }, [totalBonusesPerSet]);
 
   const getBonusValue = (bonuses: ArmorBonus[], type: string) => {
     const b = bonuses.find((x) => x.type === type);
@@ -117,7 +136,7 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
         </Card>
 
         {allBonusTypes.length > 0 && (
-          <Card title="Bonus de Conjunto">
+          <Card title="Bonus Totales">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
@@ -129,19 +148,22 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {results.map(({ set }) => (
-                    <tr key={set.id} className="border-b border-zinc-800/50">
-                      <td className="py-1 px-2 text-zinc-200 truncate max-w-32">{set.nombre}</td>
-                      {allBonusTypes.map((t) => {
-                        const val = getBonusValue(set.bonusConjunto, t);
-                        return (
-                          <td key={t} className={`py-1 px-2 text-right tabular-nums ${val > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
-                            {val > 0 ? `+${val}` : '-'}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))}
+                  {results.map(({ set }) => {
+                    const bonuses = totalBonusesPerSet.get(set.id) || [];
+                    return (
+                      <tr key={set.id} className="border-b border-zinc-800/50">
+                        <td className="py-1 px-2 text-zinc-200 truncate max-w-32">{set.nombre}</td>
+                        {allBonusTypes.map((t) => {
+                          const val = getBonusValue(bonuses, t);
+                          return (
+                            <td key={t} className={`py-1 px-2 text-right tabular-nums ${val > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
+                              {val > 0 ? `+${val}` : '-'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

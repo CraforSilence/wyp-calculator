@@ -6,7 +6,7 @@ import { useJewelry } from '@/hooks/useJewelry';
 import { useArmor } from '@/hooks/useArmor';
 import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { simulateHits } from '@/lib/engine/simulation';
-import { DEFAULT_WEAPONS } from '@/data/default-weapons';
+import { useWeapons } from '@/hooks/useWeapons';
 import { ARMOR_CLASSES, CLASE_SUBCLASES, SUBCLASE_MAIN_STAT, CRIT_BASE, ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import { calcWeaponDamage } from '@/lib/engine/damage';
 import { Card } from '@/components/ui/Card';
@@ -58,6 +58,9 @@ export function BuildSimulacion() {
   const { jewelry } = useJewelry();
   const { armorSet: myArmor } = useArmor();
   const { weapon: myWeapon, hasWeapon } = useBuildWeapon();
+  const { weapons: allWeapons } = useWeapons();
+  const customWeapons = allWeapons.filter((w) => !w.isDefault);
+  const defaultWeapons = allWeapons.filter((w) => w.isDefault);
 
   const [simTab, setSimTab] = useState<SimTabId>('ofensiva');
 
@@ -100,7 +103,7 @@ export function BuildSimulacion() {
   const [defEnemyMainStat, setDefEnemyMainStat] = useState(100);
   const [defResult, setDefResult] = useState<SimulationResult | null>(null);
 
-  const enemyWeapon = DEFAULT_WEAPONS.find((w) => w.id === enemyWeaponId) || null;
+  const enemyWeapon = allWeapons.find((w) => w.id === enemyWeaponId) || null;
 
   const handleChangeDefEnemyClase = useCallback((clase: Clase) => {
     setDefEnemyClase(clase);
@@ -326,9 +329,20 @@ export function BuildSimulacion() {
                     className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
                   >
                     <option value="">Elegir arma...</option>
-                    {DEFAULT_WEAPONS.map((w) => (
-                      <option key={w.id} value={w.id}>[{w.subcategoria}] {w.nombre}</option>
-                    ))}
+                    {customWeapons.length > 0 && (
+                      <optgroup label="Mis armas">
+                        {customWeapons.map((w) => (
+                          <option key={w.id} value={w.id}>[{w.subcategoria}] {w.nombre}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {defaultWeapons.length > 0 && (
+                      <optgroup label="Armas base">
+                        {defaultWeapons.map((w) => (
+                          <option key={w.id} value={w.id}>[{w.subcategoria}] {w.nombre}</option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                   {enemyWeapon && (
                     <div className="mt-2 grid grid-cols-3 sm:grid-cols-5 gap-3 text-center text-sm">

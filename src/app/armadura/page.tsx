@@ -6,6 +6,7 @@ import { useShowMore } from '@/hooks/useShowMore';
 import { useCharacter } from '@/hooks/useCharacter';
 import { ArmorSetTable } from '@/components/armor/ArmorSetTable';
 import { ArmorComparison } from '@/components/armor/ArmorComparison';
+import { ArmorSetForm } from '@/components/armor/ArmorSetForm';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
@@ -20,7 +21,7 @@ import type { Subclase } from '@/types/character';
 
 export default function ArmaduraPage() {
   const {
-    sets, addSet, deleteSet,
+    sets, addSet, updateSet, deleteSet,
     hideSet, showSet, resetSet, resetAll,
     duplicateAsCustom, isModified, hiddenIds, hiddenCount,
   } = useArmorSets();
@@ -29,6 +30,8 @@ export default function ArmaduraPage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showHidden, setShowHidden] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editingSet, setEditingSet] = useState<CatalogArmorSet | null>(null);
   const [claseFilter, setClaseFilter] = useState<'Todas' | 'Guerrero' | 'Arquero' | 'Mago'>('Todas');
   const [subclaseFilter, setSubclaseFilter] = useState<string>('Todas');
 
@@ -107,6 +110,23 @@ export default function ArmaduraPage() {
     toast('Set duplicado', 'success');
   };
 
+  const handleSave = (setData: Omit<CatalogArmorSet, 'id' | 'createdAt'>) => {
+    if (editingSet) {
+      updateSet(editingSet.id, setData);
+      toast('Set actualizado', 'success');
+    } else {
+      addSet(setData);
+      toast('Set agregado', 'success');
+    }
+    setShowForm(false);
+    setEditingSet(null);
+  };
+
+  const handleEdit = (set: CatalogArmorSet) => {
+    setEditingSet(set);
+    setShowForm(true);
+  };
+
   return (
     <div>
       <PageHeader
@@ -126,9 +146,22 @@ export default function ArmaduraPage() {
             )}
             <Button variant="secondary" size="sm" onClick={resetAll}>Reset todo</Button>
             <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar</Button>
+            <Button size="sm" onClick={() => { setEditingSet(null); setShowForm(!showForm); }}>
+              {showForm ? 'Cerrar' : '+ Nuevo set'}
+            </Button>
           </div>
         }
       />
+
+      {showForm && (
+        <div className="mb-6">
+          <ArmorSetForm
+            editingSet={editingSet}
+            onSave={handleSave}
+            onCancel={() => { setShowForm(false); setEditingSet(null); }}
+          />
+        </div>
+      )}
 
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
@@ -230,7 +263,7 @@ export default function ArmaduraPage() {
                 sets={customSets}
                 armorClass={armorClass}
                 subclase={character.subclase}
-                onEdit={() => {}}
+                onEdit={handleEdit}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
                 onShare={handleShare}
@@ -261,7 +294,7 @@ export default function ArmaduraPage() {
                 sets={baseSets}
                 armorClass={armorClass}
                 subclase={character.subclase}
-                onEdit={() => {}}
+                onEdit={handleEdit}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
                 onShare={handleShare}

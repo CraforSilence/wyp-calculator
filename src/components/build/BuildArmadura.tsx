@@ -15,7 +15,8 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { HelpPopover } from '@/components/ui/HelpPopover';
 import { DEFAULT_ARMOR_SETS } from '@/data/default-armor';
-import type { ArmorSlot, ArmorBonusType, ArmorBonus, ArmorUpgrade, ProtectionQuality, DefaultArmorSet } from '@/types/armor';
+import { useArmorSets } from '@/hooks/useArmorSets';
+import type { ArmorSlot, ArmorBonusType, ArmorBonus, ArmorUpgrade, ProtectionQuality, CatalogArmorSet } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 
@@ -39,11 +40,23 @@ function getClase(subclase: string): Clase {
   return 'Guerrero';
 }
 
-function aggregateArmorBonuses(armorSet: ReturnType<typeof useArmor>['armorSet']): Partial<Record<ArmorBonusType, number>> {
+function aggregateAllBonuses(
+  armorSet: ReturnType<typeof useArmor>['armorSet'],
+  activePreset: CatalogArmorSet | null,
+  subclase: string,
+): Partial<Record<ArmorBonusType, number>> {
   const totals: Partial<Record<ArmorBonusType, number>> = {};
+  // Piece bonuses
   for (const piece of Object.values(armorSet.pieces)) {
     if (!piece) continue;
     for (const bonus of piece.bonuses || []) {
+      totals[bonus.type] = (totals[bonus.type] || 0) + bonus.value;
+    }
+  }
+  // Set bonuses (from active preset)
+  if (activePreset) {
+    const conjuntoBonuses = activePreset.bonusConjuntoPorSubclase?.[subclase] || activePreset.bonusConjunto;
+    for (const bonus of conjuntoBonuses) {
       totals[bonus.type] = (totals[bonus.type] || 0) + bonus.value;
     }
   }
@@ -53,7 +66,8 @@ function aggregateArmorBonuses(armorSet: ReturnType<typeof useArmor>['armorSet']
 export function BuildArmadura() {
   const { character } = useCharacter();
   const { armorSet, updateSlot, updateSet, loadPieces } = useArmor();
-  const [activePreset, setActivePreset] = useState<DefaultArmorSet | null>(null);
+  const { sets: savedSets } = useArmorSets();
+  const [activePreset, setActivePreset] = useState<CatalogArmorSet | null>(null);
 
   const clase = getClase(character.subclase);
   const slots = ARMOR_SLOTS_POR_CLASE[clase];
@@ -68,7 +82,7 @@ export function BuildArmadura() {
     return p && p.pba > 0;
   }).length;
 
-  const bonusTotals = useMemo(() => aggregateArmorBonuses(armorSet), [armorSet]);
+  const bonusTotals = useMemo(() => aggregateAllBonuses(armorSet, activePreset, character.subclase), [armorSet, activePreset, character.subclase]);
   const hasBonusTotals = Object.values(bonusTotals).some((v) => v && v > 0);
 
   const totalResistances = useMemo(() => {
@@ -104,27 +118,44 @@ export function BuildArmadura() {
       </Card>
 
       {/* Precargar set */}
-      {DEFAULT_ARMOR_SETS.filter((s) => s.clase === clase && (!s.subclase || s.subclase === character.subclase)).length > 0 && (
-        <Card className="mb-4">
-          <label className="text-xs text-zinc-400 font-medium mb-1 block">Precargar set de armadura</label>
-          <select
-            value={activePreset?.id || ''}
-            onChange={(e) => {
-              const found = DEFAULT_ARMOR_SETS.find((s) => s.id === e.target.value);
-              if (found) {
-                loadPieces(found.pieces);
-                setActivePreset(found);
-              }
-            }}
-            className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
-          >
-            <option value="" disabled>Elegir set para cargar...</option>
-            {DEFAULT_ARMOR_SETS.filter((s) => s.clase === clase && (!s.subclase || s.subclase === character.subclase)).map((s) => (
-              <option key={s.id} value={s.id}>{s.nombre}</option>
-            ))}
-          </select>
-        </Card>
-      )}
+      {(() => {
+        const defaultOptions = DEFAULT_ARMOR_SETS.filter((s) => s.clase === clase && (!s.subclase || s.subclase === character.subclase));
+        const customOptions = savedSets.filter((s) => !s.isDefault && s.clase === clase && (!s.subclase || s.subclase === character.subclase));
+        if (defaultOptions.length === 0 && customOptions.length === 0) return null;
+        return (
+          <Card className="mb-4">
+            <label className="text-xs text-zinc-400 font-medium mb-1 block">Precargar set de armadura</label>
+            <select
+              value={activePreset?.id || ''}
+              onChange={(e) => {
+                const found = savedSets.find((s) => s.id === e.target.value)
+                  || DEFAULT_ARMOR_SETS.find((s) => s.id === e.target.value);
+                if (found) {
+                  loadPieces(found.pieces);
+                  setActivePreset(found as CatalogArmorSet);
+                }
+              }}
+              className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
+            >
+              <option value="" disabled>Elegir set para cargar...</option>
+              {customOptions.length > 0 && (
+                <optgroup label="Mis sets">
+                  {customOptions.map((s) => (
+                    <option key={s.id} value={s.id}>{s.nombre}</option>
+                  ))}
+                </optgroup>
+              )}
+              {defaultOptions.length > 0 && (
+                <optgroup label="Sets base">
+                  {defaultOptions.map((s) => (
+                    <option key={s.id} value={s.id}>{s.nombre}</option>
+                  ))}
+                </optgroup>
+              )}
+            </select>
+          </Card>
+        );
+      })()}
 
       {/* Armor slot cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-4">
@@ -405,9 +436,17 @@ export function BuildArmadura() {
         </Card>
       )}
 
-      {/* Bonus totals summary */}
+      {/* Bonus totals summary (pieces + set) */}
       {hasBonusTotals && (
-        <Card title="Bonus Totales de Armadura" className="mb-4">
+        <Card
+          title={
+            <span className="flex items-center gap-2">
+              Bonus Totales de Armadura
+              {activePreset && <span className="text-xs text-zinc-500 font-normal">(piezas + conjunto: {activePreset.nombre})</span>}
+            </span>
+          }
+          className="mb-4"
+        >
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
             {ARMOR_BONUS_TYPES.filter((t) => bonusTotals[t]).map((t) => (
               <div key={t}>
@@ -418,34 +457,6 @@ export function BuildArmadura() {
           </div>
         </Card>
       )}
-
-      {/* Bonus de Conjunto */}
-      {activePreset && (() => {
-        const subclaseBonuses = activePreset.bonusConjuntoPorSubclase?.[character.subclase];
-        const bonuses = subclaseBonuses || activePreset.bonusConjunto;
-        if (bonuses.length === 0) return null;
-        return (
-          <Card
-            title={
-              <span className="flex items-center gap-2">
-                <span className="text-emerald-400">&#9670;</span>
-                Bonus de Conjunto — {activePreset.nombre}
-                {subclaseBonuses && <span className="text-xs text-zinc-500 font-normal">({character.subclase})</span>}
-              </span>
-            }
-            className="mb-4 border-emerald-800/50"
-          >
-            <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-              {bonuses.map((bonus, idx) => (
-                <div key={idx}>
-                  <span className="text-zinc-400">{ARMOR_BONUS_LABELS[bonus.type]}:</span>{' '}
-                  <span className="text-emerald-400 font-semibold">+{bonus.value}</span>
-                </div>
-              ))}
-            </div>
-          </Card>
-        );
-      })()}
 
       {/* Modificadores */}
       <Card title="Modificadores (habilidades activas)">

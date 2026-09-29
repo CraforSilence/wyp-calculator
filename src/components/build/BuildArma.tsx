@@ -12,7 +12,6 @@ import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useWeapons } from '@/hooks/useWeapons';
 import { useToast } from '@/components/ui/Toast';
-import { DEFAULT_WEAPONS } from '@/data/default-weapons';
 import type { Weapon, DamageTypeName, Velocidad, Rareza, Subcategoria, ArrowSet, WeaponMode } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 
@@ -127,10 +126,9 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
     setMuescaRows(weaponToMuescaRows(w));
   }, []);
 
-  const preloadOptions = DEFAULT_WEAPONS.map((w) => ({
-    value: w.id,
-    label: `[${w.clase[0]}] ${w.nombre}`,
-  }));
+  const { weapons: savedWeapons } = useWeapons();
+  const customOptions = savedWeapons.filter((w) => !w.isDefault);
+  const defaultOptions = savedWeapons.filter((w) => w.isDefault);
 
   useEffect(() => {
     const tiposDano: Partial<Record<DamageTypeName, [number, number]>> = {};
@@ -194,15 +192,26 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
               <select
                 value=""
                 onChange={(e) => {
-                  const found = DEFAULT_WEAPONS.find((w) => w.id === e.target.value);
+                  const found = savedWeapons.find((w) => w.id === e.target.value);
                   if (found) loadWeapon(found);
                 }}
                 className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
               >
                 <option value="" disabled>Elegir arma para cargar...</option>
-                {preloadOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
+                {customOptions.length > 0 && (
+                  <optgroup label="Mis armas">
+                    {customOptions.map((w) => (
+                      <option key={w.id} value={w.id}>[{w.clase[0]}] {w.nombre}</option>
+                    ))}
+                  </optgroup>
+                )}
+                {defaultOptions.length > 0 && (
+                  <optgroup label="Armas base">
+                    {defaultOptions.map((w) => (
+                      <option key={w.id} value={w.id}>[{w.clase[0]}] {w.nombre}</option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
             </div>
           )}

@@ -2,8 +2,30 @@
 
 import { ARMOR_BONUS_LABELS, DAMAGE_TYPE_LABELS, ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import { calcTotalProtection } from '@/lib/engine/armor';
-import type { CatalogArmorSet } from '@/types/armor';
+import type { CatalogArmorSet, ArmorBonus, ArmorBonusType } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
+
+/** Totaliza bonuses de piezas + conjunto, agrupando por tipo */
+function getTotalBonuses(set: CatalogArmorSet, subclase?: string): ArmorBonus[] {
+  const totals = new Map<ArmorBonusType, number>();
+
+  // Bonuses de cada pieza
+  for (const piece of Object.values(set.pieces)) {
+    if (!piece) continue;
+    for (const b of piece.bonuses) {
+      totals.set(b.type, (totals.get(b.type) || 0) + b.value);
+    }
+  }
+
+  // Bonuses de conjunto (o por subclase si aplica)
+  const subclaseBonus = subclase && set.bonusConjuntoPorSubclase?.[subclase];
+  const conjuntoBonuses = subclaseBonus || set.bonusConjunto;
+  for (const b of conjuntoBonuses) {
+    totals.set(b.type, (totals.get(b.type) || 0) + b.value);
+  }
+
+  return Array.from(totals.entries()).map(([type, value]) => ({ type, value }));
+}
 
 interface ArmorSetTableProps {
   sets: CatalogArmorSet[];
@@ -99,22 +121,20 @@ export function ArmorSetTable({
                 </td>
                 <td className="py-2 px-3">
                   {(() => {
-                    const subclaseBonus = subclase && set.bonusConjuntoPorSubclase?.[subclase];
-                    const bonuses = subclaseBonus || set.bonusConjunto;
-                    const isSubclaseSpecific = !!subclaseBonus;
+                    const allBonuses = getTotalBonuses(set, subclase);
                     const hasMultipleSubclases = set.bonusConjuntoPorSubclase && Object.keys(set.bonusConjuntoPorSubclase).length > 0;
                     return (
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-                        {bonuses.map((b, i) => (
+                        {allBonuses.map((b, i) => (
                           <span key={i} className="text-xs">
                             <span className="text-zinc-400">{ARMOR_BONUS_LABELS[b.type]}:</span>{' '}
-                            <span className={`font-medium ${isSubclaseSpecific ? 'text-cyan-400' : 'text-amber-400'}`}>+{b.value}</span>
+                            <span className="font-medium text-amber-400">+{b.value}</span>
                           </span>
                         ))}
-                        {bonuses.length === 0 && hasMultipleSubclases && (
+                        {allBonuses.length === 0 && hasMultipleSubclases && (
                           <span className="text-xs text-zinc-500 italic">Selecciona subclase</span>
                         )}
-                        {bonuses.length === 0 && !hasMultipleSubclases && (
+                        {allBonuses.length === 0 && !hasMultipleSubclases && (
                           <span className="text-xs text-zinc-600">-</span>
                         )}
                       </div>
@@ -123,6 +143,11 @@ export function ArmorSetTable({
                 </td>
                 <td className="py-2 px-3">
                   <div className="flex items-center gap-1">
+                    <button onClick={() => onEdit(set)} className="p-1 text-zinc-500 hover:text-amber-400 transition-colors" title="Editar">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
                     {onShare && (
                       <button onClick={() => onShare(set)} className="p-1 text-zinc-500 hover:text-emerald-400 transition-colors" title="Compartir">
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
