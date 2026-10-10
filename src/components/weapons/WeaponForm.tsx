@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
-import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE } from '@/lib/engine/constants';
-import type { Weapon, DamageTypeName, Velocidad, Rareza, Subcategoria } from '@/types/weapon';
+import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, isMuescaSpeedType } from '@/lib/engine/constants';
+import type { Weapon, DamageTypeName, MuescaType, Velocidad, Rareza, Subcategoria } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 
 interface DamageRow {
@@ -21,7 +21,7 @@ interface BonusRow {
 }
 
 interface MuescaRow {
-  tipo: DamageTypeName;
+  tipo: MuescaType;
   valor: number;
 }
 
@@ -72,7 +72,7 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
   const [muescaRows, setMuescaRows] = useState<MuescaRow[]>(() => {
     if (editingWeapon?.muescas) {
       return Object.entries(editingWeapon.muescas).map(([tipo, valor]) => ({
-        tipo: tipo as DamageTypeName, valor: valor as number,
+        tipo: tipo as MuescaType, valor: valor as number,
       }));
     }
     return [];
@@ -103,7 +103,7 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
       }
     }
 
-    const muescas: Partial<Record<DamageTypeName, number>> = {};
+    const muescas: Partial<Record<MuescaType, number>> = {};
     for (const row of muescaRows) {
       muescas[row.tipo] = (muescas[row.tipo] || 0) + row.valor;
     }
@@ -202,9 +202,9 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
           <div className="space-y-2">
             {muescaRows.map((row, i) => (
               <div key={i} className="flex gap-2 items-end">
-                <Select value={row.tipo} onChange={(e) => { const next = [...muescaRows]; next[i].tipo = e.target.value as DamageTypeName; setMuescaRows(next); }}
-                  options={ALL_DAMAGE_TYPES.map((t) => ({ value: t, label: DAMAGE_TYPE_LABELS[t] }))} />
-                <Input type="number" min={1} max={30} placeholder="Valor" value={row.valor || ''} onChange={(e) => { const next = [...muescaRows]; next[i].valor = Number(e.target.value); setMuescaRows(next); }} className="w-24" />
+                <Select value={row.tipo} onChange={(e) => { const next = [...muescaRows]; next[i].tipo = e.target.value as MuescaType; setMuescaRows(next); }}
+                  options={MUESCA_TYPES.map((t) => ({ value: t, label: MUESCA_TYPE_LABELS[t] }))} />
+                <Input type="number" min={1} max={isMuescaSpeedType(row.tipo) ? 100 : 30} placeholder={isMuescaSpeedType(row.tipo) ? '%' : 'Valor'} value={row.valor || ''} onChange={(e) => { const next = [...muescaRows]; next[i].valor = Number(e.target.value); setMuescaRows(next); }} className="w-24" />
                 <Button size="sm" variant="danger" onClick={() => setMuescaRows(muescaRows.filter((_, j) => j !== i))}>x</Button>
               </div>
             ))}

@@ -4,6 +4,12 @@ export type DamageTypeName =
   | 'punzante' | 'aplastante' | 'cortante'
   | 'electrico' | 'hielo' | 'fuego';
 
+/** Tipos de muesca no-dano (modificadores de velocidad) */
+export type MuescaSpeedType = 'attackSpeed' | 'castSpeed';
+
+/** Una muesca puede dar dano de un tipo, o velocidad de ataque/invocacion */
+export type MuescaType = DamageTypeName | MuescaSpeedType;
+
 export type Velocidad = 'lenta' | 'media' | 'rapida';
 export type Rareza = 'Épica' | 'Mágica' | 'Legendaria' | 'Arcana';
 export type Subcategoria =
@@ -26,7 +32,7 @@ export interface Weapon {
   atributoClasePct: number;
   tiposDano: Partial<Record<DamageTypeName, [number, number]>>;
   bonusDano: Partial<Record<DamageTypeName, number>>;
-  muescas: Partial<Record<DamageTypeName, number>>;
+  muescas: Partial<Record<MuescaType, number>>;
   notas: string;
   isDefault?: boolean;
   createdAt: string;
@@ -52,6 +58,7 @@ export interface WeaponCalcResult {
   critMult: number;
   velBase: number;
   attackSpeedPct: number;
+  castSpeedPct: number;
   velEfectiva: number;
   golpesPorSeg: number;
   dpsEfectivo: number;

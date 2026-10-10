@@ -264,7 +264,7 @@ export function BuildDanos() {
 
       {/* Detalle de combate */}
       <Card title="Detalle de Combate">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 text-sm">
           <div>
             <span className="text-xs text-zinc-500 block">Vel. Base</span>
             <span className="text-zinc-200">{mainCalc.velBase}s</span>
@@ -272,6 +272,10 @@ export function BuildDanos() {
           <div>
             <span className="text-xs text-zinc-500 block">Bonus Vel. Ataque</span>
             <span className="text-zinc-200">{mainCalc.attackSpeedPct}%</span>
+          </div>
+          <div>
+            <span className="text-xs text-zinc-500 block">Bonus Vel. Invocación</span>
+            <span className="text-zinc-200">{mainCalc.castSpeedPct}%</span>
           </div>
           <div>
             <span className="text-xs text-zinc-500 block">Vel. Efectiva</span>

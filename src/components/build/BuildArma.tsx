@@ -6,13 +6,13 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Collapsible } from '@/components/ui/Collapsible';
-import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE } from '@/lib/engine/constants';
+import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, isMuescaSpeedType } from '@/lib/engine/constants';
 import { HelpPopover } from '@/components/ui/HelpPopover';
 import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useWeapons } from '@/hooks/useWeapons';
 import { useToast } from '@/components/ui/Toast';
-import type { Weapon, DamageTypeName, Velocidad, Rareza, Subcategoria, ArrowSet, WeaponMode } from '@/types/weapon';
+import type { Weapon, DamageTypeName, MuescaType, Velocidad, Rareza, Subcategoria, ArrowSet, WeaponMode } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 
 interface DamageRow {
@@ -27,7 +27,7 @@ interface BonusRow {
 }
 
 interface MuescaRow {
-  tipo: DamageTypeName;
+  tipo: MuescaType;
   valor: number;
 }
 
@@ -68,7 +68,7 @@ function weaponToBonusRows(w: Weapon): BonusRow[] {
 function weaponToMuescaRows(w: Weapon): MuescaRow[] {
   if (w.muescas && Object.keys(w.muescas).length > 0) {
     return Object.entries(w.muescas).map(([tipo, valor]) => ({
-      tipo: tipo as DamageTypeName, valor: valor as number,
+      tipo: tipo as MuescaType, valor: valor as number,
     }));
   }
   return [];
@@ -158,7 +158,7 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
       }
     }
 
-    const muescas: Partial<Record<DamageTypeName, number>> = {};
+    const muescas: Partial<Record<MuescaType, number>> = {};
     for (const row of muescaRows) {
       muescas[row.tipo] = (muescas[row.tipo] || 0) + row.valor;
     }
@@ -283,7 +283,7 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
         {/* Card: Muescas */}
         <Card title={
           <span className="flex items-center justify-between w-full">
-            <span className="flex items-center gap-1">Muescas <HelpPopover text="Gemas incrustadas en el arma. Agregan dano especial que solo es reducido por el Factor de Proteccion (FP), no por la armadura completa." /></span>
+            <span className="flex items-center gap-1">Muescas <HelpPopover text="Gemas incrustadas en el arma. Las de dano agregan dano especial que solo es reducido por el Factor de Proteccion (FP), no por la armadura completa. Las de Vel. Ataque / Vel. Invocacion agregan % de velocidad." /></span>
             {muescaRows.length < 3 && (
               <Button size="sm" variant="ghost" onClick={() => setMuescaRows([...muescaRows, { tipo: 'fuego', valor: 0 }])}>+ Muesca</Button>
             )}
@@ -292,9 +292,9 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
           <div className="space-y-2">
             {muescaRows.map((row, i) => (
               <div key={i} className="flex gap-2 items-end">
-                <Select tooltip="Tipo de dano de la gema" value={row.tipo} onChange={(e) => { const next = [...muescaRows]; next[i] = { ...next[i], tipo: e.target.value as DamageTypeName }; setMuescaRows(next); }}
-                  options={ALL_DAMAGE_TYPES.map((t) => ({ value: t, label: DAMAGE_TYPE_LABELS[t] }))} />
-                <Input tooltip="Nivel de la gema (1-30)" type="number" min={1} max={30} placeholder="Valor" value={row.valor || ''} onChange={(e) => { const next = [...muescaRows]; next[i] = { ...next[i], valor: Number(e.target.value) }; setMuescaRows(next); }} className="w-24" />
+                <Select tooltip="Tipo de la gema: dano o velocidad" value={row.tipo} onChange={(e) => { const next = [...muescaRows]; next[i] = { ...next[i], tipo: e.target.value as MuescaType }; setMuescaRows(next); }}
+                  options={MUESCA_TYPES.map((t) => ({ value: t, label: MUESCA_TYPE_LABELS[t] }))} />
+                <Input tooltip={isMuescaSpeedType(row.tipo) ? 'Porcentaje de velocidad de la gema' : 'Nivel de la gema (1-30)'} type="number" min={1} max={isMuescaSpeedType(row.tipo) ? 100 : 30} placeholder={isMuescaSpeedType(row.tipo) ? '%' : 'Valor'} value={row.valor || ''} onChange={(e) => { const next = [...muescaRows]; next[i] = { ...next[i], valor: Number(e.target.value) }; setMuescaRows(next); }} className="w-24" />
                 <Button size="sm" variant="danger" onClick={() => setMuescaRows(muescaRows.filter((_, j) => j !== i))}>x</Button>
               </div>
             ))}

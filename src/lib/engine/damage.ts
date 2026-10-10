@@ -1,7 +1,7 @@
 import type { CharacterProfile } from '@/types/character';
 import type { Weapon, WeaponCalcResult, ArrowSet } from '@/types/weapon';
 import type { JewelrySet } from '@/types/jewelry';
-import { ATTRIBUTE_MULTIPLIERS, SUBCLASE_MAIN_STAT, VELOCIDADES, SUBCATEGORIA_TO_CATEGORIA, CRIT_BASE } from './constants';
+import { ATTRIBUTE_MULTIPLIERS, SUBCLASE_MAIN_STAT, VELOCIDADES, SUBCATEGORIA_TO_CATEGORIA, CRIT_BASE, isMuescaSpeedType } from './constants';
 import { aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import { roundTo } from '../utils';
 
@@ -25,6 +25,17 @@ const JEWELRY_DAMAGE_MAP: Record<string, string> = {
   dano_hielo: 'hielo',
   dano_fuego: 'fuego',
 };
+
+/** Separa las muescas de velocidad (% ataque / % invocación) del resto */
+function splitMuescaSpeeds(muescas: Weapon['muescas']): { attackSpeed: number; castSpeed: number } {
+  let attackSpeed = 0, castSpeed = 0;
+  for (const [tipo, valor] of Object.entries(muescas)) {
+    if (!valor) continue;
+    if (tipo === 'attackSpeed') attackSpeed += valor;
+    else if (tipo === 'castSpeed') castSpeed += valor;
+  }
+  return { attackSpeed, castSpeed };
+}
 
 // Merge arrow damage types into weapon damage types
 function mergeArrowDamage(
@@ -135,9 +146,9 @@ export function calcWeaponDamage(
   // Track special damage (muescas + jewelry flat) — reduced only by PF in combat
   const specialDamagePerType: Record<string, number> = {};
 
-  // Paso 5: Muescas planas (special damage)
+  // Paso 5: Muescas planas (special damage) — las de velocidad no suman daño
   for (const [tipo, valor] of Object.entries(muescas)) {
-    if (!valor) continue;
+    if (!valor || isMuescaSpeedType(tipo)) continue;
     specialDamagePerType[tipo] = (specialDamagePerType[tipo] || 0) + valor;
     if (resultado[tipo]) {
       resultado[tipo] = [resultado[tipo][0] + valor, resultado[tipo][1] + valor];
@@ -162,9 +173,11 @@ export function calcWeaponDamage(
   const finalMin = Math.floor(Object.values(resultado).reduce((sum, v) => sum + v[0], 0));
   const finalMax = Math.floor(Object.values(resultado).reduce((sum, v) => sum + v[1], 0));
 
-  // DPS — sumar attackSpeed de joyería
+  // DPS — sumar attackSpeed de joyería y de muescas
+  const muescaSpeeds = splitMuescaSpeeds(muescas);
   const velBase = VELOCIDADES[weapon.velocidad] ?? 2.20;
-  const attackSpeedPct = weapon.attackSpeedPct + (jBonus.attackSpeed || 0);
+  const attackSpeedPct = weapon.attackSpeedPct + (jBonus.attackSpeed || 0) + muescaSpeeds.attackSpeed;
+  const castSpeedPct = (jBonus.castSpeed || 0) + muescaSpeeds.castSpeed;
   const golpesPorSeg = (1.0 / velBase) * (1 + attackSpeedPct / 100);
   const velEfectiva = 1.0 / golpesPorSeg;
 
@@ -199,6 +212,7 @@ export function calcWeaponDamage(
     critMult: roundTo(critMultTotal, 2),
     velBase,
     attackSpeedPct,
+    castSpeedPct,
     velEfectiva: roundTo(velEfectiva, 3),
     golpesPorSeg: roundTo(golpesPorSeg, 4),
     dpsEfectivo: roundTo(dpsEfectivo, 1),
@@ -242,7 +256,7 @@ export function calcDualDamage(
     if (valor) mergedBonusDano[tipo] = (mergedBonusDano[tipo] || 0) + valor;
   }
 
-  // Merge muescas
+  // Merge muescas (incluye las de velocidad: se suman las de ambas armas)
   const mergedMuescas: Partial<Record<string, number>> = {};
   for (const [tipo, valor] of Object.entries(primary.muescas)) {
     if (valor) mergedMuescas[tipo] = (mergedMuescas[tipo] || 0) + valor;
@@ -274,7 +288,8 @@ export function calcDualDamage(
   const velSecondary = VELOCIDADES[secondary.velocidad] ?? 2.20;
   const velBase = (velPrimary + velSecondary) / 2;
   const jBonus = jewelry ? aggregateJewelryBonuses(jewelry) : {};
-  const attackSpeedPct = mergedWeapon.attackSpeedPct + (jBonus.attackSpeed || 0);
+  const attackSpeedPct = mergedWeapon.attackSpeedPct + (jBonus.attackSpeed || 0)
+    + splitMuescaSpeeds(mergedWeapon.muescas).attackSpeed;
   const golpesPorSeg = (1.0 / velBase) * (1 + attackSpeedPct / 100);
   const velEfectiva = 1.0 / golpesPorSeg;
 

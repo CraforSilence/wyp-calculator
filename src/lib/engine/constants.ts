@@ -1,6 +1,6 @@
 import type { Clase, Subclase, MainStat } from '@/types/character';
 import type { ArmorSlot, ArmorBonusType, ProtectionQuality } from '@/types/armor';
-import type { DamageTypeName } from '@/types/weapon';
+import type { DamageTypeName, MuescaSpeedType, MuescaType } from '@/types/weapon';
 import type { JewelryBonusType } from '@/types/jewelry';
 
 // Multiplicador de atributo por subclase
@@ -92,6 +92,24 @@ export const DAMAGE_TYPE_LABELS: Record<DamageTypeName, string> = {
   hielo: 'Hielo',
   fuego: 'Fuego',
 };
+
+// Muescas: tipos de velocidad (no son daño, son % de velocidad)
+export const MUESCA_SPEED_TYPES: MuescaSpeedType[] = ['attackSpeed', 'castSpeed'];
+
+// Muescas: todos los tipos seleccionables (6 daños + 2 velocidades)
+export const MUESCA_TYPES: MuescaType[] = [...ALL_DAMAGE_TYPES, ...MUESCA_SPEED_TYPES];
+
+// Labels para muescas en UI
+export const MUESCA_TYPE_LABELS: Record<MuescaType, string> = {
+  ...DAMAGE_TYPE_LABELS,
+  attackSpeed: 'Vel. Ataque %',
+  castSpeed: 'Vel. Invocación %',
+};
+
+/** true si la muesca es un modificador de velocidad (no daño) */
+export function isMuescaSpeedType(tipo: string): tipo is MuescaSpeedType {
+  return (MUESCA_SPEED_TYPES as string[]).includes(tipo);
+}
 
 // Iconos/emojis por tipo de daño para UI
 export const DAMAGE_TYPE_ICONS: Record<DamageTypeName, string> = {
