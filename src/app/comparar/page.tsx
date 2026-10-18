@@ -71,7 +71,7 @@ export default function CompararPage() {
                     <th className="py-2 px-2 text-right">s/g</th>
                     <th className="py-2 px-2 text-right">g/s</th>
                     <th className="py-2 px-2 text-right font-bold text-amber-500">DPS</th>
-                    <th className="py-2 px-2 text-right">Riposte</th>
+                    <th className="py-2 px-2 text-right">Habilidad</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -86,7 +86,17 @@ export default function CompararPage() {
                       <td className="py-2 px-2 text-right text-zinc-400">{result.velEfectiva}</td>
                       <td className="py-2 px-2 text-right text-zinc-400">{result.golpesPorSeg}</td>
                       <td className="py-2 px-2 text-right font-bold text-amber-400">{result.dpsEfectivo}</td>
-                      <td className="py-2 px-2 text-right text-red-400">{result.riposteDmg ?? '-'}</td>
+                      <td className="py-2 px-2 text-right whitespace-nowrap">
+                        {result.riposteDmg ? (
+                          <><span className="text-xs text-zinc-500">Riposte</span> <span className="text-red-400">{result.riposteDmg}</span></>
+                        ) : result.impactoVigoroso ? (
+                          <><span className="text-xs text-zinc-500">Impacto Vig.</span> <span className="text-orange-400">{result.impactoVigoroso.min}-{result.impactoVigoroso.max}</span></>
+                        ) : result.cruzDelSur ? (
+                          <><span className="text-xs text-zinc-500">Cruz del Sur</span> <span className="text-sky-400">{result.cruzDelSur.min}-{result.cruzDelSur.max}</span></>
+                        ) : (
+                          <span className="text-zinc-600">-</span>
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
