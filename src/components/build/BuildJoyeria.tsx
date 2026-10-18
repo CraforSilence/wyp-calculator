@@ -17,11 +17,23 @@ const SLOT_LABELS: Record<JewelrySlot, string> = {
 const MAX_BONUSES = 5;
 
 export function BuildJoyeria() {
-  const { jewelry, addBonus, removeBonus, updateBonus } = useJewelry();
+  const { jewelry, addBonus, removeBonus, updateBonus, clearPiece, clearAll } = useJewelry();
   const totals = aggregateJewelryBonuses(jewelry);
+  const hasAnyBonus = Object.values(jewelry).some((p) => p.bonuses.length > 0);
 
   return (
     <div>
+      {hasAnyBonus && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={clearAll}
+            className="text-xs text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1 rounded transition-colors"
+            title="Borrar los bonus de las 3 piezas"
+          >
+            Limpiar joyeria
+          </button>
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-3">
         {(['anillo1', 'anillo2', 'amuleto'] as JewelrySlot[]).map((slot) => {
           const piece = jewelry[slot];
@@ -29,9 +41,20 @@ export function BuildJoyeria() {
 
           return (
             <Card key={slot} title={
-              <span className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={JEWELRY_ICONS[slot]} alt={SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
-                {SLOT_LABELS[slot]}
+              <span className="flex items-center justify-between w-full gap-2">
+                <span className="flex items-center gap-2">
+                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={JEWELRY_ICONS[slot]} alt={SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
+                  {SLOT_LABELS[slot]}
+                </span>
+                {piece.bonuses.length > 0 && (
+                  <button
+                    onClick={() => clearPiece(slot)}
+                    className="text-xs font-normal text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1 rounded transition-colors"
+                    title="Borrar los bonus de esta pieza"
+                  >
+                    Limpiar
+                  </button>
+                )}
               </span>
             }>
               <div className="flex flex-col gap-2">

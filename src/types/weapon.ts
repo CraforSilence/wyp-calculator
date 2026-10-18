@@ -64,6 +64,7 @@ export interface WeaponCalcResult {
   dpsEfectivo: number;
   riposteDmg: number | null;
   impactoVigoroso: { min: number; max: number; prom: number } | null;
+  cruzDelSur: { min: number; max: number; prom: number } | null;
   desglose: Record<string, [number, number]>;
   specialDamagePerType: Record<string, number>;
 }

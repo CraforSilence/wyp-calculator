@@ -239,7 +239,7 @@ export function BuildDanos() {
       <DamageBreakdown calc={mainCalc} />
 
       {/* Habilidades especiales */}
-      {(mainCalc.riposteDmg || mainCalc.impactoVigoroso) && (
+      {(mainCalc.riposteDmg || mainCalc.impactoVigoroso || mainCalc.cruzDelSur) && (
         <Card title="Habilidades Especiales">
           <div className="flex flex-wrap gap-6">
             {mainCalc.riposteDmg && (
@@ -256,6 +256,15 @@ export function BuildDanos() {
                   {mainCalc.impactoVigoroso.min} - {mainCalc.impactoVigoroso.max}
                 </div>
                 <div className="text-xs text-zinc-600">prom: {mainCalc.impactoVigoroso.prom}</div>
+              </div>
+            )}
+            {mainCalc.cruzDelSur && (
+              <div>
+                <div className="text-xs text-zinc-500 mb-1">Cruz del Sur</div>
+                <div className="text-lg font-bold text-sky-400">
+                  {mainCalc.cruzDelSur.min} - {mainCalc.cruzDelSur.max}
+                </div>
+                <div className="text-xs text-zinc-600">prom: {mainCalc.cruzDelSur.prom}</div>
               </div>
             )}
           </div>

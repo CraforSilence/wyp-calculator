@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useCallback } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useJewelry } from '@/hooks/useJewelry';
 import { useArmor } from '@/hooks/useArmor';
@@ -53,6 +54,17 @@ function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
   return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [], upgrades: [] };
 }
 
+function ClearButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className="text-xs text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1 rounded transition-colors"
+    >
+      {label}
+    </button>
+  );
+}
+
 export function BuildSimulacion() {
   const { character } = useCharacter();
   const { jewelry } = useJewelry();
@@ -62,53 +74,67 @@ export function BuildSimulacion() {
   const customWeapons = allWeapons.filter((w) => !w.isDefault);
   const defaultWeapons = allWeapons.filter((w) => w.isDefault);
 
-  const [simTab, setSimTab] = useState<SimTabId>('ofensiva');
+  const [simTab, setSimTab] = useLocalStorage<SimTabId>('regnum-sim-tab', 'ofensiva');
 
   // --- Offensive state: enemy armor ---
-  const [enemyArmor, setEnemyArmor] = useState<ArmorSet>(EMPTY_ARMOR);
-  const [enemyClase, setEnemyClase] = useState<Clase>('Guerrero');
-  const [enemySubclase, setEnemySubclase] = useState<Subclase>('Bárbaro');
-  const [offResult, setOffResult] = useState<SimulationResult | null>(null);
+  const [enemyArmor, setEnemyArmor] = useLocalStorage<ArmorSet>('regnum-sim-enemy-armor', EMPTY_ARMOR);
+  const [enemyClase, setEnemyClase] = useLocalStorage<Clase>('regnum-sim-enemy-clase', 'Guerrero');
+  const [enemySubclase, setEnemySubclase] = useLocalStorage<Subclase>('regnum-sim-enemy-subclase', 'Bárbaro');
+  const [offResult, setOffResult] = useLocalStorage<SimulationResult | null>('regnum-sim-off-result', null);
 
   const handleChangeEnemyClase = useCallback((clase: Clase) => {
     setEnemyClase(clase);
     setEnemySubclase(CLASE_SUBCLASES[clase][0]);
-  }, []);
+  }, [setEnemyClase, setEnemySubclase]);
 
   const handleUpdateEnemySlot = useCallback((slot: ArmorSlot, updates: Partial<ArmorPiece>) => {
     setEnemyArmor((prev) => {
       const existing = prev.pieces[slot] || makeEmptyPiece(slot);
       return { ...prev, pieces: { ...prev.pieces, [slot]: { ...existing, ...updates, slot } } };
     });
-  }, []);
+  }, [setEnemyArmor]);
 
   const handleUpdateEnemySet = useCallback((updates: Partial<Omit<ArmorSet, 'pieces'>>) => {
     setEnemyArmor((prev) => ({ ...prev, ...updates }));
-  }, []);
+  }, [setEnemyArmor]);
 
   const handleLoadArmorPreset = useCallback((armorSet: ArmorSet, clase: Clase, subclase: Subclase) => {
     setEnemyArmor(armorSet);
     setEnemyClase(clase);
     setEnemySubclase(subclase);
-  }, []);
+  }, [setEnemyArmor, setEnemyClase, setEnemySubclase]);
 
   // --- Enemy jewelry (shared between tabs) ---
-  const [enemyJewelry, setEnemyJewelry] = useState<JewelrySet>(EMPTY_JEWELRY);
+  const [enemyJewelry, setEnemyJewelry] = useLocalStorage<JewelrySet>('regnum-sim-enemy-jewelry', EMPTY_JEWELRY);
   const enemyJewelryBonusCount = Object.values(enemyJewelry).reduce((s, p) => s + p.bonuses.length, 0);
 
   // --- Defensive state: enemy weapon + attacker profile ---
-  const [enemyWeaponId, setEnemyWeaponId] = useState('');
-  const [defEnemyClase, setDefEnemyClase] = useState<Clase>('Guerrero');
-  const [defEnemySubclase, setDefEnemySubclase] = useState<Subclase>('Bárbaro');
-  const [defEnemyMainStat, setDefEnemyMainStat] = useState(100);
-  const [defResult, setDefResult] = useState<SimulationResult | null>(null);
+  const [enemyWeaponId, setEnemyWeaponId] = useLocalStorage<string>('regnum-sim-enemy-weapon', '');
+  const [defEnemyClase, setDefEnemyClase] = useLocalStorage<Clase>('regnum-sim-def-clase', 'Guerrero');
+  const [defEnemySubclase, setDefEnemySubclase] = useLocalStorage<Subclase>('regnum-sim-def-subclase', 'Bárbaro');
+  const [defEnemyMainStat, setDefEnemyMainStat] = useLocalStorage<number>('regnum-sim-def-mainstat', 100);
+  const [defResult, setDefResult] = useLocalStorage<SimulationResult | null>('regnum-sim-def-result', null);
 
   const enemyWeapon = allWeapons.find((w) => w.id === enemyWeaponId) || null;
 
   const handleChangeDefEnemyClase = useCallback((clase: Clase) => {
     setDefEnemyClase(clase);
     setDefEnemySubclase(CLASE_SUBCLASES[clase][0]);
-  }, []);
+  }, [setDefEnemyClase, setDefEnemySubclase]);
+
+  // --- Limpiar ---
+  const clearEnemyArmor = () => {
+    setEnemyArmor(EMPTY_ARMOR);
+    setOffResult(null);
+  };
+  const clearEnemyJewelry = () => setEnemyJewelry(EMPTY_JEWELRY);
+  const clearEnemyAttacker = () => {
+    setEnemyWeaponId('');
+    setDefEnemyClase('Guerrero');
+    setDefEnemySubclase('Bárbaro');
+    setDefEnemyMainStat(100);
+    setDefResult(null);
+  };
 
   // Build enemy character profile for defensive simulation
   const enemyAttackerProfile: CharacterProfile = {
@@ -220,6 +246,10 @@ export function BuildSimulacion() {
               </Card>
 
               {/* Armadura enemiga */}
+              <div className="flex justify-end gap-2">
+                <ClearButton onClick={clearEnemyArmor} label="Limpiar armadura enemiga" />
+                <ClearButton onClick={clearEnemyJewelry} label="Limpiar joyeria enemiga" />
+              </div>
               <Collapsible title={`Armadura Enemiga (${enemyArmorPieceCount} piezas)`} defaultOpen={enemyArmorPieceCount === 0}>
                 <EnemyArmorEditor
                   armorSet={enemyArmor}
@@ -283,6 +313,11 @@ export function BuildSimulacion() {
                   {myArmor.generalResistance.magico > 0 && <span> &middot; Res.M {myArmor.generalResistance.magico}%</span>}
                 </div>
               </Card>
+
+              <div className="flex justify-end gap-2">
+                <ClearButton onClick={clearEnemyAttacker} label="Limpiar atacante enemigo" />
+                <ClearButton onClick={clearEnemyJewelry} label="Limpiar joyeria enemiga" />
+              </div>
 
               {/* Perfil atacante enemigo */}
               <Card title={<span className="flex items-center gap-1">Perfil Atacante Enemigo <HelpPopover text="Define la clase, subclase y stat principal del enemigo que te ataca. Afecta el dano que genera su arma." /></span>}>

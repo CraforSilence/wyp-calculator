@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { Collapsible } from '@/components/ui/Collapsible';
 import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, isMuescaSpeedType } from '@/lib/engine/constants';
 import { HelpPopover } from '@/components/ui/HelpPopover';
-import { useBuildWeapon } from '@/hooks/useBuildWeapon';
+import { useBuildWeapon, DEFAULT_WEAPON, DEFAULT_ARROWS } from '@/hooks/useBuildWeapon';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useWeapons } from '@/hooks/useWeapons';
 import { useToast } from '@/components/ui/Toast';
@@ -178,11 +178,16 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
     <div className="space-y-4">
       {/* Card: Datos del Arma */}
       <Card title={
-        <span className="flex items-center gap-2">
-          <span className="inline-flex items-center justify-center w-8 h-8 rounded border border-zinc-700 bg-zinc-800 p-1">
-            <img src="/icons/arma.png" alt="Arma" className="w-full h-full object-contain" />
+        <span className="flex items-center justify-between w-full gap-2">
+          <span className="flex items-center gap-2">
+            <span className="inline-flex items-center justify-center w-8 h-8 rounded border border-zinc-700 bg-zinc-800 p-1">
+              <img src="/icons/arma.png" alt="Arma" className="w-full h-full object-contain" />
+            </span>
+            Datos del Arma
           </span>
-          Datos del Arma
+          <Button size="sm" variant="ghost" onClick={() => loadWeapon({ ...DEFAULT_WEAPON, id: weapon.id, clase, subcategoria: subcategoria as Subcategoria })}>
+            Limpiar
+          </Button>
         </span>
       }>
         <div className="space-y-3">
@@ -346,7 +351,18 @@ function ArrowForm({ arrows, onArrowsChange }: ArrowFormProps) {
 
   return (
     <div className="space-y-4">
-      <Input label="Nombre de Flecha" tooltip="Nombre para identificar este set de flechas." value={nombre} onChange={(e) => setNombre(e.target.value)} />
+      <div className="flex items-end gap-2">
+        <div className="flex-1">
+          <Input label="Nombre de Flecha" tooltip="Nombre para identificar este set de flechas." value={nombre} onChange={(e) => setNombre(e.target.value)} />
+        </div>
+        <Button size="sm" variant="ghost" onClick={() => {
+          setNombre(DEFAULT_ARROWS.nombre);
+          setDamageRows(arrowsToDamageRows(DEFAULT_ARROWS));
+          setBonusRows(arrowsToBonusRows(DEFAULT_ARROWS));
+        }}>
+          Limpiar
+        </Button>
+      </div>
 
       {/* Damage types */}
       <div>
@@ -403,6 +419,7 @@ export function BuildArma() {
     secondaryWeapon, setSecondaryWeapon,
     arrows, setArrows,
     hasWeapon, hasSecondaryWeapon,
+    loaded,
   } = useBuildWeapon();
   const { character } = useCharacter();
   const { addWeapon, customCount } = useWeapons();
@@ -427,6 +444,10 @@ export function BuildArma() {
     addWeapon(data);
     toast(`"${w.nombre}" guardada en Mis armas`, 'success');
   };
+
+  // Los formularios copian el arma a estado local al montarse: si se montan antes de leer
+  // localStorage arrancan vacios y pisan el arma guardada. Esperar a que cargue.
+  if (!loaded) return null;
 
   return (
     <div className="space-y-4">

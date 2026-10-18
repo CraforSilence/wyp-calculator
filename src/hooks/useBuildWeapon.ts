@@ -8,7 +8,7 @@ const STORAGE_KEY_MODE = 'regnum-build-weapon-mode';
 const STORAGE_KEY_SECONDARY = 'regnum-build-weapon-secondary';
 const STORAGE_KEY_ARROWS = 'regnum-build-arrows';
 
-const DEFAULT_WEAPON: Weapon = {
+export const DEFAULT_WEAPON: Weapon = {
   id: 'build-weapon',
   nombre: '',
   clase: 'Guerrero',
@@ -29,13 +29,13 @@ const DEFAULT_WEAPON: Weapon = {
   createdAt: '',
 };
 
-const DEFAULT_SECONDARY: Weapon = {
+export const DEFAULT_SECONDARY: Weapon = {
   ...DEFAULT_WEAPON,
   id: 'build-weapon-secondary',
   nombre: '',
 };
 
-const DEFAULT_ARROWS: ArrowSet = {
+export const DEFAULT_ARROWS: ArrowSet = {
   nombre: '',
   tiposDano: {},
   bonusStat: 0,
@@ -45,10 +45,12 @@ const DEFAULT_ARROWS: ArrowSet = {
 };
 
 export function useBuildWeapon() {
-  const [weapon, setWeapon] = useLocalStorage<Weapon>(STORAGE_KEY, DEFAULT_WEAPON);
+  const [weapon, setWeapon, weaponLoaded] = useLocalStorage<Weapon>(STORAGE_KEY, DEFAULT_WEAPON);
   const [weaponMode, setWeaponMode] = useLocalStorage<WeaponMode>(STORAGE_KEY_MODE, '2manos');
-  const [secondaryWeapon, setSecondaryWeapon] = useLocalStorage<Weapon>(STORAGE_KEY_SECONDARY, DEFAULT_SECONDARY);
-  const [arrows, setArrows] = useLocalStorage<ArrowSet>(STORAGE_KEY_ARROWS, DEFAULT_ARROWS);
+  const [secondaryWeapon, setSecondaryWeapon, secondaryLoaded] = useLocalStorage<Weapon>(STORAGE_KEY_SECONDARY, DEFAULT_SECONDARY);
+  const [arrows, setArrows, arrowsLoaded] = useLocalStorage<ArrowSet>(STORAGE_KEY_ARROWS, DEFAULT_ARROWS);
+  // true cuando ya se leyó localStorage (antes de eso los valores son los defaults)
+  const loaded = weaponLoaded && secondaryLoaded && arrowsLoaded;
 
   const updateWeapon = (updates: Partial<Weapon>) => {
     setWeapon((prev) => ({ ...prev, ...updates }));
@@ -71,5 +73,6 @@ export function useBuildWeapon() {
     weaponMode, setWeaponMode,
     secondaryWeapon, setSecondaryWeapon, updateSecondaryWeapon, hasSecondaryWeapon,
     arrows, setArrows, updateArrows, hasArrows,
+    loaded,
   };
 }

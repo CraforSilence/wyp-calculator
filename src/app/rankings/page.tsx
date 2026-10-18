@@ -111,6 +111,7 @@ export default function RankingsPage() {
               <th className="py-2 px-2 text-right font-bold text-amber-500">DPS</th>
               <th className="py-2 px-2 text-right">Riposte</th>
               <th className="py-2 px-2 text-right">Impacto</th>
+              <th className="py-2 px-2 text-right">Cruz del Sur</th>
             </tr>
           </thead>
           <tbody>
@@ -136,6 +137,9 @@ export default function RankingsPage() {
                 <td className="py-2 px-2 text-right text-red-400">{result.riposteDmg ?? '-'}</td>
                 <td className="py-2 px-2 text-right text-orange-400">
                   {result.impactoVigoroso ? `${result.impactoVigoroso.min}-${result.impactoVigoroso.max}` : '-'}
+                </td>
+                <td className="py-2 px-2 text-right text-sky-400">
+                  {result.cruzDelSur ? `${result.cruzDelSur.min}-${result.cruzDelSur.max}` : '-'}
                 </td>
               </tr>
             ))}
@@ -173,6 +177,7 @@ export default function RankingsPage() {
                 <div><span className="text-zinc-500">Velocidad:</span> <span className="text-zinc-200">{selectedDetail.result.velEfectiva}s ({selectedDetail.result.golpesPorSeg} g/s)</span></div>
                 {selectedDetail.result.riposteDmg && <div><span className="text-zinc-500">Riposte:</span> <span className="text-red-400 font-bold">{selectedDetail.result.riposteDmg}</span></div>}
                 {selectedDetail.result.impactoVigoroso && <div><span className="text-zinc-500">Impacto:</span> <span className="text-orange-400 font-bold">{selectedDetail.result.impactoVigoroso.min}-{selectedDetail.result.impactoVigoroso.max}</span></div>}
+                {selectedDetail.result.cruzDelSur && <div><span className="text-zinc-500">Cruz del Sur:</span> <span className="text-sky-400 font-bold">{selectedDetail.result.cruzDelSur.min}-{selectedDetail.result.cruzDelSur.max}</span></div>}
               </div>
             </div>
 

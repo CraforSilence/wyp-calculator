@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSessionStorage } from '@/hooks/useSessionStorage';
 import { Collapsible } from '@/components/ui/Collapsible';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
@@ -31,7 +32,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id'];
 
 export default function BuildPage() {
-  const [activeTab, setActiveTab] = useState<TabId>('build');
+  const [activeTab, setActiveTab] = useSessionStorage<TabId>('regnum-build-tab', 'build');
   const [showImport, setShowImport] = useState(false);
   const { toast } = useToast();
   const { character, updateCharacter } = useCharacter();

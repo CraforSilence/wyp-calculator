@@ -5,7 +5,7 @@ import { useLocalStorage } from './useLocalStorage';
 import type { ArmorPiece, ArmorSet, ArmorSlot } from '@/types/armor';
 import { ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
 
-const DEFAULT_ARMOR_SET: ArmorSet = {
+export const DEFAULT_ARMOR_SET: ArmorSet = {
   pieces: {},
   bonusArmaduraPct: 0,
   generalResistance: { fisico: 0, magico: 0 },
@@ -141,5 +141,9 @@ export function useArmor() {
     }));
   }, [setArmorSet]);
 
-  return { armorSet, updateSlot, clearSlot, updateSet, loadPieces };
+  const clearAll = useCallback(() => {
+    setArmorSet(DEFAULT_ARMOR_SET);
+  }, [setArmorSet]);
+
+  return { armorSet, updateSlot, clearSlot, updateSet, loadPieces, clearAll };
 }

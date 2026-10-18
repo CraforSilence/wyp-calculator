@@ -78,7 +78,7 @@ export function WeaponCard({ weapon, calcResult, onEdit, onDelete, onDuplicate, 
         </div>
       </div>
 
-      {(calcResult.riposteDmg || calcResult.impactoVigoroso) && (
+      {(calcResult.riposteDmg || calcResult.impactoVigoroso || calcResult.cruzDelSur) && (
         <div className="mt-2 pt-2 border-t border-zinc-800 flex gap-4">
           {calcResult.riposteDmg && (
             <div className="text-xs">
@@ -90,6 +90,12 @@ export function WeaponCard({ weapon, calcResult, onEdit, onDelete, onDuplicate, 
             <div className="text-xs">
               <span className="text-zinc-500">Impacto Vig:</span>{' '}
               <span className="text-orange-400 font-semibold">{calcResult.impactoVigoroso.min}-{calcResult.impactoVigoroso.max}</span>
+            </div>
+          )}
+          {calcResult.cruzDelSur && (
+            <div className="text-xs">
+              <span className="text-zinc-500">Cruz del Sur:</span>{' '}
+              <span className="text-sky-400 font-semibold">{calcResult.cruzDelSur.min}-{calcResult.cruzDelSur.max}</span>
             </div>
           )}
         </div>

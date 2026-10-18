@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useArmor } from '@/hooks/useArmor';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { calcTotalProtection } from '@/lib/engine/armor';
 import {
   ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
@@ -65,9 +66,16 @@ function aggregateAllBonuses(
 
 export function BuildArmadura() {
   const { character } = useCharacter();
-  const { armorSet, updateSlot, updateSet, loadPieces } = useArmor();
+  const { armorSet, updateSlot, updateSet, loadPieces, clearSlot, clearAll } = useArmor();
   const { sets: savedSets } = useArmorSets();
-  const [activePreset, setActivePreset] = useState<CatalogArmorSet | null>(null);
+  // Se guarda el id del set precargado para no perder sus bonus de conjunto al cambiar de tab
+  const [activePresetId, setActivePresetId] = useLocalStorage<string>('regnum-build-armor-preset', '');
+  const activePreset = useMemo<CatalogArmorSet | null>(() => {
+    if (!activePresetId) return null;
+    return (savedSets.find((s) => s.id === activePresetId)
+      || DEFAULT_ARMOR_SETS.find((s) => s.id === activePresetId)
+      || null) as CatalogArmorSet | null;
+  }, [activePresetId, savedSets]);
 
   const clase = getClase(character.subclase);
   const slots = ARMOR_SLOTS_POR_CLASE[clase];
@@ -105,9 +113,18 @@ export function BuildArmadura() {
 
   return (
     <div>
-      <p className="text-xs text-zinc-500 mb-4">
-        {clase} — {pieceCount} piezas configuradas | Clase de Armadura: {armorClass}
-      </p>
+      <div className="flex items-center justify-between gap-2 mb-4">
+        <p className="text-xs text-zinc-500">
+          {clase} — {pieceCount} piezas configuradas | Clase de Armadura: {armorClass}
+        </p>
+        <button
+          onClick={() => { clearAll(); setActivePresetId(''); }}
+          className="text-xs text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1 rounded transition-colors"
+          title="Borrar todas las piezas y modificadores"
+        >
+          Limpiar armadura
+        </button>
+      </div>
 
       {/* Referencia de siglas */}
       <Card className="mb-4">
@@ -132,7 +149,7 @@ export function BuildArmadura() {
                   || DEFAULT_ARMOR_SETS.find((s) => s.id === e.target.value);
                 if (found) {
                   loadPieces(found.pieces);
-                  setActivePreset(found as CatalogArmorSet);
+                  setActivePresetId(found.id);
                 }
               }}
               className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
@@ -170,9 +187,20 @@ export function BuildArmadura() {
             <Card
               key={slot}
               title={
-                <span className="flex items-center gap-2">
-                  <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={(ARMOR_SLOT_LABEL_OVERRIDES[clase]?.[slot] ?? ARMOR_SLOT_LABELS[slot])} className="w-full h-full object-contain" /></span>
-                  {(ARMOR_SLOT_LABEL_OVERRIDES[clase]?.[slot] ?? ARMOR_SLOT_LABELS[slot])}
+                <span className="flex items-center justify-between w-full gap-2">
+                  <span className="flex items-center gap-2">
+                    <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={(ARMOR_SLOT_LABEL_OVERRIDES[clase]?.[slot] ?? ARMOR_SLOT_LABELS[slot])} className="w-full h-full object-contain" /></span>
+                    {(ARMOR_SLOT_LABEL_OVERRIDES[clase]?.[slot] ?? ARMOR_SLOT_LABELS[slot])}
+                  </span>
+                  {piece && (
+                    <button
+                      onClick={() => clearSlot(slot)}
+                      className="text-xs font-normal text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1 rounded transition-colors"
+                      title="Borrar esta pieza"
+                    >
+                      Limpiar
+                    </button>
+                  )}
                 </span>
               }
               className={isEmpty ? 'opacity-60' : ''}

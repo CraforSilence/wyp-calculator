@@ -203,6 +203,16 @@ export function calcWeaponDamage(
     impactoVigoroso = { min: ivMin, max: ivMax, prom: roundTo((ivMin + ivMax) / 2, 1) };
   }
 
+  // Cruz del Sur (cortante): daño base del arma +100%, daño bonus +65%
+  let cruzDelSur: { min: number; max: number; prom: number } | null = null;
+  if (categoria === 'espada' || categoria === 'hacha') {
+    const baseMin = Object.values(tiposAjustados).reduce((sum, v) => sum + v[0], 0);
+    const baseMax = Object.values(tiposAjustados).reduce((sum, v) => sum + v[1], 0);
+    const cdsMin = Math.floor(baseMin * 2 + (finalMin - baseMin) * 1.65);
+    const cdsMax = Math.floor(baseMax * 2 + (finalMax - baseMax) * 1.65);
+    cruzDelSur = { min: cdsMin, max: cdsMax, prom: roundTo((cdsMin + cdsMax) / 2, 1) };
+  }
+
   return {
     nombre: weapon.nombre,
     danoMin: finalMin,
@@ -218,6 +228,7 @@ export function calcWeaponDamage(
     dpsEfectivo: roundTo(dpsEfectivo, 1),
     riposteDmg,
     impactoVigoroso,
+    cruzDelSur,
     desglose: Object.fromEntries(
       Object.entries(resultado).map(([k, v]) => [k, [roundTo(v[0], 1), roundTo(v[1], 1)]])
     ),

@@ -14,7 +14,7 @@ export function useLocalStorage<T>(
   key: string,
   initialValue: T,
   options?: UseLocalStorageOptions<T>
-): [T, (value: T | ((prev: T) => T)) => void] {
+): [T, (value: T | ((prev: T) => T)) => void, boolean] {
   const [storedValue, setStoredValue] = useState<T>(initialValue);
   const [mounted, setMounted] = useState(false);
 
@@ -66,6 +66,7 @@ export function useLocalStorage<T>(
     });
   }, [key]);
 
-  // Return initialValue until mounted to avoid hydration mismatch
-  return [mounted ? storedValue : initialValue, setValue];
+  // Return initialValue until mounted to avoid hydration mismatch.
+  // Third element tells consumers when the stored value has been loaded.
+  return [mounted ? storedValue : initialValue, setValue, mounted];
 }

@@ -6,7 +6,7 @@ import type { JewelrySet, JewelryPiece, JewelrySlot, JewelryBonus, JewelryBonusT
 
 const MAX_BONUSES = 5;
 
-const DEFAULT_JEWELRY: JewelrySet = {
+export const DEFAULT_JEWELRY: JewelrySet = {
   anillo1: { slot: 'anillo1', bonuses: [] },
   anillo2: { slot: 'anillo2', bonuses: [] },
   amuleto: { slot: 'amuleto', bonuses: [] },
@@ -117,5 +117,13 @@ export function useJewelry() {
     });
   }, [setJewelry]);
 
-  return { jewelry, updatePiece, addBonus, removeBonus, updateBonus };
+  const clearPiece = useCallback((slot: JewelrySlot) => {
+    setJewelry((prev) => ({ ...prev, [slot]: { slot, bonuses: [] } }));
+  }, [setJewelry]);
+
+  const clearAll = useCallback(() => {
+    setJewelry(DEFAULT_JEWELRY);
+  }, [setJewelry]);
+
+  return { jewelry, updatePiece, addBonus, removeBonus, updateBonus, clearPiece, clearAll };
 }
