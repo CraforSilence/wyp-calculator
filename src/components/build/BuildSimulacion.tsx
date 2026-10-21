@@ -274,7 +274,7 @@ export function BuildSimulacion() {
               {/* Simular */}
               <Button onClick={handleSimOffensive}>Simular 10 golpes</Button>
 
-              {offResult && <SimResultados result={offResult} />}
+              {offResult && <SimResultados result={offResult} weaponStats={myWeaponCalc} />}
             </>
           )}
         </div>
@@ -426,7 +426,7 @@ export function BuildSimulacion() {
                 Simular 10 golpes
               </Button>
 
-              {defResult && <SimResultados result={defResult} />}
+              {defResult && <SimResultados result={defResult} weaponStats={enemyWeapon ? calcWeaponDamage(enemyWeapon, enemyAttackerProfile, enemyJewelry) : null} />}
             </>
           )}
         </div>

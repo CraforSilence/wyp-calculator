@@ -5,10 +5,12 @@ import { Card } from '@/components/ui/Card';
 import { HelpTip } from '@/components/ui/HelpTip';
 import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS } from '@/lib/engine/constants';
 import type { SimulationResult, SimulationHit } from '@/types/simulation';
-import type { DamageTypeName } from '@/types/weapon';
+import type { DamageTypeName, WeaponCalcResult } from '@/types/weapon';
 
 interface SimResultadosProps {
   result: SimulationResult;
+  /** Stats del arma atacante (calcWeaponDamage) para el recuadro de estadisticas */
+  weaponStats?: WeaponCalcResult | null;
 }
 
 /** Renders per-type damage bars for a given finalDamagePerType record */
@@ -39,7 +41,7 @@ function DamagePerTypeBars({ perType, maxReference }: { perType: Record<string, 
   );
 }
 
-export function SimResultados({ result }: SimResultadosProps) {
+export function SimResultados({ result, weaponStats }: SimResultadosProps) {
   const maxDmg = Math.max(...result.hits.map((h) => h.totalRawDamage), 1);
   const [expandedHits, setExpandedHits] = useState<Set<number>>(new Set());
 
@@ -175,6 +177,70 @@ export function SimResultados({ result }: SimResultadosProps) {
         return (
           <Card title={<span>Dano por tipo (promedio)<HelpTip text="Desglose del dano final promedio por tipo de dano. Muestra cuanto dano de cada tipo pasa las defensas enemigas." /></span>}>
             <DamagePerTypeBars perType={avgPerType} maxReference={maxAvg} />
+          </Card>
+        );
+      })()}
+
+      {/* Weapon stats: base vs after enemy defenses */}
+      {weaponStats && (() => {
+        const finals = result.hits.map((h) => h.finalDamage);
+        const avgRaw = result.hits.reduce((s, h) => s + h.totalRawDamage, 0) / result.hits.length;
+        const passRatio = avgRaw > 0 ? result.averageDamage / avgRaw : 0;
+        const dpsVsEnemy = Math.round(weaponStats.dpsEfectivo * passRatio * 10) / 10;
+        const critObservedPct = Math.round((result.critsLanded / result.hits.length) * 100);
+        const ability = weaponStats.riposteDmg ? (
+          <><span className="text-xs text-zinc-500">Riposte</span> <span className="text-red-400">{weaponStats.riposteDmg}</span></>
+        ) : weaponStats.impactoVigoroso ? (
+          <><span className="text-xs text-zinc-500">Impacto Vig.</span> <span className="text-orange-400">{weaponStats.impactoVigoroso.min}-{weaponStats.impactoVigoroso.max}</span></>
+        ) : weaponStats.cruzDelSur ? (
+          <><span className="text-xs text-zinc-500">Cruz del Sur</span> <span className="text-sky-400">{weaponStats.cruzDelSur.min}-{weaponStats.cruzDelSur.max}</span></>
+        ) : null;
+        return (
+          <Card title={<span>Estadisticas del arma<HelpTip text="Base = stats del arma sin defensas (igual que en Comparar). Vs enemigo = dano final de la simulacion; el DPS vs enemigo es el DPS efectivo escalado por el % de dano que pasa las defensas." /></span>}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-zinc-800 text-xs text-zinc-500 text-left">
+                    <th className="py-2 px-2"></th>
+                    <th className="py-2 px-2 text-right">Min</th>
+                    <th className="py-2 px-2 text-right">Max</th>
+                    <th className="py-2 px-2 text-right">Prom</th>
+                    <th className="py-2 px-2 text-right" title="Base: probabilidad de critico. Vs enemigo: criticos obtenidos en la simulacion.">Crit%</th>
+                    <th className="py-2 px-2 text-right">Crit x</th>
+                    <th className="py-2 px-2 text-right" title="Segundos por golpe">s/g</th>
+                    <th className="py-2 px-2 text-right" title="Golpes por segundo">g/s</th>
+                    <th className="py-2 px-2 text-right font-bold text-amber-500">DPS</th>
+                    {ability && <th className="py-2 px-2 text-right">Habilidad</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b border-zinc-800/50">
+                    <td className="py-2 px-2 text-zinc-400 whitespace-nowrap">Base</td>
+                    <td className="py-2 px-2 text-right text-zinc-300">{weaponStats.danoMin}</td>
+                    <td className="py-2 px-2 text-right text-zinc-300">{weaponStats.danoMax}</td>
+                    <td className="py-2 px-2 text-right text-zinc-300">{weaponStats.danoPromedio}</td>
+                    <td className="py-2 px-2 text-right text-zinc-300">{weaponStats.critTotalPct}%</td>
+                    <td className="py-2 px-2 text-right text-zinc-400">x{weaponStats.critMult}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400">{weaponStats.velEfectiva}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400">{weaponStats.golpesPorSeg}</td>
+                    <td className="py-2 px-2 text-right font-bold text-amber-400">{weaponStats.dpsEfectivo}</td>
+                    {ability && <td className="py-2 px-2 text-right whitespace-nowrap">{ability}</td>}
+                  </tr>
+                  <tr className="border-b border-zinc-800/50">
+                    <td className="py-2 px-2 text-zinc-400 whitespace-nowrap">Vs enemigo</td>
+                    <td className="py-2 px-2 text-right text-zinc-300">{Math.min(...finals)}</td>
+                    <td className="py-2 px-2 text-right text-zinc-300">{Math.max(...finals)}</td>
+                    <td className="py-2 px-2 text-right text-zinc-300">{result.averageDamage}</td>
+                    <td className="py-2 px-2 text-right text-zinc-300">{critObservedPct}%</td>
+                    <td className="py-2 px-2 text-right text-zinc-400">x{weaponStats.critMult}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400">{weaponStats.velEfectiva}</td>
+                    <td className="py-2 px-2 text-right text-zinc-400">{weaponStats.golpesPorSeg}</td>
+                    <td className="py-2 px-2 text-right font-bold text-orange-400">~{dpsVsEnemy}</td>
+                    {ability && <td className="py-2 px-2 text-right text-zinc-600">-</td>}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </Card>
         );
       })()}
