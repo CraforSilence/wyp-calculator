@@ -58,6 +58,8 @@ export interface WeaponCalcResult {
   critMult: number;
   velBase: number;
   attackSpeedPct: number;
+  /** De donde sale attackSpeedPct: propio del arma, muescas de vel. ataque y joyeria */
+  attackSpeedSources: { arma: number; muescas: number; joyeria: number };
   castSpeedPct: number;
   velEfectiva: number;
   golpesPorSeg: number;

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
+import { WeaponAbility, hasWeaponAbility } from '@/components/weapons/WeaponAbility';
 import { HelpTip } from '@/components/ui/HelpTip';
 import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS } from '@/lib/engine/constants';
 import type { SimulationResult, SimulationHit } from '@/types/simulation';
@@ -188,15 +189,9 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
         const passRatio = avgRaw > 0 ? result.averageDamage / avgRaw : 0;
         const dpsVsEnemy = Math.round(weaponStats.dpsEfectivo * passRatio * 10) / 10;
         const critObservedPct = Math.round((result.critsLanded / result.hits.length) * 100);
-        const ability = weaponStats.riposteDmg ? (
-          <><span className="text-xs text-zinc-500">Riposte</span> <span className="text-red-400">{weaponStats.riposteDmg}</span></>
-        ) : weaponStats.impactoVigoroso ? (
-          <><span className="text-xs text-zinc-500">Impacto Vig.</span> <span className="text-orange-400">{weaponStats.impactoVigoroso.min}-{weaponStats.impactoVigoroso.max}</span></>
-        ) : weaponStats.cruzDelSur ? (
-          <><span className="text-xs text-zinc-500">Cruz del Sur</span> <span className="text-sky-400">{weaponStats.cruzDelSur.min}-{weaponStats.cruzDelSur.max}</span></>
-        ) : null;
+        const ability = hasWeaponAbility(weaponStats) ? <WeaponAbility result={weaponStats} /> : null;
         return (
-          <Card title={<span>Estadisticas del arma<HelpTip text="Base = stats del arma sin defensas (igual que en Comparar). Vs enemigo = dano final de la simulacion; el DPS vs enemigo es el DPS efectivo escalado por el % de dano que pasa las defensas." /></span>}>
+          <Card title={<span>Estadisticas del arma<HelpTip text="Base = stats del arma con tu joyeria, sin defensas (Comparar muestra el arma sola, sin joyeria). Vs enemigo = dano final de la simulacion; el DPS vs enemigo es el DPS efectivo escalado por el % de dano que pasa las defensas." /></span>}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

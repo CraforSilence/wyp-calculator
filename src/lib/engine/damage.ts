@@ -176,7 +176,12 @@ export function calcWeaponDamage(
   // DPS — sumar attackSpeed de joyería y de muescas
   const muescaSpeeds = splitMuescaSpeeds(muescas);
   const velBase = VELOCIDADES[weapon.velocidad] ?? 2.20;
-  const attackSpeedPct = weapon.attackSpeedPct + (jBonus.attackSpeed || 0) + muescaSpeeds.attackSpeed;
+  const attackSpeedSources = {
+    arma: weapon.attackSpeedPct,
+    muescas: muescaSpeeds.attackSpeed,
+    joyeria: jBonus.attackSpeed || 0,
+  };
+  const attackSpeedPct = attackSpeedSources.arma + attackSpeedSources.muescas + attackSpeedSources.joyeria;
   const castSpeedPct = (jBonus.castSpeed || 0) + muescaSpeeds.castSpeed;
   const golpesPorSeg = (1.0 / velBase) * (1 + attackSpeedPct / 100);
   const velEfectiva = 1.0 / golpesPorSeg;
@@ -222,6 +227,7 @@ export function calcWeaponDamage(
     critMult: roundTo(critMultTotal, 2),
     velBase,
     attackSpeedPct,
+    attackSpeedSources,
     castSpeedPct,
     velEfectiva: roundTo(velEfectiva, 3),
     golpesPorSeg: roundTo(golpesPorSeg, 4),
@@ -299,8 +305,7 @@ export function calcDualDamage(
   const velSecondary = VELOCIDADES[secondary.velocidad] ?? 2.20;
   const velBase = (velPrimary + velSecondary) / 2;
   const jBonus = jewelry ? aggregateJewelryBonuses(jewelry) : {};
-  const attackSpeedPct = mergedWeapon.attackSpeedPct + (jBonus.attackSpeed || 0)
-    + splitMuescaSpeeds(mergedWeapon.muescas).attackSpeed;
+  const attackSpeedPct = result.attackSpeedPct;
   const golpesPorSeg = (1.0 / velBase) * (1 + attackSpeedPct / 100);
   const velEfectiva = 1.0 / golpesPorSeg;
 
