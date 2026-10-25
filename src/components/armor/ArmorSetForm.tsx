@@ -7,7 +7,7 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import {
   ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS,
-  ARMOR_SLOTS_POR_CLASE, ARMOR_SLOT_LABELS, ARMOR_SLOT_ICONS,
+  ARMOR_SLOTS_POR_CLASE, armorSlotsFor, ARMOR_SLOT_LABELS, ARMOR_SLOT_ICONS,
   ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, SHIELD_ONLY_BONUS_TYPES,
   PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOT_LABEL_OVERRIDES,
   CLASE_SUBCLASES,
@@ -73,7 +73,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
     return [];
   });
 
-  const slots = ARMOR_SLOTS_POR_CLASE[clase];
+  const slots = armorSlotsFor(clase, subclase);
 
   const handleClaseChange = (newClase: Clase) => {
     setClase(newClase);

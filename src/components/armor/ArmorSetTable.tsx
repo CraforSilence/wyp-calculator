@@ -1,7 +1,8 @@
 'use client';
 
 import { ARMOR_BONUS_LABELS, DAMAGE_TYPE_LABELS, ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
-import { calcTotalProtection } from '@/lib/engine/armor';
+import { calcTotalProtection, filterArmorForSubclase } from '@/lib/engine/armor';
+import type { Subclase } from '@/types/character';
 import type { CatalogArmorSet, ArmorBonus, ArmorBonusType } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
 
@@ -71,7 +72,7 @@ export function ArmorSetTable({
             const modified = isModified?.(set.id) ?? false;
             const isSelected = selectedIds?.includes(set.id) ?? false;
             const fakeArmorSet = {
-              pieces: set.pieces,
+              pieces: set.subclase ? filterArmorForSubclase(set, set.subclase as Subclase).pieces : set.pieces,
               bonusArmaduraPct: 0,
               generalResistance: { fisico: 0, magico: 0 },
               typeResistance: {},

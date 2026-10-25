@@ -1,6 +1,17 @@
 import type { ArmorPiece, ArmorSet, ProtectionResult } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
-import { ITEM_DISTRIBUTION, PROTECTION_FACTORS, ALL_DAMAGE_TYPES } from './constants';
+import type { Subclase } from '@/types/character';
+import { ITEM_DISTRIBUTION, PROTECTION_FACTORS, ALL_DAMAGE_TYPES, ARMOR_SLOTS_POR_SUBCLASE } from './constants';
+
+/** Quita las piezas que la subclase no puede usar (ej. escudo en Bárbaro), incluso si quedaron guardadas */
+export function filterArmorForSubclase<T extends Pick<ArmorSet, 'pieces'>>(armorSet: T, subclase: Subclase): T {
+  const allowed = ARMOR_SLOTS_POR_SUBCLASE[subclase];
+  if (!allowed) return armorSet;
+  const pieces = Object.fromEntries(
+    Object.entries(armorSet.pieces).filter(([slot]) => (allowed as string[]).includes(slot)),
+  ) as T['pieces'];
+  return { ...armorSet, pieces };
+}
 
 /**
  * Calculates protection for a single armor piece per damage type.

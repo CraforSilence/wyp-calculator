@@ -126,7 +126,6 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
       perneras: { slot: 'perneras', pba: 255, bcmt: 17, protectionFactors: { ...MAGNANTIAS_BARBARO_PF }, bonusProteccionPct: {}, bonuses: [], upgrades: [] },
       hombreras: { slot: 'hombreras', pba: 255, bcmt: 17, protectionFactors: { ...MAGNANTIAS_BARBARO_PF }, bonusProteccionPct: {}, bonuses: [], upgrades: [] },
       guanteletes: { slot: 'guanteletes', pba: 255, bcmt: 17, protectionFactors: { ...MAGNANTIAS_BARBARO_PF }, bonusProteccionPct: {}, bonuses: [], upgrades: [] },
-      escudo: { slot: 'escudo', pba: 255, bcmt: 17, protectionFactors: { ...MAGNANTIAS_BARBARO_PF }, bonusProteccionPct: {}, bonuses: [], upgrades: [] },
     },
     bonusConjunto: [
       { type: 'critChance', value: 10 },

@@ -4,7 +4,7 @@ import type { JewelrySet } from '@/types/jewelry';
 import type { ArmorSet } from '@/types/armor';
 import type { SimulationHit, SimulationResult } from '@/types/simulation';
 import { calcWeaponDamage } from './damage';
-import { calcTotalProtection, calcAverageProtectionFactors } from './armor';
+import { calcTotalProtection, calcAverageProtectionFactors, filterArmorForSubclase } from './armor';
 import { applyDamageReduction } from './resistance';
 import { aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import { ARMOR_CLASSES, PHYSICAL_DAMAGE_TYPES } from './constants';
@@ -78,8 +78,9 @@ export function simulateHits(
   defenderJewelry?: JewelrySet | null
 ): SimulationResult {
   const weaponResult = calcWeaponDamage(weapon, character, jewelry);
-  const effectiveArmor = buildEffectiveArmorSet(armorSet, defenderJewelry);
-  const armorClass = ARMOR_CLASSES[defenderSubclase || character.subclase];
+  const defender = defenderSubclase || character.subclase;
+  const effectiveArmor = buildEffectiveArmorSet(filterArmorForSubclase(armorSet, defender), defenderJewelry);
+  const armorClass = ARMOR_CLASSES[defender];
   const protection = calcTotalProtection(effectiveArmor, armorClass);
   const avgPF = calcAverageProtectionFactors(effectiveArmor);
 

@@ -3,7 +3,8 @@
 import { useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { DAMAGE_TYPE_LABELS, ALL_DAMAGE_TYPES, ARMOR_BONUS_LABELS } from '@/lib/engine/constants';
-import { calcTotalProtection } from '@/lib/engine/armor';
+import { calcTotalProtection, filterArmorForSubclase } from '@/lib/engine/armor';
+import type { Subclase } from '@/types/character';
 import type { CatalogArmorSet, ArmorBonus, ArmorBonusType } from '@/types/armor';
 
 interface ArmorComparisonProps {
@@ -15,7 +16,7 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
   const results = useMemo(() => {
     return sets.map((set) => {
       const fakeArmorSet = {
-        pieces: set.pieces,
+        pieces: set.subclase ? filterArmorForSubclase(set, set.subclase as Subclase).pieces : set.pieces,
         bonusArmaduraPct: 0,
         generalResistance: { fisico: 0, magico: 0 } as Record<string, number>,
         typeResistance: {},

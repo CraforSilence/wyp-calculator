@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useArmor } from '@/hooks/useArmor';
-import { calcTotalProtection } from '@/lib/engine/armor';
+import { calcTotalProtection, filterArmorForSubclase } from '@/lib/engine/armor';
 import {
   ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS,
   PHYSICAL_DAMAGE_TYPES, ARMOR_SLOT_LABELS, CLASE_SUBCLASES,
@@ -33,10 +33,11 @@ function aggregateArmorBonuses(armorSet: ReturnType<typeof useArmor>['armorSet']
 
 export function BuildProtecciones() {
   const { character } = useCharacter();
-  const { armorSet } = useArmor();
+  const { armorSet: storedArmorSet } = useArmor();
 
   const clase = getClase(character.subclase);
   const armorClass = ARMOR_CLASSES[character.subclase];
+  const armorSet = useMemo(() => filterArmorForSubclase(storedArmorSet, character.subclase), [storedArmorSet, character.subclase]);
 
   const protection = useMemo(() => {
     return calcTotalProtection(armorSet, armorClass);

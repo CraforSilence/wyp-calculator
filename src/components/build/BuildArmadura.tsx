@@ -4,10 +4,10 @@ import { useMemo } from 'react';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useArmor } from '@/hooks/useArmor';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { calcTotalProtection } from '@/lib/engine/armor';
+import { calcTotalProtection, filterArmorForSubclase } from '@/lib/engine/armor';
 import {
   ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
-  PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOTS_POR_CLASE, CLASE_SUBCLASES,
+  PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, armorSlotsFor, CLASE_SUBCLASES,
   ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, ARMOR_SLOT_ICONS, SHIELD_ONLY_BONUS_TYPES,
   ARMOR_SLOT_LABEL_OVERRIDES,
 } from '@/lib/engine/constants';
@@ -66,7 +66,7 @@ function aggregateAllBonuses(
 
 export function BuildArmadura() {
   const { character } = useCharacter();
-  const { armorSet, updateSlot, updateSet, loadPieces, clearSlot, clearAll } = useArmor();
+  const { armorSet: storedArmorSet, updateSlot, updateSet, loadPieces, clearSlot, clearAll } = useArmor();
   const { sets: savedSets } = useArmorSets();
   // Se guarda el id del set precargado para no perder sus bonus de conjunto al cambiar de tab
   const [activePresetId, setActivePresetId] = useLocalStorage<string>('regnum-build-armor-preset', '');
@@ -78,7 +78,9 @@ export function BuildArmadura() {
   }, [activePresetId, savedSets]);
 
   const clase = getClase(character.subclase);
-  const slots = ARMOR_SLOTS_POR_CLASE[clase];
+  const slots = armorSlotsFor(clase, character.subclase);
+  // Ignora piezas que la subclase no usa (ej. escudo guardado de cuando era Caballero)
+  const armorSet = useMemo(() => filterArmorForSubclase(storedArmorSet, character.subclase), [storedArmorSet, character.subclase]);
   const armorClass = ARMOR_CLASSES[character.subclase];
 
   const protection = useMemo(() => {
@@ -148,7 +150,7 @@ export function BuildArmadura() {
                 const found = savedSets.find((s) => s.id === e.target.value)
                   || DEFAULT_ARMOR_SETS.find((s) => s.id === e.target.value);
                 if (found) {
-                  loadPieces(found.pieces);
+                  loadPieces(filterArmorForSubclase(found, character.subclase).pieces);
                   setActivePresetId(found.id);
                 }
               }}

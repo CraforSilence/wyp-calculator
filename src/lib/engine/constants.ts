@@ -143,6 +143,25 @@ export const ARMOR_SLOTS_POR_CLASE: Record<Clase, ArmorSlot[]> = {
   'Mago': ['tunica', 'casco', 'guanteletes', 'brazalete'],
 };
 
+// El escudo es exclusivo del Caballero: el Bárbaro pega a dos manos
+const SLOTS_SIN_ESCUDO = ARMOR_SLOTS_POR_CLASE['Guerrero'].filter((s) => s !== 'escudo');
+
+/** Slots de armadura que puede usar cada subclase */
+export const ARMOR_SLOTS_POR_SUBCLASE: Record<Subclase, ArmorSlot[]> = {
+  'Caballero': ARMOR_SLOTS_POR_CLASE['Guerrero'],
+  'Bárbaro': SLOTS_SIN_ESCUDO,
+  'Cazador': ARMOR_SLOTS_POR_CLASE['Arquero'],
+  'Tirador': ARMOR_SLOTS_POR_CLASE['Arquero'],
+  'Conjurador': ARMOR_SLOTS_POR_CLASE['Mago'],
+  'Brujo': ARMOR_SLOTS_POR_CLASE['Mago'],
+};
+
+/** Slots segun subclase si se conoce; si no, todos los de la clase */
+export function armorSlotsFor(clase: Clase, subclase?: string | null): ArmorSlot[] {
+  if (subclase && subclase in ARMOR_SLOTS_POR_SUBCLASE) return ARMOR_SLOTS_POR_SUBCLASE[subclase as Subclase];
+  return ARMOR_SLOTS_POR_CLASE[clase];
+}
+
 // Subcategorías por clase
 export const SUBCATEGORIAS_POR_CLASE: Record<Clase, string[]> = {
   'Guerrero': ['Lanza', 'Maza', 'Espada', 'Hacha', 'Martillo', 'Florin', 'Garrote'],

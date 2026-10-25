@@ -6,9 +6,10 @@ import { Card } from '@/components/ui/Card';
 import { HelpTip } from '@/components/ui/HelpTip';
 import {
   ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
-  ARMOR_SLOTS_POR_CLASE, ARMOR_SLOT_ICONS, CLASE_SUBCLASES,
+  armorSlotsFor, ARMOR_SLOT_ICONS, CLASE_SUBCLASES,
   PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOT_LABEL_OVERRIDES,
 } from '@/lib/engine/constants';
+import { filterArmorForSubclase } from '@/lib/engine/armor';
 import { DEFAULT_ARMOR_SETS } from '@/data/default-armor';
 import type { ArmorSet, ArmorSlot, ArmorPiece, ProtectionQuality } from '@/types/armor';
 import type { Clase, Subclase } from '@/types/character';
@@ -49,7 +50,7 @@ function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
 }
 
 export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChangeClase, onChangeSubclase, onUpdateSlot, onUpdateSet, onLoadPreset }: EnemyArmorEditorProps) {
-  const slots = ARMOR_SLOTS_POR_CLASE[enemyClase];
+  const slots = armorSlotsFor(enemyClase, enemySubclase);
   const subclaseOptions = CLASE_SUBCLASES[enemyClase].map((sc) => ({ value: sc, label: sc }));
 
   return (
@@ -87,7 +88,8 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                 onChange={(e) => {
                   const set = DEFAULT_ARMOR_SETS.find((s) => s.id === e.target.value);
                   if (!set) return;
-                  const armorSet: ArmorSet = {
+                  const subclase = (set.subclase || enemySubclase) as Subclase;
+                  const armorSet: ArmorSet = filterArmorForSubclase({
                     pieces: { ...set.pieces },
                     bonusArmaduraPct: 0,
                     generalResistance: { fisico: 0, magico: 0 },
@@ -95,8 +97,8 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                     barrierPoints: {},
                     meleeDmgReductionPct: 0,
                     rangedDmgReductionPct: 0,
-                  };
-                  onLoadPreset(armorSet, set.clase as Clase, (set.subclase || enemySubclase) as Subclase);
+                  }, subclase);
+                  onLoadPreset(armorSet, set.clase as Clase, subclase);
                 }}
                 options={[
                   { value: '', label: 'Seleccionar set...' },
