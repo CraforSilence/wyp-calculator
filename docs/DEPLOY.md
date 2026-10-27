@@ -13,7 +13,7 @@ Desde la carpeta del proyecto (`regnum-calc/`):
 npx vercel --prod
 ```
 
-El comando sube los archivos, buildea en los servidores de Vercel, y queda live en `wypcalculator.vercel.app`.
+El comando sube los archivos, buildea en los servidores de Vercel, y queda live en `wypforge.vercel.app`.
 
 ## Flujo completo (codigo + deploy)
 
@@ -43,6 +43,6 @@ Esto genera una URL temporal de preview sin afectar produccion.
 
 - Vercel y GitHub son independientes, se puede hacer uno sin el otro
 - El build tarda ~30-40 segundos
-- URL de produccion: https://wypcalculator.vercel.app
-- Proyecto en Vercel: `wypcalculator` (cuenta `danu-projects`)
+- URL de produccion: https://wypforge.vercel.app
+- Proyecto en Vercel: `wypforge` (cuenta `danu-projects`)
 - Repo en GitHub: `CraforSilence/wyp-calculator`

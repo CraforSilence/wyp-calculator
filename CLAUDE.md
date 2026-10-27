@@ -2,8 +2,8 @@
 
 # WypForge - Project Rules
 
-Nombre de la app: **WypForge** (antes "W&P Calculator"). El repo y el proyecto de Vercel
-conservan los nombres viejos (`wyp-calculator` / `wypcalculator`).
+Nombre de la app: **WypForge** (antes "W&P Calculator"). El repo de GitHub conserva el nombre
+viejo (`wyp-calculator`); el proyecto de Vercel ya se llama `wypforge`.
 
 ## Deploy workflow
 
@@ -14,7 +14,7 @@ No están vinculados, así que el flujo es **manual**:
 2. **Commit**: crear commits descriptivos con los cambios
 3. **Push a GitHub**: `git push origin master`
 
-- **Vercel**: proyecto `wypcalculator` en cuenta `danu-projects`
+- **Vercel**: proyecto `wypforge` en cuenta `danu-projects` (https://wypforge.vercel.app)
 - **GitHub**: repo `CraforSilence/wyp-calculator`
 - **GitHub auth**: usar `gh auth switch -u CraforSilence` si es necesario
 - **Remote**: `https://CraforSilence@github.com/CraforSilence/wyp-calculator.git`
