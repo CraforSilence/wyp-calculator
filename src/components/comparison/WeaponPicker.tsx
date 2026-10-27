@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Badge, rarezaToBadgeVariant } from '@/components/ui/Badge';
 import type { Weapon, WeaponCalcResult } from '@/types/weapon';
+import { useT } from '@/i18n/I18nProvider';
 
 export interface PickerItem {
   weapon: Weapon;
@@ -23,6 +24,7 @@ function norm(s: string): string {
 }
 
 export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }: WeaponPickerProps) {
+  const t = useT();
   const [query, setQuery] = useState('');
   const [subcatChoice, setSubcat] = useState<string>('Todas');
 
@@ -39,8 +41,8 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
       .filter(({ weapon }) => {
         if (subcat !== 'Todas' && weapon.subcategoria !== subcat) return false;
         if (terms.length === 0) return true;
-        const haystack = norm(`${weapon.nombre} ${weapon.subcategoria} ${weapon.rareza} ${weapon.velocidad} ${weapon.notas ?? ''}`);
-        return terms.every((t) => haystack.includes(t));
+        const haystack = norm(`${weapon.nombre} ${t(weapon.subcategoria)} ${t(weapon.rareza)} ${t(weapon.velocidad)} ${weapon.notas ?? ''}`);
+        return terms.every((dt) => haystack.includes(dt));
       })
       .sort((a, b) => a.weapon.nombre.localeCompare(b.weapon.nombre));
   }, [items, query, subcat]);
@@ -59,7 +61,7 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar arma por nombre, tipo, rareza..."
+            placeholder={t("Buscar arma por nombre, tipo, rareza...")}
             className="w-full bg-zinc-800 border border-zinc-700 rounded pl-8 pr-2.5 py-1.5 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors"
           />
         </div>
@@ -77,7 +79,7 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
-              {s}
+              {t(s)}
             </button>
           ))}
         </div>
@@ -85,7 +87,7 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
 
       <div className="max-h-72 lg:max-h-none lg:flex-1 lg:min-h-0 overflow-y-auto rounded border border-zinc-800 divide-y divide-zinc-800/70">
         {filtered.length === 0 && (
-          <div className="py-6 text-center text-sm text-zinc-500">No hay armas que coincidan.</div>
+          <div className="py-6 text-center text-sm text-zinc-500">{t("No hay armas que coincidan.")}</div>
         )}
         {filtered.map(({ weapon, result }) => {
           const isSelected = selectedIds.includes(weapon.id);
@@ -95,7 +97,7 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
               key={weapon.id}
               onClick={() => onToggle(weapon.id)}
               disabled={disabled}
-              title={disabled ? `Maximo ${maxSelected} armas. Quita una para agregar otra.` : undefined}
+              title={disabled ? t('Máximo {n} armas. Quitá una para agregar otra.', { n: maxSelected }) : undefined}
               className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-40 ${
                 isSelected ? 'bg-amber-900/15' : 'hover:bg-zinc-800/60'
               }`}
@@ -103,15 +105,15 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`text-sm truncate ${isSelected ? 'text-amber-300' : 'text-zinc-200'}`}>{weapon.nombre}</span>
-                  <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{weapon.rareza}</Badge>
-                  {!weapon.isDefault && <Badge variant="info">Propia</Badge>}
+                  <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{t(weapon.rareza)}</Badge>
+                  {!weapon.isDefault && <Badge variant="info">{t("Propia")}</Badge>}
                 </div>
                 <div className="text-xs text-zinc-500 mt-0.5">
-                  {weapon.subcategoria} &middot; {weapon.velocidad} &middot; {result.danoMin}-{result.danoMax}
+                  {t(weapon.subcategoria)} &middot; {t(weapon.velocidad)} &middot; {result.danoMin}-{result.danoMax}
                 </div>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-xs text-zinc-500">DPS</div>
+                <div className="text-xs text-zinc-500">{t("DPS")}</div>
                 <div className="text-sm font-semibold text-amber-400">{result.dpsEfectivo}</div>
               </div>
               <span
@@ -129,7 +131,7 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
         })}
       </div>
       <div className="text-xs text-zinc-500 mt-2">
-        {filtered.length} de {items.length} armas
+        {t('{n} de {total} armas', { n: filtered.length, total: items.length })}
       </div>
     </div>
   );

@@ -7,6 +7,7 @@ import { HelpTip } from '@/components/ui/HelpTip';
 import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS } from '@/lib/engine/constants';
 import type { SimulationResult, SimulationHit } from '@/types/simulation';
 import type { DamageTypeName, WeaponCalcResult } from '@/types/weapon';
+import { useT } from '@/i18n/I18nProvider';
 
 interface SimResultadosProps {
   result: SimulationResult;
@@ -16,8 +17,9 @@ interface SimResultadosProps {
 
 /** Renders per-type damage bars for a given finalDamagePerType record */
 function DamagePerTypeBars({ perType, maxReference }: { perType: Record<string, number>; maxReference: number }) {
-  const types = Object.keys(perType).filter((t) => perType[t] > 0).sort((a, b) => perType[b] - perType[a]);
-  if (types.length === 0) return <span className="text-xs text-zinc-600">Sin dano</span>;
+  const t = useT();
+  const types = Object.keys(perType).filter((dt) => perType[dt] > 0).sort((a, b) => perType[b] - perType[a]);
+  if (types.length === 0) return <span className="text-xs text-zinc-600">{t('Sin daño')}</span>;
   return (
     <div className="space-y-1">
       {types.map((type) => {
@@ -43,6 +45,7 @@ function DamagePerTypeBars({ perType, maxReference }: { perType: Record<string, 
 }
 
 export function SimResultados({ result, weaponStats }: SimResultadosProps) {
+  const t = useT();
   const maxDmg = Math.max(...result.hits.map((h) => h.totalRawDamage), 1);
   // Las barras no arrancan en 0: si no, todos los golpes llenan casi toda la barra y no se ve
   // la diferencia entre uno y otro. Se deja un margen bajo el golpe mas chico.
@@ -74,25 +77,25 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 stagger-children">
         <Card className="border-amber-800/40">
           <div className="text-center py-1">
-            <div className="text-xs text-zinc-500 uppercase tracking-wide">Dano Promedio<HelpTip text="Promedio de dano final por golpe en esta simulacion." /></div>
+            <div className="text-xs text-zinc-500 uppercase tracking-wide">{t('Daño Promedio')}<HelpTip text={t('Promedio de daño final por golpe en esta simulación.')} /></div>
             <div className="text-4xl font-bold text-amber-400 mt-1">{result.averageDamage}</div>
           </div>
         </Card>
         <Card>
           <div className="text-center py-1">
-            <div className="text-xs text-zinc-500 uppercase tracking-wide">Dano Total<HelpTip text="Suma del dano final de todos los golpes." /></div>
+            <div className="text-xs text-zinc-500 uppercase tracking-wide">{t('Daño Total')}<HelpTip text={t('Suma del daño final de todos los golpes.')} /></div>
             <div className="text-2xl font-bold text-zinc-200 mt-1">{result.totalDamage}</div>
           </div>
         </Card>
         <Card className="border-red-900/40">
           <div className="text-center py-1">
-            <div className="text-xs text-zinc-500 uppercase tracking-wide">Criticos<HelpTip text="Golpes criticos obtenidos del total. Critico = dano x1.5." /></div>
+            <div className="text-xs text-zinc-500 uppercase tracking-wide">{t('Críticos')}<HelpTip text={t('Golpes críticos obtenidos del total. Crítico = daño x1.5.')} /></div>
             <div className="text-2xl font-bold text-red-400 mt-1">{result.critsLanded}/{result.hits.length}</div>
           </div>
         </Card>
         <Card>
           <div className="text-center py-1">
-            <div className="text-xs text-zinc-500 uppercase tracking-wide">Min / Max<HelpTip text="Dano final minimo y maximo en un solo golpe." /></div>
+            <div className="text-xs text-zinc-500 uppercase tracking-wide">{t('Mín / Máx')}<HelpTip text={t('Daño final mínimo y máximo en un solo golpe.')} /></div>
             <div className="text-lg font-bold text-zinc-200 mt-1">
               {Math.min(...result.hits.map((h) => h.finalDamage))} / {Math.max(...result.hits.map((h) => h.finalDamage))}
             </div>
@@ -101,14 +104,14 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
       </div>
 
       {/* Hits visual with expandable per-type breakdown */}
-      <Card title={<span>Golpes<HelpTip text="Barra gris = dano bruto. Barra color = dano final. Rojo = critico. La linea blanca marca el promedio." /></span>}>
+      <Card title={<span>{t("Golpes")}<HelpTip text={t('Barra gris = daño bruto. Barra de color = daño final. Rojo = crítico. La línea blanca marca el promedio.')} /></span>}>
         <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 mb-2 text-xs text-zinc-500">
-          <p>Hacé click en un golpe para ver el desglose de daño por tipo.</p>
+          <p>{t('Hacé clic en un golpe para ver el desglose de daño por tipo.')}</p>
           <p className="flex items-center gap-3">
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-600" />normal</span>
-            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-600" />crítico</span>
-            <span className="flex items-center gap-1"><span className="w-0.5 h-3 bg-white/70" />promedio</span>
-            <span className="text-zinc-600" title="Las barras empiezan en este valor para que se note la diferencia entre golpes">escala desde {scaleFloor}</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-600" />{t("normal")}</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-600" />{t("crítico")}</span>
+            <span className="flex items-center gap-1"><span className="w-0.5 h-3 bg-white/70" />{t("promedio")}</span>
+            <span className="text-zinc-600" title={t("Las barras empiezan en este valor para que se note la diferencia entre golpes")}>{t('escala desde {n}', { n: scaleFloor })}</span>
           </p>
         </div>
         <div className="space-y-1">
@@ -135,12 +138,12 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
                       <div className="absolute inset-y-0 w-0.5 bg-white/70" style={{ left: `${avgPct}%` }} aria-hidden />
                       <div className="absolute inset-0 flex items-center px-2 text-xs font-medium text-white">
                         {hit.finalDamage}
-                        {hit.isCrit && <span className="ml-1 text-red-300">CRIT</span>}
+                        {hit.isCrit && <span className="ml-1 text-red-300">{t("CRIT")}</span>}
                       </div>
                     </div>
                   </div>
                   <div className="w-20 text-right text-xs shrink-0">
-                    <span className="text-zinc-500">raw:</span>{' '}
+                    <span className="text-zinc-500">{'raw:'}</span>{' '}
                     <span className="text-zinc-400">{Math.round(hit.totalRawDamage)}</span>
                   </div>
                   <div className="w-14 text-right text-xs text-zinc-500 shrink-0">-{reducPct}%</div>
@@ -169,7 +172,7 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
         const reductionPct = avgRaw > 0 ? ((avgRaw - avgFinal) / avgRaw * 100).toFixed(1) : '0';
         return (
           <div className="text-center text-sm text-zinc-500 -mt-2">
-            Reduccion promedio: <span className="text-orange-400 font-semibold">{reductionPct}%</span>
+            {t('Reducción promedio:')} <span className="text-orange-400 font-semibold">{reductionPct}%</span>
             {' '}({Math.round(avgRaw)} raw &rarr; {avgFinal} final)
           </div>
         );
@@ -192,7 +195,7 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
         if (Object.keys(avgPerType).length === 0) return null;
         const maxAvg = Math.max(...Object.values(avgPerType));
         return (
-          <Card title={<span>Dano por tipo (promedio)<HelpTip text="Desglose del dano final promedio por tipo de dano. Muestra cuanto dano de cada tipo pasa las defensas enemigas." /></span>}>
+          <Card title={<span>{t('Daño por tipo (promedio)')}<HelpTip text={t('Desglose del daño final promedio por tipo de daño. Muestra cuánto daño de cada tipo pasa las defensas enemigas.')} /></span>}>
             <DamagePerTypeBars perType={avgPerType} maxReference={maxAvg} />
           </Card>
         );
@@ -207,26 +210,26 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
         const critObservedPct = Math.round((result.critsLanded / result.hits.length) * 100);
         const ability = hasWeaponAbility(weaponStats) ? <WeaponAbility result={weaponStats} /> : null;
         return (
-          <Card title={<span>Estadisticas del arma<HelpTip text="Base = stats del arma con tu joyeria, sin defensas (Comparar muestra el arma sola, sin joyeria). Vs enemigo = dano final de la simulacion; el DPS vs enemigo es el DPS efectivo escalado por el % de dano que pasa las defensas." /></span>}>
+          <Card title={<span>{t('Estadísticas del arma')}<HelpTip text={t('Base = stats del arma con tu joyería, sin defensas (Comparar muestra el arma sola, sin joyería). Vs enemigo = daño final de la simulación; el DPS vs enemigo es el DPS efectivo escalado por el % de daño que pasa las defensas.')} /></span>}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800 text-xs text-zinc-500 text-left">
                     <th className="py-2 px-2"></th>
-                    <th className="py-2 px-2 text-right">Min</th>
-                    <th className="py-2 px-2 text-right">Max</th>
-                    <th className="py-2 px-2 text-right">Prom</th>
-                    <th className="py-2 px-2 text-right" title="Base: probabilidad de critico. Vs enemigo: criticos obtenidos en la simulacion.">Crit%</th>
-                    <th className="py-2 px-2 text-right">Crit x</th>
-                    <th className="py-2 px-2 text-right" title="Segundos por golpe">s/g</th>
-                    <th className="py-2 px-2 text-right" title="Golpes por segundo">g/s</th>
-                    <th className="py-2 px-2 text-right font-bold text-amber-500">DPS</th>
-                    {ability && <th className="py-2 px-2 text-right">Habilidad</th>}
+                    <th className="py-2 px-2 text-right">{t('Mín')}</th>
+                    <th className="py-2 px-2 text-right">{t('Máx')}</th>
+                    <th className="py-2 px-2 text-right">{t("Prom")}</th>
+                    <th className="py-2 px-2 text-right" title={t('Base: probabilidad de crítico. Vs enemigo: críticos obtenidos en la simulación.')}>{t("Crit%")}</th>
+                    <th className="py-2 px-2 text-right">{t("Crit x")}</th>
+                    <th className="py-2 px-2 text-right" title={t("Segundos por golpe")}>s/g</th>
+                    <th className="py-2 px-2 text-right" title={t("Golpes por segundo")}>g/s</th>
+                    <th className="py-2 px-2 text-right font-bold text-amber-500">{t("DPS")}</th>
+                    {ability && <th className="py-2 px-2 text-right">{t("Habilidad")}</th>}
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="border-b border-zinc-800/50">
-                    <td className="py-2 px-2 text-zinc-400 whitespace-nowrap">Base</td>
+                    <td className="py-2 px-2 text-zinc-400 whitespace-nowrap">{t("Base")}</td>
                     <td className="py-2 px-2 text-right text-zinc-300">{weaponStats.danoMin}</td>
                     <td className="py-2 px-2 text-right text-zinc-300">{weaponStats.danoMax}</td>
                     <td className="py-2 px-2 text-right text-zinc-300">{weaponStats.danoPromedio}</td>
@@ -238,7 +241,7 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
                     {ability && <td className="py-2 px-2 text-right whitespace-nowrap">{ability}</td>}
                   </tr>
                   <tr className="border-b border-zinc-800/50">
-                    <td className="py-2 px-2 text-zinc-400 whitespace-nowrap">Vs enemigo</td>
+                    <td className="py-2 px-2 text-zinc-400 whitespace-nowrap">{t("Vs enemigo")}</td>
                     <td className="py-2 px-2 text-right text-zinc-300">{Math.min(...finals)}</td>
                     <td className="py-2 px-2 text-right text-zinc-300">{Math.max(...finals)}</td>
                     <td className="py-2 px-2 text-right text-zinc-300">{result.averageDamage}</td>
@@ -257,19 +260,19 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
       })()}
 
       {/* Detail table */}
-      <Card title={<span>Detalle<HelpTip text="Desglose completo de cada golpe: dano bruto, critico, y cada capa de reduccion aplicada." /></span>}>
+      <Card title={<span>{t("Detalle")}<HelpTip text={t('Desglose completo de cada golpe: daño bruto, crítico y cada capa de reducción aplicada.')} /></span>}>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-zinc-800 text-zinc-500 text-left">
                 <th className="py-1 px-2">#</th>
-                <th className="py-1 px-2 text-right" title="Dano bruto antes de defensas (incluye especial)">Raw</th>
-                <th className="py-1 px-2 text-center" title="Golpe critico (x1.5 dano)">Crit</th>
-                <th className="py-1 px-2 text-right" title="Dano absorbido por armadura (PBA, CA, calidad)">Proteccion</th>
-                <th className="py-1 px-2 text-right" title="Dano reducido por resistencias (general + por tipo)">Resistencia</th>
-                <th className="py-1 px-2 text-right" title="Dano absorbido por barrera magica">Barrera</th>
-                <th className="py-1 px-2 text-center" title="Se aplico piso minimo de dano (4-8% siempre pasa)">Min?</th>
-                <th className="py-1 px-2 text-right font-bold" title="Dano final que recibe el objetivo">Final</th>
+                <th className="py-1 px-2 text-right" title={t('Daño bruto antes de defensas (incluye especial)')}>{t('Bruto')}</th>
+                <th className="py-1 px-2 text-center" title={t('Golpe crítico (x1.5 daño)')}>{t("Crit")}</th>
+                <th className="py-1 px-2 text-right" title={t('Daño absorbido por armadura (PBA, CA, calidad)')}>{t('Protección')}</th>
+                <th className="py-1 px-2 text-right" title={t('Daño reducido por resistencias (general + por tipo)')}>{t("Resistencia")}</th>
+                <th className="py-1 px-2 text-right" title={t('Daño absorbido por barrera mágica')}>{t("Barrera")}</th>
+                <th className="py-1 px-2 text-center" title={t('Se aplicó el piso mínimo de daño (4-8% siempre pasa)')}>{t('¿Mín?')}</th>
+                <th className="py-1 px-2 text-right font-bold" title={t('Daño final que recibe el objetivo')}>{t("Final")}</th>
               </tr>
             </thead>
             <tbody>
@@ -277,7 +280,7 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
                 <tr key={hit.hitNumber} className={`border-b border-zinc-800/50 ${hit.isCrit ? 'bg-red-950/20' : ''}`}>
                   <td className="py-1 px-2 text-zinc-500">{hit.hitNumber}</td>
                   <td className="py-1 px-2 text-right text-zinc-300">{Math.round(hit.totalRawDamage)}</td>
-                  <td className="py-1 px-2 text-center">{hit.isCrit ? <span className="text-red-400">Si</span> : <span className="text-zinc-600">-</span>}</td>
+                  <td className="py-1 px-2 text-center">{hit.isCrit ? <span className="text-red-400">{t('Sí')}</span> : <span className="text-zinc-600">-</span>}</td>
                   <td className="py-1 px-2 text-right text-orange-400">
                     {Math.round(Object.values(hit.protectionApplied).reduce((s, v) => s + v, 0))}
                   </td>
@@ -288,7 +291,7 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
                     {hit.barrierReduction > 0 ? hit.barrierReduction : '-'}
                   </td>
                   <td className="py-1 px-2 text-center">
-                    {hit.minimumDamageEnforced ? <span className="text-yellow-400">Si</span> : <span className="text-zinc-600">-</span>}
+                    {hit.minimumDamageEnforced ? <span className="text-yellow-400">{t('Sí')}</span> : <span className="text-zinc-600">-</span>}
                   </td>
                   <td className="py-1 px-2 text-right font-bold text-amber-400">{hit.finalDamage}</td>
                 </tr>

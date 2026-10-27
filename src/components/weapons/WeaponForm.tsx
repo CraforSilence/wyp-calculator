@@ -10,6 +10,7 @@ import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS,
 import { SlotEditor, muescaValueInput } from './SlotEditor';
 import type { Weapon, DamageTypeName, MuescaType, Velocidad, Rareza, Subcategoria } from '@/types/weapon';
 import type { Clase } from '@/types/character';
+import { useT } from '@/i18n/I18nProvider';
 
 interface DamageRow {
   tipo: DamageTypeName;
@@ -31,7 +32,7 @@ interface MuescaRow {
 const BONUS_TYPES = [
   'Fuerza', 'Chance de critico %', 'Dano critico %',
   'Vel ataque %', 'Atributo de clase %',
-  ...ALL_DAMAGE_TYPES.map((t) => `Dano ${DAMAGE_TYPE_LABELS[t]}`),
+  ...ALL_DAMAGE_TYPES.map((dt) => `Dano ${DAMAGE_TYPE_LABELS[dt]}`),
 ];
 
 interface WeaponFormProps {
@@ -41,6 +42,7 @@ interface WeaponFormProps {
 }
 
 export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps) {
+  const t = useT();
   const [nombre, setNombre] = useState(editingWeapon?.nombre || '');
   const [clase, setClase] = useState<Clase>(editingWeapon?.clase || 'Guerrero');
   const [subcategoria, setSubcategoria] = useState<string>(editingWeapon?.subcategoria || 'Lanza');
@@ -100,7 +102,7 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
         case 'Vel ataque %': attackSpeedPct = row.valor; break;
         case 'Atributo de clase %': atributoClasePct = row.valor; break;
         default: {
-          const dmgType = ALL_DAMAGE_TYPES.find((t) => `Dano ${DAMAGE_TYPE_LABELS[t]}` === row.tipo);
+          const dmgType = ALL_DAMAGE_TYPES.find((dt) => `Dano ${DAMAGE_TYPE_LABELS[dt]}` === row.tipo);
           if (dmgType) bonusDano[dmgType] = row.valor;
         }
       }
@@ -135,38 +137,38 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
   const subcatOptions = SUBCATEGORIAS_POR_CLASE[clase].map((s) => ({ value: s, label: s }));
 
   return (
-    <Card title={editingWeapon ? 'Editar Arma' : 'Nueva Arma'}>
+    <Card title={editingWeapon ? t("Editar Arma") : t("Nueva Arma")}>
       <div className="space-y-4">
         {/* Basic info */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <div className="col-span-2 sm:col-span-3">
-            <Input label="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+            <Input label={t("Nombre")} value={nombre} onChange={(e) => setNombre(e.target.value)} />
           </div>
-          <Select label="Clase" value={clase} onChange={(e) => { setClase(e.target.value as Clase); setSubcategoria(SUBCATEGORIAS_POR_CLASE[e.target.value as Clase][0]); }}
+          <Select label={t("Clase")} value={clase} onChange={(e) => { setClase(e.target.value as Clase); setSubcategoria(SUBCATEGORIAS_POR_CLASE[e.target.value as Clase][0]); }}
             options={[{ value: 'Guerrero', label: 'Guerrero' }, { value: 'Arquero', label: 'Arquero' }, { value: 'Mago', label: 'Mago' }]} />
-          <Select label="Subcategoria" value={subcategoria} onChange={(e) => setSubcategoria(e.target.value)} options={subcatOptions} />
-          <Select label="Velocidad" value={velocidad} onChange={(e) => setVelocidad(e.target.value as Velocidad)}
+          <Select label={t('Subcategoría')} value={subcategoria} onChange={(e) => setSubcategoria(e.target.value)} options={subcatOptions} />
+          <Select label={t("Velocidad")} value={velocidad} onChange={(e) => setVelocidad(e.target.value as Velocidad)}
             options={[{ value: 'lenta', label: 'Lenta' }, { value: 'media', label: 'Media' }, { value: 'rapida', label: 'Rapida' }]} />
-          <Select label="Rareza" value={rareza} onChange={(e) => setRareza(e.target.value as Rareza)}
+          <Select label={t("Rareza")} value={rareza} onChange={(e) => setRareza(e.target.value as Rareza)}
             options={[{ value: 'Épica', label: 'Épica' }, { value: 'Mágica', label: 'Mágica' }, { value: 'Legendaria', label: 'Legendaria' }, { value: 'Arcana', label: 'Arcana' }]} />
-          <Input label="Stat Base (+dano)" type="number" value={bonusAtributo} onChange={(e) => setBonusAtributo(Number(e.target.value))} />
+          <Input label={t('Stat Base (+daño)')} type="number" value={bonusAtributo} onChange={(e) => setBonusAtributo(Number(e.target.value))} />
         </div>
 
         {/* Damage types */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Dano Base</span>
+            <span className="text-xs font-medium text-zinc-400">{t('Daño Base')}</span>
             {damageRows.length < 6 && (
-              <Button size="sm" variant="ghost" onClick={() => setDamageRows([...damageRows, { tipo: 'punzante', min: 0, max: 0 }])}>+ Tipo</Button>
+              <Button size="sm" variant="ghost" onClick={() => setDamageRows([...damageRows, { tipo: 'punzante', min: 0, max: 0 }])}>{t("+ Tipo")}</Button>
             )}
           </div>
           <div className="space-y-2">
             {damageRows.map((row, i) => (
               <div key={i} className="flex gap-2 items-end">
                 <Select value={row.tipo} onChange={(e) => { const next = [...damageRows]; next[i].tipo = e.target.value as DamageTypeName; setDamageRows(next); }}
-                  options={ALL_DAMAGE_TYPES.map((t) => ({ value: t, label: DAMAGE_TYPE_LABELS[t] }))} />
-                <Input type="number" placeholder="Min" value={row.min || ''} onChange={(e) => { const next = [...damageRows]; next[i].min = Number(e.target.value); setDamageRows(next); }} className="w-20" />
-                <Input type="number" placeholder="Max" value={row.max || ''} onChange={(e) => { const next = [...damageRows]; next[i].max = Number(e.target.value); setDamageRows(next); }} className="w-20" />
+                  options={ALL_DAMAGE_TYPES.map((dt) => ({ value: dt, label: DAMAGE_TYPE_LABELS[dt] }))} />
+                <Input type="number" placeholder={t('Mín')} value={row.min || ''} onChange={(e) => { const next = [...damageRows]; next[i].min = Number(e.target.value); setDamageRows(next); }} className="w-20" />
+                <Input type="number" placeholder={t('Máx')} value={row.max || ''} onChange={(e) => { const next = [...damageRows]; next[i].max = Number(e.target.value); setDamageRows(next); }} className="w-20" />
                 {damageRows.length > 1 && (
                   <Button size="sm" variant="danger-ghost" onClick={() => setDamageRows(damageRows.filter((_, j) => j !== i))}>x</Button>
                 )}
@@ -178,8 +180,8 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
         {/* Bonuses: la cantidad de slots depende de la rareza */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Bonus</span>
-            <span className="text-xs text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].bonus} {RAREZA_SLOTS[rareza].bonus === 1 ? 'slot' : 'slots'}</span>
+            <span className="text-xs font-medium text-zinc-400">{t("Bonus")}</span>
+            <span className="text-xs text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].bonus} {RAREZA_SLOTS[rareza].bonus === 1 ? t("slot") : t("slots")}</span>
           </div>
           <SlotEditor
             rows={bonusRows}
@@ -187,15 +189,15 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
             options={bonusSelectOptions(bonusOptionsForRareza(rareza, BONUS_TYPES).map((o) => o.value))}
             onChange={setBonusRows}
             noun={{ one: 'bonus', many: 'bonus' }}
-            limitLabel={`Un arma ${rareza}`}
+            limitLabel={t('Un arma {rareza}', { rareza: t(rareza) })}
           />
         </div>
 
         {/* Muescas: 1, salvo las Arcanas que tienen 2 */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Muescas</span>
-            <span className="text-xs text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].muescas} {RAREZA_SLOTS[rareza].muescas === 1 ? 'muesca' : 'muescas'}</span>
+            <span className="text-xs font-medium text-zinc-400">{t("Muescas")}</span>
+            <span className="text-xs text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].muescas} {RAREZA_SLOTS[rareza].muescas === 1 ? t("muesca") : t("muescas")}</span>
           </div>
           <SlotEditor
             rows={muescaRows}
@@ -204,13 +206,13 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
             onChange={(rows) => setMuescaRows(rows as MuescaRow[])}
             valueInput={muescaValueInput}
             noun={{ one: 'muesca', many: 'muescas' }}
-            limitLabel={`Un arma ${rareza}`}
+            limitLabel={t('Un arma {rareza}', { rareza: t(rareza) })}
           />
         </div>
 
         {/* Notes */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-zinc-400 font-medium">Notas</label>
+          <label className="text-xs text-zinc-400 font-medium">{t("Notas")}</label>
           <textarea
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
@@ -220,9 +222,9 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
 
         {/* Actions */}
         <div className="flex gap-2 justify-end">
-          {onCancel && <Button variant="secondary" onClick={onCancel}>Cancelar</Button>}
+          {onCancel && <Button variant="secondary" onClick={onCancel}>{t("Cancelar")}</Button>}
           <Button onClick={handleSubmit} disabled={!nombre.trim()}>
-            {editingWeapon ? 'Guardar' : 'Agregar Arma'}
+            {editingWeapon ? t("Guardar") : t("Agregar Arma")}
           </Button>
         </div>
       </div>

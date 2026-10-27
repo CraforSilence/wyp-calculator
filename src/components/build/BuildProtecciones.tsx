@@ -12,6 +12,7 @@ import {
 import { Card } from '@/components/ui/Card';
 import type { ArmorSlot, ArmorBonusType } from '@/types/armor';
 import type { Clase } from '@/types/character';
+import { useT } from '@/i18n/I18nProvider';
 
 function getClase(subclase: string): Clase {
   for (const [clase, subs] of Object.entries(CLASE_SUBCLASES)) {
@@ -32,6 +33,7 @@ function aggregateArmorBonuses(armorSet: ReturnType<typeof useArmor>['armorSet']
 }
 
 export function BuildProtecciones() {
+  const t = useT();
   const { character } = useCharacter();
   const { armorSet: storedArmorSet } = useArmor();
 
@@ -67,7 +69,7 @@ export function BuildProtecciones() {
       <div className="flex items-center gap-2 text-sm">
         <span className="text-zinc-200 font-semibold">{clase}</span>
         <span className="text-zinc-600">&middot;</span>
-        <span className="text-zinc-400">{character.subclase}</span>
+        <span className="text-zinc-400">{t(character.subclase)}</span>
         <span className="text-zinc-600">&middot;</span>
         <span className="text-zinc-500">{pieceCount} piezas</span>
         <span className="text-zinc-600">&middot;</span>
@@ -75,17 +77,17 @@ export function BuildProtecciones() {
       </div>
 
       {/* Proteccion por tipo de dano. En pantallas grandes ya esta en el panel fijo. */}
-      <Card title="Proteccion por Tipo de Dano" className="lg:hidden">
+      <Card title={t('Protección por Tipo de Daño')} className="lg:hidden">
         <div className="space-y-3">
-          {ALL_DAMAGE_TYPES.map((t) => {
-            const val = protection.perType[t] || 0;
+          {ALL_DAMAGE_TYPES.map((dt) => {
+            const val = protection.perType[dt] || 0;
             const pct = (val / maxProt) * 100;
-            const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(t);
+            const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(dt);
 
             return (
-              <div key={t}>
+              <div key={dt}>
                 <div className="flex items-center justify-between text-sm mb-0.5">
-                  <span className="text-zinc-300">{DAMAGE_TYPE_ICONS[t]} {DAMAGE_TYPE_LABELS[t]}</span>
+                  <span className="text-zinc-300">{DAMAGE_TYPE_ICONS[dt]} {t(DAMAGE_TYPE_LABELS[dt])}</span>
                   <span className={`font-bold ${val > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-600'}`}>
                     {Math.round(val)}
                   </span>
@@ -103,14 +105,14 @@ export function BuildProtecciones() {
       </Card>
 
       {/* Proteccion por pieza */}
-      <Card title="Detalle por Pieza">
+      <Card title={t("Detalle por Pieza")}>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
               <tr className="text-zinc-500 border-b border-zinc-800">
-                <th className="text-left py-1.5 pr-2 font-medium">Pieza</th>
-                {ALL_DAMAGE_TYPES.map((t) => (
-                  <th key={t} className="text-right py-1.5 px-1 font-medium" title={DAMAGE_TYPE_LABELS[t]}>{DAMAGE_TYPE_ICONS[t]}</th>
+                <th className="text-left py-1.5 pr-2 font-medium">{t("Pieza")}</th>
+                {ALL_DAMAGE_TYPES.map((dt) => (
+                  <th key={dt} className="text-right py-1.5 px-1 font-medium" title={t(DAMAGE_TYPE_LABELS[dt])}>{DAMAGE_TYPE_ICONS[dt]}</th>
                 ))}
               </tr>
             </thead>
@@ -118,11 +120,11 @@ export function BuildProtecciones() {
               {Object.entries(protection.perPiece).map(([slot, values]) => (
                 <tr key={slot} className="border-b border-zinc-800/50">
                   <td className="py-1.5 pr-2 text-zinc-300">{ARMOR_SLOT_LABEL_OVERRIDES[clase]?.[slot as ArmorSlot] ?? ARMOR_SLOT_LABELS[slot as ArmorSlot] ?? slot}</td>
-                  {ALL_DAMAGE_TYPES.map((t) => {
-                    const v = values[t] || 0;
-                    const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(t);
+                  {ALL_DAMAGE_TYPES.map((dt) => {
+                    const v = values[dt] || 0;
+                    const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(dt);
                     return (
-                      <td key={t} className={`text-right py-1.5 px-1 ${v > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-700'}`}>
+                      <td key={dt} className={`text-right py-1.5 px-1 ${v > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-700'}`}>
                         {v > 0 ? Math.round(v) : '-'}
                       </td>
                     );
@@ -130,12 +132,12 @@ export function BuildProtecciones() {
                 </tr>
               ))}
               <tr className="font-semibold">
-                <td className="py-1.5 pr-2 text-zinc-200">Total</td>
-                {ALL_DAMAGE_TYPES.map((t) => {
-                  const v = protection.perType[t] || 0;
-                  const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(t);
+                <td className="py-1.5 pr-2 text-zinc-200">{t("Total")}</td>
+                {ALL_DAMAGE_TYPES.map((dt) => {
+                  const v = protection.perType[dt] || 0;
+                  const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(dt);
                   return (
-                    <td key={t} className={`text-right py-1.5 px-1 ${v > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-700'}`}>
+                    <td key={dt} className={`text-right py-1.5 px-1 ${v > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-700'}`}>
                       {Math.round(v)}
                     </td>
                   );
@@ -147,39 +149,39 @@ export function BuildProtecciones() {
       </Card>
 
       {/* Resistencias y reducciones */}
-      <Card title="Resistencias y Reducciones">
+      <Card title={t("Resistencias y Reducciones")}>
         <div className="space-y-3">
           {/* Generales */}
           <div>
-            <p className="text-xs text-zinc-500 mb-1">Generales</p>
+            <p className="text-xs text-zinc-500 mb-1">{t("Generales")}</p>
             <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
               {armorSet.bonusArmaduraPct > 0 && (
                 <div>
-                  <span className="text-zinc-400">Armadura %:</span>{' '}
+                  <span className="text-zinc-400">{t("Armadura %:")}</span>{' '}
                   <span className="text-amber-400 font-semibold">+{armorSet.bonusArmaduraPct}%</span>
                 </div>
               )}
               {armorSet.generalResistance.fisico > 0 && (
                 <div>
-                  <span className="text-zinc-400">Res. Fisica:</span>{' '}
+                  <span className="text-zinc-400">{t('Res. Física:')}</span>{' '}
                   <span className="text-orange-400 font-semibold">{armorSet.generalResistance.fisico}%</span>
                 </div>
               )}
               {armorSet.generalResistance.magico > 0 && (
                 <div>
-                  <span className="text-zinc-400">Res. Magica:</span>{' '}
+                  <span className="text-zinc-400">{t('Res. Mágica:')}</span>{' '}
                   <span className="text-blue-400 font-semibold">{armorSet.generalResistance.magico}%</span>
                 </div>
               )}
               {armorSet.meleeDmgReductionPct > 0 && (
                 <div>
-                  <span className="text-zinc-400">Red. Melee:</span>{' '}
+                  <span className="text-zinc-400">{t("Red. Melee:")}</span>{' '}
                   <span className="text-amber-400 font-semibold">{armorSet.meleeDmgReductionPct}%</span>
                 </div>
               )}
               {armorSet.rangedDmgReductionPct > 0 && (
                 <div>
-                  <span className="text-zinc-400">Red. Rango:</span>{' '}
+                  <span className="text-zinc-400">{t("Red. Rango:")}</span>{' '}
                   <span className="text-amber-400 font-semibold">{armorSet.rangedDmgReductionPct}%</span>
                 </div>
               )}
@@ -188,7 +190,7 @@ export function BuildProtecciones() {
                 && armorSet.generalResistance.magico === 0
                 && armorSet.meleeDmgReductionPct === 0
                 && armorSet.rangedDmgReductionPct === 0 && (
-                <span className="text-xs text-zinc-600">Sin modificadores generales configurados</span>
+                <span className="text-xs text-zinc-600">{t("Sin modificadores generales configurados")}</span>
               )}
             </div>
           </div>
@@ -196,15 +198,15 @@ export function BuildProtecciones() {
           {/* Resistencia por tipo */}
           {Object.values(armorSet.typeResistance).some((v) => v && v > 0) && (
             <div>
-              <p className="text-xs text-zinc-500 mb-1">Resistencia por Tipo</p>
+              <p className="text-xs text-zinc-500 mb-1">{t("Resistencia por Tipo")}</p>
               <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-                {ALL_DAMAGE_TYPES.filter((t) => (armorSet.typeResistance[t] || 0) > 0).map((t) => {
-                  const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(t);
+                {ALL_DAMAGE_TYPES.filter((dt) => (armorSet.typeResistance[dt] || 0) > 0).map((dt) => {
+                  const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(dt);
                   return (
-                    <div key={t}>
-                      <span className="text-zinc-400">{DAMAGE_TYPE_LABELS[t]}:</span>{' '}
+                    <div key={dt}>
+                      <span className="text-zinc-400">{t(DAMAGE_TYPE_LABELS[dt])}:</span>{' '}
                       <span className={`font-semibold ${isPhysical ? 'text-orange-400' : 'text-blue-400'}`}>
-                        {armorSet.typeResistance[t]}%
+                        {armorSet.typeResistance[dt]}%
                       </span>
                     </div>
                   );
@@ -216,12 +218,12 @@ export function BuildProtecciones() {
           {/* Barrera magica */}
           {Object.values(armorSet.barrierPoints).some((v) => v && v > 0) && (
             <div>
-              <p className="text-xs text-zinc-500 mb-1">Barrera Magica</p>
+              <p className="text-xs text-zinc-500 mb-1">{t('Barrera Mágica')}</p>
               <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-                {ALL_DAMAGE_TYPES.filter((t) => (armorSet.barrierPoints[t] || 0) > 0).map((t) => (
-                  <div key={t}>
-                    <span className="text-zinc-400">{DAMAGE_TYPE_LABELS[t]}:</span>{' '}
-                    <span className="text-purple-400 font-semibold">{armorSet.barrierPoints[t]}</span>
+                {ALL_DAMAGE_TYPES.filter((dt) => (armorSet.barrierPoints[dt] || 0) > 0).map((dt) => (
+                  <div key={dt}>
+                    <span className="text-zinc-400">{t(DAMAGE_TYPE_LABELS[dt])}:</span>{' '}
+                    <span className="text-purple-400 font-semibold">{armorSet.barrierPoints[dt]}</span>
                   </div>
                 ))}
               </div>
@@ -232,12 +234,12 @@ export function BuildProtecciones() {
 
       {/* Bonus totales de armadura */}
       {hasBonusTotals && (
-        <Card title="Bonus Totales de Armadura">
+        <Card title={t("Bonus Totales de Armadura")}>
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-            {ARMOR_BONUS_TYPES.filter((t) => bonusTotals[t]).map((t) => (
-              <div key={t}>
-                <span className="text-zinc-400">{ARMOR_BONUS_LABELS[t]}:</span>{' '}
-                <span className="text-amber-400 font-semibold">+{bonusTotals[t]}</span>
+            {ARMOR_BONUS_TYPES.filter((dt) => bonusTotals[dt]).map((dt) => (
+              <div key={dt}>
+                <span className="text-zinc-400">{t(ARMOR_BONUS_LABELS[dt])}:</span>{' '}
+                <span className="text-amber-400 font-semibold">+{bonusTotals[dt]}</span>
               </div>
             ))}
           </div>

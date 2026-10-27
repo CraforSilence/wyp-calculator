@@ -20,6 +20,7 @@ import type {
 } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
+import { useT } from '@/i18n/I18nProvider';
 
 const QUALITY_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'N/A' },
@@ -45,7 +46,7 @@ interface ArmorSetFormProps {
 
 function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
   const protectionFactors: Partial<Record<DamageTypeName, ProtectionQuality>> = {};
-  for (const t of ALL_DAMAGE_TYPES) protectionFactors[t] = 'Normal';
+  for (const dt of ALL_DAMAGE_TYPES) protectionFactors[dt] = 'Normal';
   return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [], upgrades: [] };
 }
 
@@ -59,6 +60,7 @@ function initPieces(clase: Clase, existing?: Partial<Record<ArmorSlot, ArmorPiec
 }
 
 export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps) {
+  const t = useT();
   const [nombre, setNombre] = useState(editingSet?.nombre || '');
   const [clase, setClase] = useState<Clase>(editingSet?.clase || 'Guerrero');
   const [subclase, setSubclase] = useState(editingSet?.subclase || '');
@@ -146,15 +148,15 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
   const subclaseOptions = CLASE_SUBCLASES[clase].map((sc) => ({ value: sc, label: sc }));
 
   return (
-    <Card title={editingSet ? 'Editar Set de Armadura' : 'Nuevo Set de Armadura'}>
+    <Card title={editingSet ? t("Editar Set de Armadura") : t("Nuevo Set de Armadura")}>
       <div className="space-y-4">
         {/* Basic info */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="col-span-2">
-            <Input label="Nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+            <Input label={t("Nombre")} value={nombre} onChange={(e) => setNombre(e.target.value)} />
           </div>
           <Select
-            label="Clase" value={clase}
+            label={t("Clase")} value={clase}
             onChange={(e) => handleClaseChange(e.target.value as Clase)}
             options={[
               { value: 'Guerrero', label: 'Guerrero' },
@@ -163,13 +165,13 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
             ]}
           />
           <Select
-            label="Subclase" value={subclase}
+            label={t("Subclase")} value={subclase}
             onChange={(e) => setSubclase(e.target.value)}
             options={[{ value: '', label: '(ninguna)' }, ...subclaseOptions]}
           />
           <Select
-            label="Rareza"
-            tooltip="Define cuantos bonus puede tener cada pieza. Artesano (Magnanitas, Champion) trae bonus fijos: definilos aca."
+            label={t("Rareza")}
+            tooltip={t('Define cuántos bonus puede tener cada pieza. Artesano (Magnanitas, Champion) trae bonus fijos: definilos acá.')}
             value={rareza}
             onChange={(e) => setRareza(e.target.value as ArmorRareza)}
             options={ARMOR_RAREZAS.map((r) => ({ value: r, label: r }))}
@@ -178,7 +180,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
 
         {/* Armor pieces */}
         <div>
-          <span className="text-xs font-medium text-zinc-400 mb-2 block">Piezas de Armadura</span>
+          <span className="text-xs font-medium text-zinc-400 mb-2 block">{t("Piezas de Armadura")}</span>
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {slots.map((slot) => {
               const piece = pieces[slot] || makeEmptyPiece(slot);
@@ -196,12 +198,12 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
                   {/* PBA + BCMT */}
                   <div className="grid grid-cols-2 gap-2">
                     <Input
-                      label="PBA" type="number" min={0}
+                      label={t("PBA")} type="number" min={0}
                       value={piece.pba}
                       onChange={(e) => updatePiece(slot, { pba: Number(e.target.value) })}
                     />
                     <Input
-                      label="BCMT" type="number" min={0}
+                      label={t("BCMT")} type="number" min={0}
                       value={piece.bcmt}
                       onChange={(e) => updatePiece(slot, { bcmt: Number(e.target.value) })}
                     />
@@ -209,19 +211,19 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
 
                   {/* Protection factors */}
                   <div>
-                    <span className="text-[11px] text-zinc-500 mb-1 block">Factor de proteccion</span>
+                    <span className="text-[11px] text-zinc-500 mb-1 block">{t('Factor de protección')}</span>
                     <div className="grid grid-cols-2 gap-1.5">
-                      {DAMAGE_TYPES_PAIRED.map((t) => (
-                        <div key={t} className="flex items-center gap-1.5">
-                          <span className="text-sm shrink-0" title={DAMAGE_TYPE_LABELS[t]}>{DAMAGE_TYPE_ICONS[t]}</span>
+                      {DAMAGE_TYPES_PAIRED.map((dt) => (
+                        <div key={dt} className="flex items-center gap-1.5">
+                          <span className="text-sm shrink-0" title={t(DAMAGE_TYPE_LABELS[dt])}>{DAMAGE_TYPE_ICONS[dt]}</span>
                           <select
-                            className={`flex-1 min-w-0 rounded border px-2 py-1.5 text-xs focus:outline-none focus:border-amber-500 transition-colors ${QUALITY_STYLES[piece.protectionFactors[t] || 'Normal']}`}
-                            value={piece.protectionFactors[t] || ''}
+                            className={`flex-1 min-w-0 rounded border px-2 py-1.5 text-xs focus:outline-none focus:border-amber-500 transition-colors ${QUALITY_STYLES[piece.protectionFactors[dt] || 'Normal']}`}
+                            value={piece.protectionFactors[dt] || ''}
                             onChange={(e) => {
                               const val = e.target.value as ProtectionQuality | '';
                               const factors = { ...piece.protectionFactors };
-                              if (val) factors[t] = val as ProtectionQuality;
-                              else delete factors[t];
+                              if (val) factors[dt] = val as ProtectionQuality;
+                              else delete factors[dt];
                               updatePiece(slot, { protectionFactors: factors });
                             }}
                           >
@@ -236,7 +238,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
 
                   {/* Bonuses: los slots dependen de la rareza del set */}
                   <div>
-                    <span className="text-[11px] text-zinc-500 mb-1 block">Bonuses · {armorBonusLimitLabel(rareza)}</span>
+                    <span className="text-[11px] text-zinc-500 mb-1 block">Bonuses · {armorBonusLimitLabel(rareza, t)}</span>
                     <ArmorBonusSlots
                       bonuses={piece.bonuses}
                       slot={slot}
@@ -248,7 +250,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
                   {/* Upgrades */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[11px] text-zinc-500">Upgrades</span>
+                      <span className="text-[11px] text-zinc-500">{t("Upgrades")}</span>
                       {piece.upgrades.length < 3 && (
                         <Button size="sm" variant="ghost" onClick={() => addPieceUpgrade(slot)}>+</Button>
                       )}
@@ -258,7 +260,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
                         <Select
                           value={u.type}
                           onChange={(e) => updatePieceUpgrade(slot, i, { type: e.target.value as DamageTypeName })}
-                          options={ALL_DAMAGE_TYPES.map((t) => ({ value: t, label: DAMAGE_TYPE_LABELS[t] }))}
+                          options={ALL_DAMAGE_TYPES.map((dt) => ({ value: dt, label: DAMAGE_TYPE_LABELS[dt] }))}
                         />
                         <Select
                           value={String(u.value)}
@@ -278,9 +280,9 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
         {/* Bonus de conjunto */}
         <div>
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-medium text-zinc-400">Bonus de Conjunto</span>
+            <span className="text-xs font-medium text-zinc-400">{t("Bonus de Conjunto")}</span>
             {bonusRows.length < 8 && (
-              <Button size="sm" variant="ghost" onClick={() => setBonusRows([...bonusRows, { tipo: 'vida', valor: 0 }])}>+ Bonus</Button>
+              <Button size="sm" variant="ghost" onClick={() => setBonusRows([...bonusRows, { tipo: 'vida', valor: 0 }])}>{t("+ Bonus")}</Button>
             )}
           </div>
           <div className="space-y-2">
@@ -289,10 +291,10 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
                 <Select
                   value={row.tipo}
                   onChange={(e) => { const next = [...bonusRows]; next[i].tipo = e.target.value as ArmorBonusType; setBonusRows(next); }}
-                  options={ARMOR_BONUS_TYPES.map((t) => ({ value: t, label: ARMOR_BONUS_LABELS[t] }))}
+                  options={ARMOR_BONUS_TYPES.map((dt) => ({ value: dt, label: ARMOR_BONUS_LABELS[dt] }))}
                 />
                 <Input
-                  type="number" placeholder="Valor"
+                  type="number" placeholder={t("Valor")}
                   value={row.valor || ''} className="w-24"
                   onChange={(e) => { const next = [...bonusRows]; next[i].valor = Number(e.target.value); setBonusRows(next); }}
                 />
@@ -304,7 +306,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
 
         {/* Notes */}
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-zinc-400 font-medium">Notas</label>
+          <label className="text-xs text-zinc-400 font-medium">{t("Notas")}</label>
           <textarea
             value={notas}
             onChange={(e) => setNotas(e.target.value)}
@@ -314,9 +316,9 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
 
         {/* Actions */}
         <div className="flex gap-2 justify-end">
-          {onCancel && <Button variant="secondary" onClick={onCancel}>Cancelar</Button>}
+          {onCancel && <Button variant="secondary" onClick={onCancel}>{t("Cancelar")}</Button>}
           <Button onClick={handleSubmit} disabled={!nombre.trim()}>
-            {editingSet ? 'Guardar' : 'Agregar Set'}
+            {editingSet ? t("Guardar") : t("Agregar Set")}
           </Button>
         </div>
       </div>

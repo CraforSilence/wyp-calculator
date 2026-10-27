@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { buildShareLink, decodeShareCode, encodeShareCode, getSharePreview, SHARE_TYPE_LABELS } from '@/lib/share';
 import type { ShareType } from '@/lib/share';
+import { useT } from '@/i18n/I18nProvider';
 
 interface ShareContextValue {
   /** Arma el codigo y abre la ventana con el link y el codigo para copiar */
@@ -28,6 +29,7 @@ interface Shared {
 }
 
 function CopyField({ label, hint, value, onCopy, mono }: { label: string; hint: string; value: string; onCopy: () => void; mono?: boolean }) {
+  const t = useT();
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2 mb-1">
@@ -41,13 +43,14 @@ function CopyField({ label, hint, value, onCopy, mono }: { label: string; hint: 
           onFocus={(e) => e.target.select()}
           className={`flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded px-3 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500 ${mono ? 'font-mono' : ''}`}
         />
-        <Button size="sm" onClick={onCopy}>Copiar</Button>
+        <Button size="sm" onClick={onCopy}>{t("Copiar")}</Button>
       </div>
     </div>
   );
 }
 
 export function ShareProvider({ children }: { children: React.ReactNode }) {
+  const t = useT();
   const { toast } = useToast();
   const [shared, setShared] = useState<Shared | null>(null);
 
@@ -58,42 +61,41 @@ export function ShareProvider({ children }: { children: React.ReactNode }) {
       type,
       code,
       link: buildShareLink(code),
-      preview: decoded ? getSharePreview(decoded) : SHARE_TYPE_LABELS[type],
+      preview: decoded ? getSharePreview(decoded, t) : t(SHARE_TYPE_LABELS[type]),
     });
-  }, []);
+  }, [t]);
 
   const copy = (text: string, what: string) => {
     navigator.clipboard.writeText(text).then(
-      () => toast(`${what} copiado al portapapeles`, 'success'),
-      () => toast('Error al copiar', 'error'),
+      () => toast(t('{what} copiado al portapapeles', { what: t(what) }), 'success'),
+      () => toast(t("Error al copiar"), 'error'),
     );
   };
 
   return (
     <ShareContext.Provider value={{ share }}>
       {children}
-      <Modal open={shared !== null} onClose={() => setShared(null)} title={`Compartir ${shared ? SHARE_TYPE_LABELS[shared.type].toLowerCase() : ''}`} size="md">
+      <Modal open={shared !== null} onClose={() => setShared(null)} title={t('Compartir {tipo}', { tipo: shared ? t(SHARE_TYPE_LABELS[shared.type]).toLowerCase() : '' })} size="md">
         {shared && (
           <div className="space-y-4">
             <p className="text-sm text-emerald-400 bg-emerald-900/20 border border-emerald-800/50 rounded px-3 py-2 break-words">
               {shared.preview}
             </p>
             <CopyField
-              label="Link"
-              hint="lo abren y lo cargan con un clic"
+              label={t("Link")}
+              hint={t("lo abren y lo cargan con un clic")}
               value={shared.link}
               onCopy={() => copy(shared.link, 'Link')}
             />
             <CopyField
-              label="Código"
-              hint="se pega en Importar"
+              label={t("Código")}
+              hint={t("se pega en Importar")}
               value={shared.code}
               onCopy={() => copy(shared.code, 'Código')}
               mono
             />
             <p className="text-xs text-zinc-500">
-              La data viaja dentro del link o el código: no se guarda en ningún servidor. Quien lo reciba
-              lo importa y le queda guardado en su navegador.
+              {t('La data viaja dentro del link o el código: no se guarda en ningún servidor. Quien lo reciba lo importa y le queda guardado en su navegador.')}
             </p>
           </div>
         )}

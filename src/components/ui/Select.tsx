@@ -2,6 +2,7 @@
 
 import { Fragment, SelectHTMLAttributes } from 'react';
 import { HelpPopover } from './HelpPopover';
+import { useT, type TFunction } from '@/i18n/I18nProvider';
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
@@ -12,9 +13,16 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 type SelectOption = SelectProps['options'][number];
 
-function renderOptions(options: SelectOption[]) {
+// Las etiquetas de las opciones suelen ser datos del juego (clases, bonus, rarezas): se traducen aca.
+// Si traen un icono adelante ("💥  Chance de critico %") se traduce solo el texto.
+function translateLabel(label: string, t: TFunction): string {
+  const m = label.match(/^([^\p{L}]*)(.*)$/u);
+  return m ? m[1] + t(m[2]) : t(label);
+}
+
+function renderOptions(options: SelectOption[], t: TFunction) {
   if (!options.some((o) => o.group)) {
-    return options.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>);
+    return options.map((opt) => <option key={opt.value} value={opt.value}>{translateLabel(opt.label, t)}</option>);
   }
   const groups: { name?: string; items: SelectOption[] }[] = [];
   for (const opt of options) {
@@ -23,12 +31,13 @@ function renderOptions(options: SelectOption[]) {
     else groups.push({ name: opt.group, items: [opt] });
   }
   return groups.map((g, i) => {
-    const items = g.items.map((opt) => <option key={opt.value} value={opt.value}>{opt.label}</option>);
-    return g.name ? <optgroup key={g.name} label={g.name}>{items}</optgroup> : <Fragment key={`_${i}`}>{items}</Fragment>;
+    const items = g.items.map((opt) => <option key={opt.value} value={opt.value}>{translateLabel(opt.label, t)}</option>);
+    return g.name ? <optgroup key={g.name} label={t(g.name)}>{items}</optgroup> : <Fragment key={`_${i}`}>{items}</Fragment>;
   });
 }
 
 export function Select({ label, tooltip, options, className = '', id, ...props }: SelectProps) {
+  const t = useT();
   const selectId = id || label?.toLowerCase().replace(/\s+/g, '-');
   return (
     <div className="flex flex-col gap-1">
@@ -43,7 +52,7 @@ export function Select({ label, tooltip, options, className = '', id, ...props }
         className={`bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500/30 transition-colors ${className}`}
         {...props}
       >
-        {renderOptions(options)}
+        {renderOptions(options, t)}
       </select>
     </div>
   );

@@ -16,6 +16,7 @@ import { ArmorPieceSummary, QUALITY_STYLES } from '@/components/armor/ArmorPiece
 import { ArmorModifiersSection } from '@/components/armor/ArmorModifiersSection';
 import type { ArmorSet, ArmorSlot, ArmorPiece, ProtectionQuality } from '@/types/armor';
 import type { Clase, Subclase } from '@/types/character';
+import { useT } from '@/i18n/I18nProvider';
 
 const QUALITY_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'N/A' },
@@ -48,11 +49,12 @@ interface EnemyArmorEditorProps {
 
 function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
   const protectionFactors: Record<string, string> = {};
-  for (const t of ALL_DAMAGE_TYPES) protectionFactors[t] = 'Normal';
+  for (const dt of ALL_DAMAGE_TYPES) protectionFactors[dt] = 'Normal';
   return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [], upgrades: [] };
 }
 
 export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChangeClase, onChangeSubclase, onUpdateSlot, onUpdateSet, onLoadPreset }: EnemyArmorEditorProps) {
+  const t = useT();
   const slots = armorSlotsFor(enemyClase, enemySubclase);
   const subclaseOptions = CLASE_SUBCLASES[enemyClase].map((sc) => ({ value: sc, label: sc }));
   // Piezas con el formulario abierto; el resto se ve como resumen
@@ -69,8 +71,8 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
       <div className="flex gap-3 flex-wrap items-end">
         <div className="w-36">
           <Select
-            label="Clase"
-            tooltip="Clase del enemigo. Determina las piezas de armadura disponibles."
+            label={t("Clase")}
+            tooltip={t("Clase del enemigo. Determina las piezas de armadura disponibles.")}
             value={enemyClase}
             onChange={(e) => onChangeClase(e.target.value as Clase)}
             options={CLASE_OPTIONS}
@@ -78,8 +80,8 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
         </div>
         <div className="w-36">
           <Select
-            label="Subclase"
-            tooltip="Subclase del enemigo. Determina el multiplicador de Clase de Armadura (CA)."
+            label={t("Subclase")}
+            tooltip={t("Subclase del enemigo. Determina el multiplicador de Clase de Armadura (CA).")}
             value={enemySubclase}
             onChange={(e) => onChangeSubclase(e.target.value as Subclase)}
             options={subclaseOptions}
@@ -92,8 +94,8 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
           return filteredSets.length > 0 ? (
             <div className="flex-1 min-w-[180px]">
               <Select
-                label="Cargar set"
-                tooltip="Carga un set de armadura predefinido para esta subclase."
+                label={t("Cargar set")}
+                tooltip={t("Carga un set de armadura predefinido para esta subclase.")}
                 value=""
                 onChange={(e) => {
                   const set = DEFAULT_ARMOR_SETS.find((s) => s.id === e.target.value);
@@ -140,9 +142,9 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                   <button
                     onClick={() => setSlotEditing(slot, !isEditing)}
                     className={`shrink-0 text-xs font-normal px-2 py-1 rounded transition-colors ${isEditing ? 'bg-amber-600 text-white hover:bg-amber-500' : 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/10'}`}
-                    title={isEditing ? 'Cerrar el formulario' : 'Editar esta pieza'}
+                    title={isEditing ? t("Cerrar el formulario") : t("Editar esta pieza")}
                   >
-                    {isEditing ? 'Listo' : 'Editar'}
+                    {isEditing ? t("Listo") : t("Editar")}
                   </button>
                 )}
               </span>
@@ -151,43 +153,43 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                 <ArmorPieceSummary piece={piece} />
               ) : !isEditing ? (
                 <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
-                  <span className="text-xs text-zinc-500">Pieza vacía</span>
+                  <span className="text-xs text-zinc-500">{t("Pieza vacía")}</span>
                   <button
                     onClick={() => setSlotEditing(slot, true)}
                     className="text-xs text-amber-400 hover:text-amber-300 border border-amber-600/50 hover:bg-amber-400/10 px-3 py-1.5 rounded transition-colors"
                   >
-                    + Cargar a mano
+                    {t("+ Cargar a mano")}
                   </button>
                 </div>
               ) : (
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <Input
-                    label="PBA" type="number" min={0}
-                    tooltip="Puntos Base de Armadura. Valor base de la pieza antes de aplicar calidades."
+                    label={t("PBA")} type="number" min={0}
+                    tooltip={t("Puntos Base de Armadura. Valor base de la pieza antes de aplicar calidades.")}
                     value={piece.pba}
                     onChange={(e) => onUpdateSlot(slot, { pba: Number(e.target.value) })}
                   />
                   <Input
-                    label="BCMT" type="number" min={0}
-                    tooltip="Bonus Calidad-Material-Tipo. Proteccion fija adicional que se suma despues de los calculos."
+                    label={t("BCMT")} type="number" min={0}
+                    tooltip={t('Bonus Calidad-Material-Tipo. Protección fija adicional que se suma después de los cálculos.')}
                     value={piece.bcmt}
                     onChange={(e) => onUpdateSlot(slot, { bcmt: Number(e.target.value) })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
-                  {DAMAGE_TYPES_PAIRED.map((t) => (
-                    <div key={t} className="flex items-center gap-1.5">
-                      <span className="text-sm shrink-0" title={DAMAGE_TYPE_LABELS[t]}>{DAMAGE_TYPE_ICONS[t]}</span>
+                  {DAMAGE_TYPES_PAIRED.map((dt) => (
+                    <div key={dt} className="flex items-center gap-1.5">
+                      <span className="text-sm shrink-0" title={t(DAMAGE_TYPE_LABELS[dt])}>{DAMAGE_TYPE_ICONS[dt]}</span>
                       <select
-                        className={`flex-1 min-w-0 rounded border px-2 py-1.5 text-xs focus:outline-none focus:border-amber-500 transition-colors ${piece.protectionFactors[t] ? QUALITY_STYLES[piece.protectionFactors[t] as ProtectionQuality] : 'bg-zinc-800 border-zinc-700 text-zinc-100'}`}
-                        value={piece.protectionFactors[t] || ''}
-                        title={`${DAMAGE_TYPE_LABELS[t]}: Factor de proteccion`}
+                        className={`flex-1 min-w-0 rounded border px-2 py-1.5 text-xs focus:outline-none focus:border-amber-500 transition-colors ${piece.protectionFactors[dt] ? QUALITY_STYLES[piece.protectionFactors[dt] as ProtectionQuality] : 'bg-zinc-800 border-zinc-700 text-zinc-100'}`}
+                        value={piece.protectionFactors[dt] || ''}
+                        title={`${t(DAMAGE_TYPE_LABELS[dt])}: ${t('Factor de protección')}`}
                         onChange={(e) => {
                           const val = e.target.value as ProtectionQuality | '';
                           const factors = { ...piece.protectionFactors };
-                          if (val) factors[t] = val as ProtectionQuality;
-                          else delete factors[t];
+                          if (val) factors[dt] = val as ProtectionQuality;
+                          else delete factors[dt];
                           onUpdateSlot(slot, { protectionFactors: factors });
                         }}
                       >
@@ -203,7 +205,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                     onClick={() => setSlotEditing(slot, false)}
                     className="w-full text-xs text-zinc-400 hover:text-zinc-200 py-1"
                   >
-                    Cancelar
+                    {t("Cancelar")}
                   </button>
                 )}
               </div>
@@ -215,27 +217,27 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
 
       {/* Modificadores enemigos */}
       <ArmorModifiersSection
-        title={<span>Modificadores enemigo<HelpTip text="Bonificadores adicionales del enemigo: resistencias, barrera magica y reducciones de dano." /></span>}
+        title={<span>{t("Modificadores enemigo")}<HelpTip text={t('Bonificadores adicionales del enemigo: resistencias, barrera mágica y reducciones de daño.')} /></span>}
         armorSet={armorSet}
       >
         <div className="space-y-3 mt-3">
           {/* Armadura % + Resistencias generales */}
           <div className="grid grid-cols-3 gap-3">
             <Input
-              label="Armadura %" type="number" min={0} max={100}
-              tooltip="Bonus % de armadura por habilidades. Multiplica la proteccion total."
+              label={t("Armadura %")} type="number" min={0} max={100}
+              tooltip={t('Bonus % de armadura por habilidades. Multiplica la protección total.')}
               value={armorSet.bonusArmaduraPct}
               onChange={(e) => onUpdateSet({ bonusArmaduraPct: Number(e.target.value) })}
             />
             <Input
-              label="Res. Fisica %" type="number" min={0} max={100}
-              tooltip="Resistencia fisica general. Reduce TODO el dano fisico despues de armadura."
+              label={t('Res. Física %')} type="number" min={0} max={100}
+              tooltip={t('Resistencia física general. Reduce TODO el daño físico después de la armadura.')}
               value={armorSet.generalResistance.fisico}
               onChange={(e) => onUpdateSet({ generalResistance: { ...armorSet.generalResistance, fisico: Number(e.target.value) } })}
             />
             <Input
-              label="Res. Magica %" type="number" min={0} max={100}
-              tooltip="Resistencia magica general. Reduce TODO el dano magico despues de armadura."
+              label={t('Res. Mágica %')} type="number" min={0} max={100}
+              tooltip={t('Resistencia mágica general. Reduce TODO el daño mágico después de la armadura.')}
               value={armorSet.generalResistance.magico}
               onChange={(e) => onUpdateSet({ generalResistance: { ...armorSet.generalResistance, magico: Number(e.target.value) } })}
             />
@@ -244,18 +246,18 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
           {/* Resistencia por tipo */}
           <div>
             <p className="text-xs text-zinc-500 mb-1">
-              Resistencia por tipo %
-              <HelpTip text="Resistencia especifica por tipo de dano. Se aplica despues de la resistencia general." />
+              {t("Resistencia por tipo %")}
+              <HelpTip text={t('Resistencia específica por tipo de daño. Se aplica después de la resistencia general.')} />
             </p>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {ALL_DAMAGE_TYPES.map((t) => (
+              {ALL_DAMAGE_TYPES.map((dt) => (
                 <Input
-                  key={t}
-                  label={`${DAMAGE_TYPE_ICONS[t]} ${DAMAGE_TYPE_LABELS[t]}`}
+                  key={dt}
+                  label={`${DAMAGE_TYPE_ICONS[dt]} ${t(DAMAGE_TYPE_LABELS[dt])}`}
                   type="number" min={0} max={100}
-                  value={armorSet.typeResistance[t] ?? 0}
+                  value={armorSet.typeResistance[dt] ?? 0}
                   onChange={(e) => onUpdateSet({
-                    typeResistance: { ...armorSet.typeResistance, [t]: Number(e.target.value) },
+                    typeResistance: { ...armorSet.typeResistance, [dt]: Number(e.target.value) },
                   })}
                 />
               ))}
@@ -265,18 +267,18 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
           {/* Barrera magica */}
           <div>
             <p className="text-xs text-zinc-500 mb-1">
-              Barrera magica (puntos)
-              <HelpTip text="Puntos de barrera que absorben dano directamente. Se resta del dano final por tipo." />
+              {t('Barrera mágica (puntos)')}
+              <HelpTip text={t('Puntos de barrera que absorben daño directamente. Se resta del daño final por tipo.')} />
             </p>
             <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-              {ALL_DAMAGE_TYPES.map((t) => (
+              {ALL_DAMAGE_TYPES.map((dt) => (
                 <Input
-                  key={t}
-                  label={`${DAMAGE_TYPE_ICONS[t]} ${DAMAGE_TYPE_LABELS[t]}`}
+                  key={dt}
+                  label={`${DAMAGE_TYPE_ICONS[dt]} ${t(DAMAGE_TYPE_LABELS[dt])}`}
                   type="number" min={0}
-                  value={armorSet.barrierPoints[t] ?? 0}
+                  value={armorSet.barrierPoints[dt] ?? 0}
                   onChange={(e) => onUpdateSet({
-                    barrierPoints: { ...armorSet.barrierPoints, [t]: Number(e.target.value) },
+                    barrierPoints: { ...armorSet.barrierPoints, [dt]: Number(e.target.value) },
                   })}
                 />
               ))}
@@ -286,14 +288,14 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
           {/* Reduccion melee/ranged */}
           <div className="grid grid-cols-2 gap-3">
             <Input
-              label="Reduccion Melee %" type="number" min={0} max={100}
-              tooltip="Reduce el dano final de ataques cuerpo a cuerpo (espadas, mazas, etc.)."
+              label={t('Reducción Melee %')} type="number" min={0} max={100}
+              tooltip={t('Reduce el daño final de ataques cuerpo a cuerpo (espadas, mazas, etc.).')}
               value={armorSet.meleeDmgReductionPct}
               onChange={(e) => onUpdateSet({ meleeDmgReductionPct: Number(e.target.value) })}
             />
             <Input
-              label="Reduccion Ranged %" type="number" min={0} max={100}
-              tooltip="Reduce el dano final de ataques a distancia (arcos, baculos)."
+              label={t('Reducción Rango %')} type="number" min={0} max={100}
+              tooltip={t('Reduce el daño final de ataques a distancia (arcos, báculos).')}
               value={armorSet.rangedDmgReductionPct}
               onChange={(e) => onUpdateSet({ rangedDmgReductionPct: Number(e.target.value) })}
             />

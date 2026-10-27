@@ -6,6 +6,7 @@ import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, MUESCA_TYPE_LABELS, PHYSICAL_DAM
 import { isMuescaSpeedType } from '@/lib/engine/constants';
 import { bonusIcon } from '@/lib/bonusDisplay';
 import type { DamageTypeName, MuescaType, Weapon, WeaponCalcResult } from '@/types/weapon';
+import { useT } from '@/i18n/I18nProvider';
 
 export interface BestFlags {
   dps: boolean;
@@ -49,9 +50,10 @@ const fmtPct = (n: number) => `${n > 0 ? '+' : ''}${n}%`;
 const RANK_STYLES = ['bg-amber-500 text-zinc-950', 'bg-zinc-300 text-zinc-900', 'bg-orange-800 text-orange-100'];
 
 export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemove }: CompareCardProps) {
+  const t = useT();
   const { arma, muescas } = result.attackSpeedSources;
   // Las muescas de velocidad ya se muestran en la seccion Velocidad
-  const muescaEntries = Object.entries(weapon.muescas).filter(([t, v]) => v && !isMuescaSpeedType(t)) as [MuescaType, number][];
+  const muescaEntries = Object.entries(weapon.muescas).filter(([dt, v]) => v && !isMuescaSpeedType(dt)) as [MuescaType, number][];
 
   return (
     <div className={`bg-zinc-900 border rounded-lg p-4 flex flex-col animate-fade-in-up ${best.dps ? 'border-amber-600/60' : 'border-zinc-800'}`}>
@@ -61,7 +63,7 @@ export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemo
           {rank !== undefined && (
             <span
               className={`shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${RANK_STYLES[rank - 1] ?? 'bg-zinc-800 text-zinc-400'}`}
-              title={`Puesto ${rank} por DPS`}
+              title={t('Puesto {n} por DPS', { n: rank })}
             >
               {rank}
             </span>
@@ -69,14 +71,14 @@ export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemo
           <div className="min-w-0">
           <h3 className="text-sm font-semibold text-zinc-100 leading-snug break-words">{weapon.nombre}</h3>
           <div className="flex items-center gap-1.5 flex-wrap mt-1">
-            <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{weapon.rareza}</Badge>
-            <span className="text-xs text-zinc-500">{weapon.subcategoria} &middot; {weapon.velocidad}</span>
+            <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{t(weapon.rareza)}</Badge>
+            <span className="text-xs text-zinc-500">{t(weapon.subcategoria)} &middot; {t(weapon.velocidad)}</span>
           </div>
           </div>
         </div>
         <button
           onClick={onRemove}
-          title="Quitar de la comparacion"
+          title={t('Quitar de la comparación')}
           className="shrink-0 w-6 h-6 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
         >
           &times;
@@ -86,22 +88,22 @@ export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemo
       {/* DPS destacado */}
       <div
         className={`mt-3 rounded border px-3 py-2 ${best.dps ? 'bg-amber-500/10 border-amber-600/40' : 'bg-zinc-950/60 border-zinc-800'}`}
-        title="Daño por segundo: promedio por golpe × golpes por segundo, con el crítico incluido"
+        title={t("Daño por segundo: promedio por golpe × golpes por segundo, con el crítico incluido")}
       >
         <div className="flex items-baseline justify-between">
-          <span className="text-xs text-zinc-500">DPS efectivo</span>
+          <span className="text-xs text-zinc-500">{t("DPS efectivo")}</span>
           <span className="text-xl font-bold text-amber-400 tabular-nums">{result.dpsEfectivo}</span>
         </div>
         {rank !== undefined && (
           <div className={`text-right text-[12px] ${best.dps ? 'text-amber-500' : 'text-zinc-500'}`}>
-            {best.dps ? '🏆 la mejor' : dpsDiffPct === 0 ? 'empata con la mejor' : `${dpsDiffPct.toFixed(1)}% vs la mejor`}
+            {best.dps ? t("🏆 la mejor") : dpsDiffPct === 0 ? t("empata con la mejor") : t('{pct}% vs la mejor', { pct: dpsDiffPct.toFixed(1) })}
           </div>
         )}
       </div>
 
-      <Section title="Daño por golpe" hint="Lo que hace cada golpe, antes de la armadura del enemigo">
-        <Row label="Mín – Máx">{result.danoMin} – {result.danoMax}</Row>
-        <Row label="Promedio" highlight={best.prom}>{result.danoPromedio}</Row>
+      <Section title={t("Daño por golpe")} hint={t("Lo que hace cada golpe, antes de la armadura del enemigo")}>
+        <Row label={t("Mín – Máx")}>{result.danoMin} – {result.danoMax}</Row>
+        <Row label={t("Promedio")} highlight={best.prom}>{result.danoPromedio}</Row>
         {Object.entries(result.desglose).map(([tipo, [min, max]]) => {
           const special = result.specialDamagePerType[tipo] || 0;
           const label = DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo;
@@ -110,49 +112,49 @@ export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemo
             <Row key={tipo} label={
               <span className="pl-2 inline-flex items-center gap-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${isPhysical ? 'bg-orange-500' : 'bg-blue-500'}`} />
-                {DAMAGE_TYPE_ICONS[tipo as DamageTypeName]} {label}
+                {DAMAGE_TYPE_ICONS[tipo as DamageTypeName]} {t(label)}
               </span>
             }>
               <span className="text-zinc-400">
                 {min === max ? min : `${min}-${max}`}
-                {special > 0 && <span className="text-purple-400/80 text-xs" title="Daño especial de gemas: solo lo reduce el factor de protección (PF)"> +{special} esp.</span>}
+                {special > 0 && <span className="text-purple-400/80 text-xs" title={t("Daño especial de gemas: solo lo reduce el factor de protección (PF)")}> +{special} {t('esp.')}</span>}
               </span>
             </Row>
           );
         })}
       </Section>
 
-      <Section title="Velocidad" hint="s/g = segundos por golpe (menos es mejor) · g/s = golpes por segundo">
-        <Row label="Base">{result.velBase.toFixed(2)} s/g</Row>
-        {arma !== 0 && <Row label="Arma">{fmtPct(arma)}</Row>}
-        {muescas !== 0 && <Row label="Muescas">{fmtPct(muescas)}</Row>}
-        <Row label="Efectiva" highlight={best.vel}>
+      <Section title={t("Velocidad")} hint={t("s/g = segundos por golpe (menos es mejor) · g/s = golpes por segundo")}>
+        <Row label={t("Base")}>{result.velBase.toFixed(2)} s/g</Row>
+        {arma !== 0 && <Row label={t("Arma")}>{fmtPct(arma)}</Row>}
+        {muescas !== 0 && <Row label={t("Muescas")}>{fmtPct(muescas)}</Row>}
+        <Row label={t("Efectiva")} highlight={best.vel}>
           {result.velEfectiva} s/g <span className="text-zinc-500 text-xs">({result.golpesPorSeg} g/s)</span>
         </Row>
       </Section>
 
-      <Section title="Crítico" hint="Chance de pegar crítico y cuánto multiplica el daño">
-        <Row label="Chance" highlight={best.crit}>
+      <Section title={t("Crítico")} hint={t("Chance de pegar crítico y cuánto multiplica el daño")}>
+        <Row label={t("Chance")} highlight={best.crit}>
           {result.critTotalPct}%
           {weapon.critChanceExtra !== 0 && <span className="text-zinc-500 text-xs"> ({fmtPct(weapon.critChanceExtra)})</span>}
         </Row>
-        <Row label="Multiplicador">x{result.critMult}</Row>
+        <Row label={t("Multiplicador")}>x{result.critMult}</Row>
       </Section>
 
       {(weapon.bonusAtributo !== 0 || weapon.bonusStat !== 0 || weapon.atributoClasePct !== 0 || muescaEntries.length > 0) && (
-        <Section title="Bonus del arma">
-          {weapon.bonusAtributo !== 0 && <Row label="Atributo">+{weapon.bonusAtributo}</Row>}
-          {weapon.bonusStat !== 0 && <Row label="Stat principal">+{weapon.bonusStat}</Row>}
-          {weapon.atributoClasePct !== 0 && <Row label="Atributo de clase">{fmtPct(weapon.atributoClasePct)}</Row>}
+        <Section title={t("Bonus del arma")}>
+          {weapon.bonusAtributo !== 0 && <Row label={t("Atributo")}>+{weapon.bonusAtributo}</Row>}
+          {weapon.bonusStat !== 0 && <Row label={t("Stat principal")}>+{weapon.bonusStat}</Row>}
+          {weapon.atributoClasePct !== 0 && <Row label={t("Atributo de clase")}>{fmtPct(weapon.atributoClasePct)}</Row>}
           {muescaEntries.map(([tipo, valor]) => (
-            <Row key={tipo} label={`${bonusIcon(tipo)} Muesca ${MUESCA_TYPE_LABELS[tipo] || tipo}`}>+{valor}</Row>
+            <Row key={tipo} label={`${bonusIcon(tipo)} ${t('Muesca {tipo}', { tipo: t(MUESCA_TYPE_LABELS[tipo] || tipo) })}`}>+{valor}</Row>
           ))}
         </Section>
       )}
 
-      <Section title="Habilidad" hint="Golpe especial de la categoría del arma (Riposte en lanzas, Impacto Vigoroso en mazas, etc.)">
+      <Section title={t("Habilidad")} hint={t("Golpe especial de la categoría del arma (Riposte en lanzas, Impacto Vigoroso en mazas, etc.)")}>
         <div className={`text-sm ${best.ability ? 'font-semibold' : ''}`}>
-          <WeaponAbility result={result} fallback={<span className="text-zinc-600 text-xs">Sin habilidad propia</span>} />
+          <WeaponAbility result={result} fallback={<span className="text-zinc-600 text-xs">{t("Sin habilidad propia")}</span>} />
         </div>
       </Section>
     </div>

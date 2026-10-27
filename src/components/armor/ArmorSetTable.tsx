@@ -5,6 +5,7 @@ import { calcTotalProtection, filterArmorForSubclase, setBonusesFor } from '@/li
 import type { Subclase } from '@/types/character';
 import type { CatalogArmorSet, ArmorBonus, ArmorBonusType } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
+import { useT } from '@/i18n/I18nProvider';
 
 /** Totaliza bonuses de piezas + conjunto, agrupando por tipo */
 function getTotalBonuses(set: CatalogArmorSet, subclase?: string): ArmorBonus[] {
@@ -46,6 +47,7 @@ export function ArmorSetTable({
   sets, armorClass, subclase, onEdit, onDelete, onDuplicate, onShare,
   onReset, isModified, selectedIds, onToggleSelect,
 }: ArmorSetTableProps) {
+  const t = useT();
   if (sets.length === 0) return null;
 
   return (
@@ -54,16 +56,16 @@ export function ArmorSetTable({
         <thead>
           <tr className="border-b border-zinc-800 text-left">
             {onToggleSelect && <th className="py-2 px-2 w-8"></th>}
-            <th className="py-2 px-3 text-xs font-medium text-zinc-500">Nombre</th>
-            <th className="py-2 px-3 text-xs font-medium text-zinc-500">Clase</th>
-            <th className="py-2 px-3 text-xs font-medium text-zinc-500">Pzas</th>
-            {ALL_DAMAGE_TYPES.map((t) => (
-              <th key={t} className="py-2 px-2 text-xs font-medium text-zinc-500 text-right">
-                {DAMAGE_TYPE_LABELS[t].slice(0, 4)}
+            <th className="py-2 px-3 text-xs font-medium text-zinc-500">{t("Nombre")}</th>
+            <th className="py-2 px-3 text-xs font-medium text-zinc-500">{t("Clase")}</th>
+            <th className="py-2 px-3 text-xs font-medium text-zinc-500">{t("Pzas")}</th>
+            {ALL_DAMAGE_TYPES.map((dt) => (
+              <th key={dt} className="py-2 px-2 text-xs font-medium text-zinc-500 text-right">
+                {t(DAMAGE_TYPE_LABELS[dt]).slice(0, 4)}
               </th>
             ))}
-            <th className="py-2 px-2 text-xs font-medium text-zinc-500 text-right">Total</th>
-            <th className="py-2 px-3 text-xs font-medium text-zinc-500">Bonus</th>
+            <th className="py-2 px-2 text-xs font-medium text-zinc-500 text-right">{t("Total")}</th>
+            <th className="py-2 px-3 text-xs font-medium text-zinc-500">{t("Bonus")}</th>
             <th className="py-2 px-3 text-xs font-medium text-zinc-500 w-10"></th>
           </tr>
         </thead>
@@ -109,13 +111,13 @@ export function ArmorSetTable({
                   )}
                 </td>
                 <td className="py-2 px-3 text-zinc-400 text-xs">
-                  {set.clase}
-                  {set.subclase && <span className="block text-zinc-500">{set.subclase}</span>}
+                  {t(set.clase)}
+                  {set.subclase && <span className="block text-zinc-500">{t(set.subclase)}</span>}
                 </td>
                 <td className="py-2 px-3 text-zinc-400 text-center">{pieceCount}</td>
-                {ALL_DAMAGE_TYPES.map((t) => (
-                  <td key={t} className="py-2 px-2 text-right text-zinc-300 tabular-nums">
-                    {Math.round(prot.perType[t] || 0)}
+                {ALL_DAMAGE_TYPES.map((dt) => (
+                  <td key={dt} className="py-2 px-2 text-right text-zinc-300 tabular-nums">
+                    {Math.round(prot.perType[dt] || 0)}
                   </td>
                 ))}
                 <td className="py-2 px-2 text-right font-medium text-amber-400 tabular-nums">
@@ -129,12 +131,12 @@ export function ArmorSetTable({
                       <div className="flex flex-wrap gap-x-3 gap-y-0.5">
                         {allBonuses.map((b, i) => (
                           <span key={i} className="text-xs">
-                            <span className="text-zinc-400">{ARMOR_BONUS_LABELS[b.type]}:</span>{' '}
+                            <span className="text-zinc-400">{t(ARMOR_BONUS_LABELS[b.type])}:</span>{' '}
                             <span className="font-medium text-amber-400">+{b.value}</span>
                           </span>
                         ))}
                         {allBonuses.length === 0 && hasMultipleSubclases && (
-                          <span className="text-xs text-zinc-500 italic">Selecciona subclase</span>
+                          <span className="text-xs text-zinc-500 italic">{t('Seleccioná la subclase')}</span>
                         )}
                         {allBonuses.length === 0 && !hasMultipleSubclases && (
                           <span className="text-xs text-zinc-600">-</span>
@@ -145,31 +147,31 @@ export function ArmorSetTable({
                 </td>
                 <td className="py-2 px-3">
                   <div className="flex items-center gap-1">
-                    <button onClick={() => onEdit(set)} className="p-1 text-zinc-500 hover:text-amber-400 transition-colors" title="Editar">
+                    <button onClick={() => onEdit(set)} className="p-1 text-zinc-500 hover:text-amber-400 transition-colors" title={t("Editar")}>
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     </button>
                     {onShare && (
-                      <button onClick={() => onShare(set)} className="p-1 text-zinc-500 hover:text-emerald-400 transition-colors" title="Compartir">
+                      <button onClick={() => onShare(set)} className="p-1 text-zinc-500 hover:text-emerald-400 transition-colors" title={t("Compartir")}>
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
                         </svg>
                       </button>
                     )}
-                    <button onClick={() => onDuplicate(set)} className="p-1 text-zinc-500 hover:text-blue-400 transition-colors" title="Duplicar">
+                    <button onClick={() => onDuplicate(set)} className="p-1 text-zinc-500 hover:text-blue-400 transition-colors" title={t("Duplicar")}>
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     </button>
                     {onReset && modified && (
-                      <button onClick={() => onReset(set)} className="p-1 text-zinc-500 hover:text-yellow-400 transition-colors" title="Resetear">
+                      <button onClick={() => onReset(set)} className="p-1 text-zinc-500 hover:text-yellow-400 transition-colors" title={t("Resetear")}>
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                         </svg>
                       </button>
                     )}
-                    <button onClick={() => onDelete(set)} className="p-1 text-zinc-500 hover:text-red-400 transition-colors" title={set.isDefault ? 'Ocultar' : 'Eliminar'}>
+                    <button onClick={() => onDelete(set)} className="p-1 text-zinc-500 hover:text-red-400 transition-colors" title={set.isDefault ? t("Ocultar") : t("Eliminar")}>
                       <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         {set.isDefault ? (
                           <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />

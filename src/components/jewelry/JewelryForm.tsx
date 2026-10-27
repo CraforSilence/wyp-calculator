@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_MAX_BONUSES } from '@/lib/engine/constants';
 import type { JewelryItem, JewelryItemSlot, JewelryBonusType, JewelryBonus } from '@/types/jewelry';
+import { useT } from '@/i18n/I18nProvider';
 
 const MAX_BONUSES = JEWELRY_MAX_BONUSES;
 
@@ -23,6 +24,7 @@ interface JewelryFormProps {
 }
 
 export function JewelryForm({ onSave, editingItem, onCancel }: JewelryFormProps) {
+  const t = useT();
   const [nombre, setNombre] = useState(editingItem?.nombre ?? '');
   const [slot, setSlot] = useState<JewelryItemSlot>(editingItem?.slot ?? 'anillo');
   const [bonuses, setBonuses] = useState<JewelryBonus[]>(editingItem?.bonuses ?? []);
@@ -31,7 +33,7 @@ export function JewelryForm({ onSave, editingItem, onCancel }: JewelryFormProps)
   const usedTypes = bonuses.map((b) => b.type);
 
   const handleAddBonus = () => {
-    const available = JEWELRY_BONUS_TYPES.find((t) => !usedTypes.includes(t));
+    const available = JEWELRY_BONUS_TYPES.find((dt) => !usedTypes.includes(dt));
     if (available && bonuses.length < MAX_BONUSES) {
       setBonuses([...bonuses, { type: available, value: 0 }]);
     }
@@ -64,20 +66,20 @@ export function JewelryForm({ onSave, editingItem, onCancel }: JewelryFormProps)
   };
 
   return (
-    <Card title={editingItem ? 'Editar joya' : 'Nueva joya'}>
+    <Card title={editingItem ? t("Editar joya") : t("Nueva joya")}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="sm:col-span-2">
             <Input
-              label="Nombre"
+              label={t("Nombre")}
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              placeholder="Ej: Anillo de Fuego +10"
+              placeholder={t("Ej: Anillo de Fuego +10")}
               required
             />
           </div>
           <Select
-            label="Tipo"
+            label={t("Tipo")}
             value={slot}
             onChange={(e) => setSlot(e.target.value as JewelryItemSlot)}
             options={SLOT_OPTIONS}
@@ -89,7 +91,7 @@ export function JewelryForm({ onSave, editingItem, onCancel }: JewelryFormProps)
           <div className="flex flex-col gap-2">
             {bonuses.map((bonus, idx) => {
               const availableTypes = JEWELRY_BONUS_TYPES.filter(
-                (t) => t === bonus.type || !usedTypes.includes(t)
+                (dt) => dt === bonus.type || !usedTypes.includes(dt)
               );
               return (
                 <div key={idx} className="flex items-end gap-2">
@@ -125,23 +127,23 @@ export function JewelryForm({ onSave, editingItem, onCancel }: JewelryFormProps)
                 onClick={handleAddBonus}
                 className="text-sm text-amber-400 hover:text-amber-300 py-1 transition-colors text-left"
               >
-                + Agregar bonus
+                {t("+ Agregar bonus")}
               </button>
             )}
           </div>
         </div>
 
         <Input
-          label="Notas"
+          label={t("Notas")}
           value={notas}
           onChange={(e) => setNotas(e.target.value)}
-          placeholder="Opcional"
+          placeholder={t("Opcional")}
         />
 
         <div className="flex gap-2 pt-2">
-          <Button type="submit">{editingItem ? 'Guardar' : 'Crear'}</Button>
+          <Button type="submit">{editingItem ? t("Guardar") : t("Crear")}</Button>
           {onCancel && (
-            <Button type="button" variant="secondary" onClick={onCancel}>Cancelar</Button>
+            <Button type="button" variant="secondary" onClick={onCancel}>{t("Cancelar")}</Button>
           )}
         </div>
       </form>

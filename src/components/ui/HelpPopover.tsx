@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import { useT } from '@/i18n/I18nProvider';
 
 interface HelpPopoverProps {
   text: string;
 }
 
 export function HelpPopover({ text }: HelpPopoverProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -27,7 +29,7 @@ export function HelpPopover({ text }: HelpPopoverProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className="inline-flex items-center justify-center w-4 h-4 text-[11px] font-bold rounded-full bg-zinc-700/50 border border-zinc-600 text-zinc-400 hover:text-amber-400 hover:border-amber-500 transition-colors leading-none"
-        aria-label="Ayuda"
+        aria-label={t("Ayuda")}
       >
         ?
       </button>

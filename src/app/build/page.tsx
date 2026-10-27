@@ -27,6 +27,7 @@ import { useShare } from '@/components/ui/ShareProvider';
 import { useShareImport } from '@/hooks/useShareImport';
 import type { ShareResult, BuildPayload } from '@/lib/share';
 import type { Weapon } from '@/types/weapon';
+import { useT } from '@/i18n/I18nProvider';
 
 // El id 'build' se conserva para no romper la pestaña guardada en sessionStorage.
 const TABS = [
@@ -39,6 +40,7 @@ const TABS = [
 type TabId = (typeof TABS)[number]['id'];
 
 export default function BuildPage() {
+  const t = useT();
   const [activeTab, setActiveTab] = useSessionStorage<TabId>('regnum-build-tab', 'build');
   const [showImport, setShowImport] = useState(false);
   const { toast } = useToast();
@@ -59,7 +61,7 @@ export default function BuildPage() {
   const hasArmorData = Object.values(armorSet.pieces).some((p) => p && p.pba > 0);
   const hasJewelry = Object.values(jewelry).some((p) => p.bonuses.length > 0);
 
-  const tabIndex = TABS.findIndex((t) => t.id === activeTab);
+  const tabIndex = TABS.findIndex((dt) => dt.id === activeTab);
   const prevTab = tabIndex > 0 ? TABS[tabIndex - 1] : undefined;
   const nextTab = tabIndex < TABS.length - 1 ? TABS[tabIndex + 1] : undefined;
   const goTo = (id: TabId) => {
@@ -104,12 +106,12 @@ export default function BuildPage() {
   return (
     <div className="max-w-7xl mx-auto">
       <PageHeader
-        title="Build"
-        description="Armá tu personaje paso a paso: clase y atributos, arma y joyería, armadura y, al final, la simulación contra un enemigo."
+        title={t("Build")}
+        description={t("Armá tu personaje paso a paso: clase y atributos, arma y joyería, armadura y, al final, la simulación contra un enemigo.")}
         actions={
           <div className="flex gap-2">
-            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar build</Button>
-            <Button size="sm" onClick={handleExportBuild}>Compartir build</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>{t("Importar build")}</Button>
+            <Button size="sm" onClick={handleExportBuild}>{t("Compartir build")}</Button>
           </div>
         }
       />
@@ -139,7 +141,7 @@ export default function BuildPage() {
               {tabDone[tab.id] ? '✓' : i + 1}
             </span>
             {/* En celular solo se ve el nombre del paso activo */}
-            <span className={activeTab === tab.id ? '' : 'hidden sm:inline'}>{tab.label}</span>
+            <span className={activeTab === tab.id ? '' : 'hidden sm:inline'}>{t(tab.label)}</span>
           </button>
         ))}
       </div>
@@ -147,8 +149,8 @@ export default function BuildPage() {
       {/* Tab content */}
       {activeTab === 'build' && (
         <>
-          <StepIntro step={1} title="Elegí tu personaje">
-            <p>Seleccioná la clase y la subclase, y cargá tus atributos. De esto dependen el multiplicador de daño y las armas que podés usar.</p>
+          <StepIntro step={1} title={t("Elegí tu personaje")}>
+            <p>{t('Seleccioná la clase y la subclase, y cargá tus atributos. De esto dependen el multiplicador de daño y las armas que podés usar.')}</p>
           </StepIntro>
           <BuildPersonaje />
         </>
@@ -158,29 +160,29 @@ export default function BuildPage() {
         <>
         <StepIntro
           step={2}
-          title="Cargá tu arma y tu joyería"
+          title={t("Cargá tu arma y tu joyería")}
           checklist={[
-            { label: 'Arma', done: hasWeapon, required: true, note: 'necesaria para simular tu daño' },
-            { label: 'Joyería', done: hasJewelry, note: 'opcional, suma sus bonus a tu daño' },
+            { label: t('Arma'), done: hasWeapon, required: true, note: t('necesaria para simular tu daño') },
+            { label: t('Joyería'), done: hasJewelry, note: t('opcional, suma sus bonus a tu daño') },
           ]}
         >
           <p>
-            <strong className="text-zinc-100">Arma:</strong> elegí una en <em>Precargar arma existente</em> o completá los datos a mano, como figuran en el tooltip del juego.
+            <strong className="text-zinc-100">{t("Arma:")}</strong> {t("elegí una en")} <em>{t("Precargar arma existente")}</em> {t('o completá los datos a mano, como figuran en el tooltip del juego.')}
           </p>
           <p>
-            <strong className="text-zinc-100">Joyería:</strong> sumá los bonus de tus anillos y tu amuleto. Al final ves el daño del arma con todo aplicado.
+            <strong className="text-zinc-100">{t("Joyería:")}</strong> {t('sumá los bonus de tus anillos y tu amuleto. Al final ves el daño del arma con todo aplicado.')}
           </p>
         </StepIntro>
         <WithSidePanel panel={<WeaponDamagePanel />}>
-          <Collapsible title="Arma" defaultOpen>
+          <Collapsible title={t("Arma")} defaultOpen>
             <BuildArma />
           </Collapsible>
 
-          <Collapsible title="Joyeria" defaultOpen>
+          <Collapsible title={t("Joyería")} defaultOpen>
             <BuildJoyeria />
           </Collapsible>
 
-          <Collapsible title="Danos de Arma" defaultOpen>
+          <Collapsible title={t("Daños de Arma")} defaultOpen>
             <BuildDanos />
           </Collapsible>
         </WithSidePanel>
@@ -191,18 +193,18 @@ export default function BuildPage() {
         <>
         <StepIntro
           step={3}
-          title="Cargá tu armadura (opcional)"
-          checklist={[{ label: 'Armadura', done: hasArmorData, note: 'opcional, solo para probar un arma enemiga contra tu armadura' }]}
+          title={t("Cargá tu armadura (opcional)")}
+          checklist={[{ label: t('Armadura'), done: hasArmorData, note: t('opcional, solo para probar un arma enemiga contra tu armadura') }]}
         >
-          <p>Elegí un set precargado o completá cada pieza con su PBA y sus factores de protección. Debajo ves tus protecciones totales contra cada tipo de daño.</p>
-          <p className="text-zinc-400">Si solo querés ver cuánto daño hacés, podés saltear este paso.</p>
+          <p>{t('Elegí un set precargado o completá cada pieza con su PBA y sus factores de protección. Debajo ves tus protecciones totales contra cada tipo de daño.')}</p>
+          <p className="text-zinc-400">{t("Si solo querés ver cuánto daño hacés, podés saltear este paso.")}</p>
         </StepIntro>
         <WithSidePanel panel={<ArmorStatusPanel />}>
-          <Collapsible title="Armadura" defaultOpen>
+          <Collapsible title={t("Armadura")} defaultOpen>
             <BuildArmadura />
           </Collapsible>
 
-          <Collapsible title="Protecciones" defaultOpen>
+          <Collapsible title={t("Protecciones")} defaultOpen>
             <BuildProtecciones />
           </Collapsible>
         </WithSidePanel>
@@ -213,22 +215,22 @@ export default function BuildPage() {
         <>
         <StepIntro
           step={4}
-          title="Simulá el combate"
+          title={t("Simulá el combate")}
           checklist={[
-            { label: 'Tu Arma vs Enemigo', done: hasWeapon, required: true, note: 'necesita tu arma (paso 2)' },
-            { label: 'Tu Armadura vs Enemigo', done: hasArmorData, note: 'necesita tu armadura (paso 3)' },
+            { label: t('Tu Arma vs Enemigo'), done: hasWeapon, required: true, note: t('necesita tu arma (paso 2)') },
+            { label: t('Tu Armadura vs Enemigo'), done: hasArmorData, note: t('necesita tu armadura (paso 3)') },
           ]}
         >
-          <p>Elegí qué querés probar y completá los puntos en orden. Cada simulación usa solo lo que necesita.</p>
+          <p>{t('Elegí qué querés probar y completá los puntos en orden. Cada simulación usa solo lo que necesita.')}</p>
         </StepIntro>
         <BuildSimulacion onGoTo={goTo} />
         </>
       )}
 
       <StepNav
-        prev={prevTab && { label: prevTab.label, onClick: () => goTo(prevTab.id) }}
-        next={nextTab && { label: nextTab.label, onClick: () => goTo(nextTab.id) }}
-        hint={nextHint[activeTab]}
+        prev={prevTab && { label: t(prevTab.label), onClick: () => goTo(prevTab.id) }}
+        next={nextTab && { label: t(nextTab.label), onClick: () => goTo(nextTab.id) }}
+        hint={nextHint[activeTab] && t(nextHint[activeTab])}
       />
 
       <ImportModal

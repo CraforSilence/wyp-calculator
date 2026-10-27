@@ -1,4 +1,5 @@
 import type { WeaponCalcResult } from '@/types/weapon';
+import { useT } from '@/i18n/I18nProvider';
 
 type AbilityStats = Pick<WeaponCalcResult, 'riposteDmg' | 'impactoVigoroso' | 'cruzDelSur'>;
 
@@ -8,14 +9,15 @@ export function hasWeaponAbility(r: AbilityStats): boolean {
 
 /** Habilidad propia de la categoria del arma: Riposte (lanza), Impacto Vigoroso (contundentes), Cruz del Sur (cortantes) */
 export function WeaponAbility({ result, fallback = <span className="text-zinc-600">-</span> }: { result: AbilityStats; fallback?: React.ReactNode }) {
+  const t = useT();
   if (result.riposteDmg) {
-    return <><span className="text-xs text-zinc-500">Riposte</span> <span className="text-red-400">{result.riposteDmg}</span></>;
+    return <><span className="text-xs text-zinc-500">{t("Riposte")}</span> <span className="text-red-400">{result.riposteDmg}</span></>;
   }
   if (result.impactoVigoroso) {
-    return <><span className="text-xs text-zinc-500">Impacto Vig.</span> <span className="text-orange-400">{result.impactoVigoroso.min}-{result.impactoVigoroso.max}</span></>;
+    return <><span className="text-xs text-zinc-500">{t("Impacto Vig.")}</span> <span className="text-orange-400">{result.impactoVigoroso.min}-{result.impactoVigoroso.max}</span></>;
   }
   if (result.cruzDelSur) {
-    return <><span className="text-xs text-zinc-500">Cruz del Sur</span> <span className="text-sky-400">{result.cruzDelSur.min}-{result.cruzDelSur.max}</span></>;
+    return <><span className="text-xs text-zinc-500">{t("Cruz del Sur")}</span> <span className="text-sky-400">{result.cruzDelSur.min}-{result.cruzDelSur.max}</span></>;
   }
   return <>{fallback}</>;
 }

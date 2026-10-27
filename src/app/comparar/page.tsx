@@ -19,6 +19,7 @@ import { useShareImport, COMPARE_SELECTED_KEY } from '@/hooks/useShareImport';
 import { stripWeapon } from '@/lib/share';
 import type { ComparePayload } from '@/lib/share';
 import type { WeaponCalcResult } from '@/types/weapon';
+import { useT, rich } from '@/i18n/I18nProvider';
 
 const MAX_COMPARE = 5;
 const SELECTED_KEY = COMPARE_SELECTED_KEY;
@@ -48,6 +49,7 @@ function HowToStep({ n, done, title, text }: { n: number; done: boolean; title: 
 }
 
 export default function CompararPage() {
+  const t = useT();
   const { character } = useCharacter();
   const { weapons } = useWeapons();
   const { jewelry } = useJewelry();
@@ -131,14 +133,14 @@ export default function CompararPage() {
   return (
     <div>
       <PageHeader
-        title="Comparar"
-        description={`Poné hasta ${MAX_COMPARE} armas lado a lado y mirá cuál rinde más con tu personaje.`}
+        title={t("Comparar")}
+        description={t('Poné hasta {n} armas lado a lado y mirá cuál rinde más con tu personaje.', { n: MAX_COMPARE })}
         actions={
           <div className="flex flex-wrap justify-end gap-2">
             {selected.length > 0 && (
-              <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>Limpiar</Button>
+              <Button variant="ghost" size="sm" onClick={() => setSelectedIds([])}>{t("Limpiar")}</Button>
             )}
-            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar código</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>{t("Importar código")}</Button>
             {selected.length > 0 && (
               <Button
                 size="sm"
@@ -147,7 +149,7 @@ export default function CompararPage() {
                   character,
                 } satisfies ComparePayload)}
               >
-                Compartir comparativo
+                {t("Compartir comparativo")}
               </Button>
             )}
           </div>
@@ -164,34 +166,34 @@ export default function CompararPage() {
       {/* Como se usa y con que se calcula */}
       <div className="mb-4 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3 space-y-3">
         <div className="grid gap-3 sm:grid-cols-3">
-          <HowToStep n={1} done={selected.length >= 2} title="Elegí 2 o más armas" text="Buscalas en la lista de la izquierda y tocá +." />
-          <HowToStep n={2} done={false} title="Mirá el veredicto" text="Te dice cuál rinde más por segundo, cuál pega más fuerte y cuál es más rápida." />
-          <HowToStep n={3} done={false} title="Revisá el detalle" text="Cada card y el cuadro muestran de dónde sale cada número. En verde, el mejor." />
+          <HowToStep n={1} done={selected.length >= 2} title={t("Elegí 2 o más armas")} text={t("Buscalas en la lista de la izquierda y tocá +.")} />
+          <HowToStep n={2} done={false} title={t("Mirá el veredicto")} text={t("Te dice cuál rinde más por segundo, cuál pega más fuerte y cuál es más rápida.")} />
+          <HowToStep n={3} done={false} title={t("Revisá el detalle")} text={t("Cada card y el cuadro muestran de dónde sale cada número. En verde, el mejor.")} />
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2 pt-3 border-t border-amber-500/20">
-          <span className="text-xs text-zinc-400">Calcular con:</span>
+          <span className="text-xs text-zinc-400">{t("Calcular con:")}</span>
           <div className="inline-flex rounded-md border border-zinc-700 overflow-hidden text-xs">
             <button
               onClick={() => setWithJewelry(false)}
               className={`px-3 py-1.5 transition-colors ${!applyJewelry ? 'bg-amber-600 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
             >
-              Solo el arma
+              {t("Solo el arma")}
             </button>
             <button
               onClick={() => setWithJewelry(true)}
               disabled={!hasJewelry}
-              title={hasJewelry ? 'Suma los bonus de tus anillos y amuleto del Build' : 'Cargá tu joyería en el Build (paso 2) para usar esta opción'}
+              title={hasJewelry ? t("Suma los bonus de tus anillos y amuleto del Build") : t("Cargá tu joyería en el Build (paso 2) para usar esta opción")}
               className={`px-3 py-1.5 border-l border-zinc-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${applyJewelry ? 'bg-amber-600 text-white' : 'text-zinc-400 hover:text-zinc-200'}`}
             >
-              Con mi joyería
+              {t("Con mi joyería")}
             </button>
           </div>
           <span className="text-xs text-zinc-500">
-            {applyJewelry
-              ? 'Incluye los bonus de tu joyería del Build.'
+            {t(applyJewelry
+              ? t('Incluye los bonus de tu joyería del Build.')
               : hasJewelry
-                ? 'Arma contra arma con los stats de tu personaje, sin joyería.'
-                : 'Arma contra arma con los stats de tu personaje. No tenés joyería cargada en el Build.'}
+                ? t('Arma contra arma con los stats de tu personaje, sin joyería.')
+                : 'Arma contra arma con los stats de tu personaje. No tenés joyería cargada en el Build.')}
           </span>
         </div>
         <details className="group">
@@ -201,8 +203,8 @@ export default function CompararPage() {
           <dl className="mt-2 grid gap-x-6 gap-y-1.5 sm:grid-cols-2 text-xs">
             {GLOSSARY.map((g) => (
               <div key={g.term}>
-                <dt className="inline font-semibold text-zinc-200">{g.term}: </dt>
-                <dd className="inline text-zinc-400">{g.text}</dd>
+                <dt className="inline font-semibold text-zinc-200">{t(g.term)}: </dt>
+                <dd className="inline text-zinc-400">{t(g.text)}</dd>
               </div>
             ))}
           </dl>
@@ -218,20 +220,20 @@ export default function CompararPage() {
         const lead = Math.abs(dpsDiff(second.result.dpsEfectivo));
         return (
           <div className="mb-4 rounded-lg border border-emerald-700/40 bg-emerald-500/5 px-4 py-3">
-            <p className="text-[12px] uppercase tracking-wider text-emerald-400/80 font-semibold mb-1">Veredicto</p>
+            <p className="text-[12px] uppercase tracking-wider text-emerald-400/80 font-semibold mb-1">{t("Veredicto")}</p>
             <p className="text-sm text-zinc-200">
-              🏆 <strong className="text-amber-400">{top.weapon.nombre}</strong> es la que más daño hace por segundo
+              🏆 {rich(t, 'La que más daño hace por segundo es {arma}', { arma: <strong className="text-amber-400">{top.weapon.nombre}</strong> })}
               {lead !== 0
-                ? <> ({top.result.dpsEfectivo} DPS). La sigue {second.weapon.nombre}, que rinde <span className="text-emerald-400">{lead.toFixed(1)}% menos</span>.</>
-                : <> (empata con {second.weapon.nombre}).</>}
+                ? <> ({top.result.dpsEfectivo} DPS). {rich(t, 'La sigue {arma}, que rinde {menos}.', { arma: second.weapon.nombre, menos: <span className="text-emerald-400">{t('{pct}% menos', { pct: lead.toFixed(1) })}</span> })}</>
+                : <> ({t('empata con {arma}', { arma: second.weapon.nombre })}).</>}
             </p>
             <ul className="mt-1.5 space-y-0.5 text-xs text-zinc-400">
               {hardest.weapon.id !== top.weapon.id ? (
-                <li>💪 <span className="text-zinc-200">{hardest.weapon.nombre}</span> pega más fuerte por golpe (promedio {hardest.result.danoPromedio}), pero rinde menos por segundo: conviene para golpes sueltos o habilidades.</li>
+                <li>💪 {rich(t, '{arma} pega más fuerte por golpe (promedio {prom}), pero rinde menos por segundo: conviene para golpes sueltos o habilidades.', { arma: <span className="text-zinc-200">{hardest.weapon.nombre}</span>, prom: hardest.result.danoPromedio })}</li>
               ) : (
-                <li>💪 También es la que pega más fuerte por golpe (promedio {hardest.result.danoPromedio}).</li>
+                <li>💪 {t('También es la que pega más fuerte por golpe (promedio {prom}).', { prom: hardest.result.danoPromedio })}</li>
               )}
-              <li>⏩ La más rápida es <span className="text-zinc-200">{fastest.weapon.nombre}</span> ({fastest.result.velEfectiva} s por golpe).</li>
+              <li>⏩ {rich(t, 'La más rápida es {arma} ({vel} s por golpe).', { arma: <span className="text-zinc-200">{fastest.weapon.nombre}</span>, vel: fastest.result.velEfectiva })}</li>
             </ul>
           </div>
         );
@@ -242,7 +244,7 @@ export default function CompararPage() {
         <div className="lg:relative lg:min-h-[32rem]">
           <div className="lg:absolute lg:inset-0 flex flex-col bg-zinc-900 border border-zinc-800 rounded-lg animate-fade-in-up">
             <div className="px-4 py-3 border-b border-zinc-800">
-              <h3 className="text-sm font-semibold text-zinc-200">Armas <span className="text-zinc-500 font-normal">({selected.length}/{MAX_COMPARE})</span></h3>
+              <h3 className="text-sm font-semibold text-zinc-200">{t("Armas")} <span className="text-zinc-500 font-normal">({selected.length}/{MAX_COMPARE})</span></h3>
             </div>
             <div className="p-4 flex-1 min-h-0">
               <WeaponPicker
@@ -272,8 +274,8 @@ export default function CompararPage() {
             const top = [...allResults].sort((a, b) => b.result.dpsEfectivo - a.result.dpsEfectivo).slice(0, 3);
             return (
               <div className="sm:col-span-2 xl:col-span-3 rounded-lg border border-amber-600/30 bg-gradient-to-br from-amber-500/10 to-transparent px-4 py-4">
-                <p className="text-sm font-medium text-zinc-200">¿No sabés por dónde empezar?</p>
-                <p className="text-xs text-zinc-400 mt-0.5">Compará las {top.length} armas con más DPS para tu personaje y después cambiá las que quieras.</p>
+                <p className="text-sm font-medium text-zinc-200">{t("¿No sabés por dónde empezar?")}</p>
+                <p className="text-xs text-zinc-400 mt-0.5">{t('Compará las {n} armas con más DPS para tu personaje y después cambiá las que quieras.', { n: top.length })}</p>
                 <div className="mt-3 flex flex-wrap gap-1.5">
                   {top.map(({ weapon, result }) => (
                     <span key={weapon.id} className="rounded border border-zinc-700 bg-zinc-900/80 px-2 py-0.5 text-xs text-zinc-300">
@@ -281,8 +283,8 @@ export default function CompararPage() {
                     </span>
                   ))}
                 </div>
-                <Button size="sm" className="mt-3" onClick={() => setSelectedIds(top.map((t) => t.weapon.id))}>
-                  Comparar estas {top.length}
+                <Button size="sm" className="mt-3" onClick={() => setSelectedIds(top.map((dt) => dt.weapon.id))}>
+                  {t('Comparar estas {n}', { n: top.length })}
                 </Button>
               </div>
             );
@@ -293,9 +295,9 @@ export default function CompararPage() {
               className="min-h-40 rounded-lg border-2 border-dashed border-zinc-800 hover:border-zinc-700 text-zinc-500 hover:text-zinc-300 transition-colors cursor-pointer flex flex-col items-center justify-center gap-1 text-sm"
             >
               <span className="text-2xl leading-none">+</span>
-              <span>Agregar arma</span>
+              <span>{t("Agregar arma")}</span>
               <span className="text-xs text-zinc-600">
-                {selected.length === 0 ? 'Buscá y elegí en la lista' : `Quedan ${emptySlots} lugar${emptySlots === 1 ? '' : 'es'}`}
+                {selected.length === 0 ? t("Buscá y elegí en la lista") : (emptySlots === 1 ? t('Queda 1 lugar') : t('Quedan {n} lugares', { n: emptySlots }))}
               </span>
             </button>
           )}
@@ -304,23 +306,23 @@ export default function CompararPage() {
 
       {selected.length >= 2 && (
         <>
-          <Card title="Cuadro comparativo" className="mb-6">
+          <Card title={t("Cuadro comparativo")} className="mb-6">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800 text-xs text-zinc-500 text-left">
                     <th className="py-2 px-2">#</th>
-                    <th className="py-2 px-2">Arma</th>
-                    <th className="py-2 px-2 text-right">Mín</th>
-                    <th className="py-2 px-2 text-right">Máx</th>
-                    <th className="py-2 px-2 text-right" title="Daño promedio por golpe">Prom.</th>
-                    <th className="py-2 px-2 text-right" title="Chance de crítico">Crít. %</th>
-                    <th className="py-2 px-2 text-right" title="Multiplicador del crítico">Crít. x</th>
-                    <th className="py-2 px-2 text-right" title="Segundos por golpe (base del arma ajustada por vel. ataque del arma y muescas)">s/g</th>
-                    <th className="py-2 px-2 text-right" title="Golpes por segundo">g/s</th>
-                    <th className="py-2 px-2 text-right font-bold text-amber-500">DPS</th>
-                    <th className="py-2 px-2 text-right" title="Diferencia de DPS contra la mejor arma">vs mejor</th>
-                    <th className="py-2 px-2 text-right">Habilidad</th>
+                    <th className="py-2 px-2">{t("Arma")}</th>
+                    <th className="py-2 px-2 text-right">{t("Mín")}</th>
+                    <th className="py-2 px-2 text-right">{t("Máx")}</th>
+                    <th className="py-2 px-2 text-right" title={t("Daño promedio por golpe")}>{t("Prom.")}</th>
+                    <th className="py-2 px-2 text-right" title={t("Chance de crítico")}>{t("Crít. %")}</th>
+                    <th className="py-2 px-2 text-right" title={t("Multiplicador del crítico")}>{t("Crít. x")}</th>
+                    <th className="py-2 px-2 text-right" title={t("Segundos por golpe (base del arma ajustada por vel. ataque del arma y muescas)")}>s/g</th>
+                    <th className="py-2 px-2 text-right" title={t("Golpes por segundo")}>g/s</th>
+                    <th className="py-2 px-2 text-right font-bold text-amber-500">{t("DPS")}</th>
+                    <th className="py-2 px-2 text-right" title={t("Diferencia de DPS contra la mejor arma")}>{t("vs mejor")}</th>
+                    <th className="py-2 px-2 text-right">{t("Habilidad")}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -340,7 +342,7 @@ export default function CompararPage() {
                         <td className={`py-2 px-2 text-right ${cell(f.vel, 'text-zinc-400')}`}>{result.golpesPorSeg}</td>
                         <td className="py-2 px-2 text-right font-bold text-amber-400">{result.dpsEfectivo}</td>
                         <td className={`py-2 px-2 text-right text-xs ${f.dps ? 'text-emerald-400' : 'text-zinc-500'}`}>
-                          {f.dps ? '🏆 mejor' : diff === 0 ? 'empate' : `${diff.toFixed(1)}%`}
+                          {f.dps ? t("🏆 mejor") : diff === 0 ? t("empate") : `${diff.toFixed(1)}%`}
                         </td>
                         <td className={`py-2 px-2 text-right whitespace-nowrap ${f.ability ? 'font-semibold' : ''}`}>
                           <WeaponAbility result={result} />
@@ -351,11 +353,11 @@ export default function CompararPage() {
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-zinc-600 mt-2">Ordenado por DPS. En verde, el mejor valor de cada columna. <span className="text-zinc-500">s/g</span> = segundos por golpe (menos es mejor), <span className="text-zinc-500">g/s</span> = golpes por segundo.</p>
+            <p className="text-xs text-zinc-600 mt-2">{t("Ordenado por DPS. En verde, el mejor valor de cada columna.")} <span className="text-zinc-500">s/g</span> {t("= segundos por golpe (menos es mejor),")} <span className="text-zinc-500">g/s</span> {t("= golpes por segundo.")}</p>
           </Card>
 
           <div className="grid sm:grid-cols-2 gap-4">
-            <Card title={<span>DPS efectivo <span className="text-xs font-normal text-zinc-500">· daño por segundo, el que más importa en una pelea</span></span>}>
+            <Card title={<span>{t("DPS efectivo")} <span className="text-xs font-normal text-zinc-500">{t("· daño por segundo, el que más importa en una pelea")}</span></span>}>
               <div className="space-y-2">
                 {byDps.map(({ weapon, result }) => (
                   <div key={weapon.id}>
@@ -374,7 +376,7 @@ export default function CompararPage() {
               </div>
             </Card>
 
-            <Card title={<span>Daño promedio <span className="text-xs font-normal text-zinc-500">· lo que hace cada golpe</span></span>}>
+            <Card title={<span>{t("Daño promedio")} <span className="text-xs font-normal text-zinc-500">{t("· lo que hace cada golpe")}</span></span>}>
               <div className="space-y-2">
                 {byProm.map(({ weapon, result }) => (
                   <div key={weapon.id}>
@@ -397,7 +399,7 @@ export default function CompararPage() {
       )}
 
       {selected.length === 1 && (
-        <div className="text-center py-6 text-zinc-500 text-sm">Agregá al menos una arma más para ver el veredicto y el cuadro comparativo.</div>
+        <div className="text-center py-6 text-zinc-500 text-sm">{t("Agregá al menos una arma más para ver el veredicto y el cuadro comparativo.")}</div>
       )}
     </div>
   );

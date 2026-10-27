@@ -24,6 +24,7 @@ import type { JewelrySet } from '@/types/jewelry';
 import type { Weapon } from '@/types/weapon';
 import type { Clase, Subclase, CharacterProfile } from '@/types/character';
 import type { SimulationResult } from '@/types/simulation';
+import { useT } from '@/i18n/I18nProvider';
 
 const SIM_TABS = [
   {
@@ -62,7 +63,7 @@ const EMPTY_JEWELRY: JewelrySet = {
 
 function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
   const protectionFactors: Record<string, string> = {};
-  for (const t of ALL_DAMAGE_TYPES) protectionFactors[t] = 'Normal';
+  for (const dt of ALL_DAMAGE_TYPES) protectionFactors[dt] = 'Normal';
   return { slot, pba: 0, bcmt: 0, protectionFactors, bonusProteccionPct: {}, bonuses: [], upgrades: [] };
 }
 
@@ -85,6 +86,7 @@ function SimStep({ n, title, hint, optional, action }: {
   optional?: boolean;
   action?: React.ReactNode;
 }) {
+  const t = useT();
   return (
     <div className="flex items-start gap-2.5 pt-2">
       <span className="shrink-0 mt-0.5 inline-flex items-center justify-center w-5 h-5 rounded-full bg-zinc-800 border border-zinc-700 text-[12px] font-semibold text-zinc-300">
@@ -93,7 +95,7 @@ function SimStep({ n, title, hint, optional, action }: {
       <div className="min-w-0 flex-1">
         <h3 className="text-sm font-semibold text-zinc-200">
           {title}
-          {optional && <span className="ml-1.5 text-xs font-normal text-zinc-500">(opcional)</span>}
+          {optional && <span className="ml-1.5 text-xs font-normal text-zinc-500">{t("(opcional)")}</span>}
         </h3>
         {hint && <p className="text-xs text-zinc-500 mt-0.5">{hint}</p>}
       </div>
@@ -108,6 +110,7 @@ interface BuildSimulacionProps {
 }
 
 export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
+  const t = useT();
   const { character } = useCharacter();
   const { jewelry } = useJewelry();
   const { armorSet: myArmor } = useArmor();
@@ -216,7 +219,7 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
     return p && p.pba > 0;
   }).length;
 
-  const activeMode = SIM_TABS.find((t) => t.id === simTab) ?? SIM_TABS[0];
+  const activeMode = SIM_TABS.find((dt) => dt.id === simTab) ?? SIM_TABS[0];
   const enemyWeaponCalc = enemyWeapon ? calcWeaponDamage(enemyWeapon, enemyAttackerProfile, enemyJewelry) : null;
   const changeLink = (label: string, step: 'armas' | 'armadura') => onGoTo && (
     <button
@@ -231,7 +234,7 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
     <div className="space-y-4">
       {/* Selector de modo: cada uno responde una pregunta distinta */}
       <div>
-        <p className="text-xs text-zinc-400 font-medium mb-2">¿Qué querés probar?</p>
+        <p className="text-xs text-zinc-400 font-medium mb-2">{t("¿Qué querés probar?")}</p>
         <div className="grid sm:grid-cols-2 gap-2">
           {SIM_TABS.map((tab) => {
             const active = simTab === tab.id;
@@ -248,10 +251,10 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
               >
                 <div className={`text-sm font-semibold flex items-center gap-2 ${active ? 'text-amber-300' : 'text-zinc-200'}`}>
                   <span aria-hidden>{tab.icon}</span>
-                  {tab.question}
+                  {t(tab.question)}
                 </div>
                 <div className="text-xs text-zinc-400 mt-1">
-                  <span className="text-zinc-300">{tab.label}:</span> {tab.uses}
+                  <span className="text-zinc-300">{t(tab.label)}:</span> {t(tab.uses)}
                 </div>
               </button>
             );
@@ -261,24 +264,24 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
 
       {/* Resumen de lo que se esta probando */}
       <div className="flex items-center gap-2 flex-wrap text-sm rounded-lg bg-zinc-900 border border-zinc-800 px-4 py-2.5">
-        <span className="text-zinc-500">Probando:</span>
+        <span className="text-zinc-500">{t("Probando:")}</span>
         {activeMode.id === 'ofensiva' ? (
           <>
-            <span className="text-amber-400 font-semibold">{myWeapon.nombre || 'Tu arma (sin cargar)'}</span>
-            <span className="text-zinc-600">(vos · {character.subclase})</span>
-            <span className="text-zinc-500 mx-1">golpea a</span>
-            <span className="text-red-400 font-semibold">{enemySubclase} enemigo</span>
+            <span className="text-amber-400 font-semibold">{myWeapon.nombre || t('Tu arma (sin cargar)')}</span>
+            <span className="text-zinc-600">({t('vos')} · {t(character.subclase)})</span>
+            <span className="text-zinc-500 mx-1">{t("golpea a")}</span>
+            <span className="text-red-400 font-semibold">{t('{subclase} enemigo', { subclase: t(enemySubclase) })}</span>
             <span className="text-zinc-600">
-              ({enemyArmorPieceCount > 0 ? `${enemyArmorPieceCount} piezas de armadura` : 'sin armadura'} · CA {ARMOR_CLASSES[enemySubclase]})
+              ({enemyArmorPieceCount > 0 ? t('{n} piezas de armadura', { n: enemyArmorPieceCount }) : t("sin armadura")} · CA {ARMOR_CLASSES[enemySubclase]})
             </span>
           </>
         ) : (
           <>
-            <span className="text-red-400 font-semibold">{enemyWeapon?.nombre || 'Arma enemiga (sin elegir)'}</span>
-            <span className="text-zinc-600">({defEnemySubclase} · {SUBCLASE_MAIN_STAT[defEnemySubclase]} {defEnemyMainStat})</span>
-            <span className="text-zinc-500 mx-1">te golpea a vos</span>
-            <span className="text-blue-400 font-semibold">{character.subclase}</span>
-            <span className="text-zinc-600">({myArmorPieceCount} piezas · CA {ARMOR_CLASSES[character.subclase]})</span>
+            <span className="text-red-400 font-semibold">{enemyWeapon?.nombre || t('Arma enemiga (sin elegir)')}</span>
+            <span className="text-zinc-600">({t(defEnemySubclase)} · {t(SUBCLASE_MAIN_STAT[defEnemySubclase])} {defEnemyMainStat})</span>
+            <span className="text-zinc-500 mx-1">{t("te golpea a vos")}</span>
+            <span className="text-blue-400 font-semibold">{t(character.subclase)}</span>
+            <span className="text-zinc-600">({t('{n} piezas · CA {ca}', { n: myArmorPieceCount, ca: ARMOR_CLASSES[character.subclase] })})</span>
           </>
         )}
       </div>
@@ -288,9 +291,9 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
         <div className="space-y-3">
           {!hasWeapon && (
             <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-300 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-              <span>Para simular tu daño necesitás cargar un arma.</span>
+              <span>{t("Para simular tu daño necesitás cargar un arma.")}</span>
               {onGoTo && (
-                <Button size="sm" onClick={() => onGoTo('armas')}>Cargar arma →</Button>
+                <Button size="sm" onClick={() => onGoTo('armas')}>{t("Cargar arma →")}</Button>
               )}
             </div>
           )}
@@ -299,31 +302,31 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
             <>
               <SimStep
                 n={1}
-                title="Tu arma"
-                hint="La que cargaste en el paso 2, con tu joyería y tus atributos ya aplicados."
-                action={changeLink('Cambiar arma', 'armas')}
+                title={t("Tu arma")}
+                hint={t("La que cargaste en el paso 2, con tu joyería y tus atributos ya aplicados.")}
+                action={changeLink(t('Cambiar arma'), 'armas')}
               />
-              <Card title={<span className="flex items-center gap-1">{myWeapon.nombre || 'Tu Arma'} <HelpPopover text="Resumen de tu arma con tu build actual. Los valores incluyen bonuses de joyeria y atributos, todavia sin la armadura del enemigo." /></span>}>
+              <Card title={<span className="flex items-center gap-1">{myWeapon.nombre || t('Tu Arma')} <HelpPopover text={t('Resumen de tu arma con tu build actual. Los valores incluyen bonuses de joyería y atributos, todavía sin la armadura del enemigo.')} /></span>}>
                 {myWeaponCalc && (
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 text-center text-sm">
                     <div>
-                      <div className="text-xs text-zinc-500" title="Rango de dano min-max por golpe">Dano</div>
+                      <div className="text-xs text-zinc-500" title={t('Rango de daño mín-máx por golpe')}>{t('Daño')}</div>
                       <div className="font-semibold text-zinc-200">{myWeaponCalc.danoMin}-{myWeaponCalc.danoMax}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-zinc-500" title="Dano promedio por golpe">Promedio</div>
+                      <div className="text-xs text-zinc-500" title={t('Daño promedio por golpe')}>{t("Promedio")}</div>
                       <div className="font-semibold text-zinc-200">{myWeaponCalc.danoPromedio}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-zinc-500" title="Dano por segundo. Tiene en cuenta velocidad y criticos.">DPS</div>
+                      <div className="text-xs text-zinc-500" title={t('Daño por segundo. Tiene en cuenta velocidad y críticos.')}>{t("DPS")}</div>
                       <div className="font-bold text-amber-400">{myWeaponCalc.dpsEfectivo}</div>
                     </div>
                     <div>
-                      <div className="text-xs text-zinc-500" title="Probabilidad de golpe critico">Crit</div>
+                      <div className="text-xs text-zinc-500" title={t('Probabilidad de golpe crítico')}>{t("Crit")}</div>
                       <div className="font-semibold text-zinc-200">{myWeaponCalc.critTotalPct}%</div>
                     </div>
                     <div>
-                      <div className="text-xs text-zinc-500" title="Tiempo entre ataques en segundos. Menor = mas rapido.">Vel</div>
+                      <div className="text-xs text-zinc-500" title={t('Tiempo entre ataques en segundos. Menor = más rápido.')}>{t("Vel")}</div>
                       <div className="font-semibold text-zinc-200">{myWeaponCalc.velEfectiva}s</div>
                     </div>
                   </div>
@@ -332,13 +335,13 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
 
               <SimStep
                 n={2}
-                title="Armadura del enemigo"
+                title={t("Armadura del enemigo")}
                 hint={enemyArmorPieceCount > 0
-                  ? 'Elegí la clase del enemigo y un set precargado, o editá las piezas a mano.'
-                  : 'Elegí la clase del enemigo y un set precargado, o editá las piezas a mano. Si no cargás nada, le pegás a un objetivo sin armadura.'}
-                action={<ClearButton onClick={clearEnemyArmor} label="Limpiar" />}
+                  ? t('Elegí la clase del enemigo y un set precargado, o editá las piezas a mano.')
+                  : t('Elegí la clase del enemigo y un set precargado, o editá las piezas a mano. Si no cargás nada, le pegás a un objetivo sin armadura.')}
+                action={<ClearButton onClick={clearEnemyArmor} label={t("Limpiar")} />}
               />
-              <Collapsible title={`Armadura Enemiga (${enemyArmorPieceCount} piezas)`} defaultOpen={enemyArmorPieceCount === 0}>
+              <Collapsible title={t('Armadura Enemiga ({n} piezas)', { n: enemyArmorPieceCount })} defaultOpen={enemyArmorPieceCount === 0}>
                 <EnemyArmorEditor
                   armorSet={enemyArmor}
                   enemyClase={enemyClase}
@@ -353,12 +356,12 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
 
               <SimStep
                 n={3}
-                title="Joyería del enemigo"
+                title={t("Joyería del enemigo")}
                 optional
-                hint="Sus bonus de protección y resistencia reducen el daño que le hacés."
-                action={enemyJewelryBonusCount > 0 ? <ClearButton onClick={clearEnemyJewelry} label="Limpiar" /> : undefined}
+                hint={t("Sus bonus de protección y resistencia reducen el daño que le hacés.")}
+                action={enemyJewelryBonusCount > 0 ? <ClearButton onClick={clearEnemyJewelry} label={t("Limpiar")} /> : undefined}
               />
-              <Collapsible title={`Joyeria Enemiga (${enemyJewelryBonusCount} bonuses)`} defaultOpen={false}>
+              <Collapsible title={t('Joyería Enemiga ({n} bonus)', { n: enemyJewelryBonusCount })} defaultOpen={false}>
                 <EnemyJewelryEditor
                   jewelry={enemyJewelry}
                   onUpdate={setEnemyJewelry}
@@ -366,14 +369,14 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
               </Collapsible>
 
               <div className="pt-2 flex flex-wrap items-center gap-3">
-                <Button size="lg" onClick={handleSimOffensive}>⚔️ Simular 10 golpes tuyos</Button>
-                <span className="text-xs text-zinc-500">Cada vez que simulás, los golpes y los críticos salen al azar.</span>
+                <Button size="lg" onClick={handleSimOffensive}>{t("⚔️ Simular 10 golpes tuyos")}</Button>
+                <span className="text-xs text-zinc-500">{t("Cada vez que simulás, los golpes y los críticos salen al azar.")}</span>
               </div>
 
               {offResult && (
                 <div className="space-y-2 pt-2">
                   <h3 className="text-sm font-semibold text-amber-300">
-                    Resultado: daño que le hacés a un {enemySubclase} con tu {myWeapon.nombre || 'arma'}
+                    {t('Resultado: daño que le hacés a un {subclase} con tu {arma}', { subclase: t(enemySubclase), arma: myWeapon.nombre || t('arma') })}
                   </h3>
                   <SimResultados result={offResult} weaponStats={myWeaponCalc} />
                 </div>
@@ -388,9 +391,9 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
         <div className="space-y-3">
           {myArmorPieceCount === 0 && (
             <div className="flex flex-wrap items-center gap-3 text-sm text-zinc-300 rounded-lg border border-amber-500/30 bg-amber-500/5 px-4 py-3">
-              <span>Para probar un arma enemiga contra vos necesitás cargar tu armadura.</span>
+              <span>{t("Para probar un arma enemiga contra vos necesitás cargar tu armadura.")}</span>
               {onGoTo && (
-                <Button size="sm" onClick={() => onGoTo('armadura')}>Cargar armadura →</Button>
+                <Button size="sm" onClick={() => onGoTo('armadura')}>{t("Cargar armadura →")}</Button>
               )}
             </div>
           )}
@@ -399,13 +402,13 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
             <>
               <SimStep
                 n={1}
-                title="Tu armadura"
-                hint="La que cargaste en el paso 3. Tu joyería también suma a tu defensa."
-                action={changeLink('Cambiar armadura', 'armadura')}
+                title={t("Tu armadura")}
+                hint={t("La que cargaste en el paso 3. Tu joyería también suma a tu defensa.")}
+                action={changeLink(t('Cambiar armadura'), 'armadura')}
               />
-              <Card title={<span className="flex items-center gap-1">Tu Armadura <HelpPopover text="Tu armadura configurada en el paso Armadura. CA = Clase de Armadura (multiplicador de defensa)." /></span>}>
+              <Card title={<span className="flex items-center gap-1">{t("Tu Armadura")} <HelpPopover text={t("Tu armadura configurada en el paso Armadura. CA = Clase de Armadura (multiplicador de defensa).")} /></span>}>
                 <div className="text-sm text-zinc-400">
-                  {myArmorPieceCount} piezas configuradas &middot; CA: {ARMOR_CLASSES[character.subclase]}
+                  {t('{n} piezas configuradas', { n: myArmorPieceCount })} &middot; {t('CA')}: {ARMOR_CLASSES[character.subclase]}
                   {myArmor.bonusArmaduraPct > 0 && <span> &middot; Armadura +{myArmor.bonusArmaduraPct}%</span>}
                   {myArmor.generalResistance.fisico > 0 && <span> &middot; Res.F {myArmor.generalResistance.fisico}%</span>}
                   {myArmor.generalResistance.magico > 0 && <span> &middot; Res.M {myArmor.generalResistance.magico}%</span>}
@@ -414,14 +417,14 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
 
               <SimStep
                 n={2}
-                title="Quién te ataca"
-                hint="La clase y el atributo principal del enemigo cambian el daño de su arma."
-                action={<ClearButton onClick={clearEnemyAttacker} label="Limpiar" />}
+                title={t("Quién te ataca")}
+                hint={t("La clase y el atributo principal del enemigo cambian el daño de su arma.")}
+                action={<ClearButton onClick={clearEnemyAttacker} label={t("Limpiar")} />}
               />
-              <Card title={<span className="flex items-center gap-1">Perfil Atacante Enemigo <HelpPopover text="Define la clase, subclase y stat principal del enemigo que te ataca. Afecta el dano que genera su arma." /></span>}>
+              <Card title={<span className="flex items-center gap-1">{t("Perfil Atacante Enemigo")} <HelpPopover text={t('Define la clase, subclase y stat principal del enemigo que te ataca. Afecta el daño que genera su arma.')} /></span>}>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   <Select
-                    label="Clase"
+                    label={t("Clase")}
                     value={defEnemyClase}
                     onChange={(e) => handleChangeDefEnemyClase(e.target.value as Clase)}
                     options={[
@@ -431,14 +434,14 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
                     ]}
                   />
                   <Select
-                    label="Subclase"
+                    label={t("Subclase")}
                     value={defEnemySubclase}
                     onChange={(e) => setDefEnemySubclase(e.target.value as Subclase)}
                     options={CLASE_SUBCLASES[defEnemyClase].map((sc) => ({ value: sc, label: sc }))}
                   />
                   <Input
                     label={SUBCLASE_MAIN_STAT[defEnemySubclase]}
-                    tooltip="Stat principal del enemigo. Afecta directamente el dano de su arma."
+                    tooltip={t('Stat principal del enemigo. Afecta directamente el daño de su arma.')}
                     type="number"
                     min={20}
                     max={120}
@@ -446,7 +449,7 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
                     onChange={(e) => setDefEnemyMainStat(Number(e.target.value))}
                   />
                   <div className="flex flex-col gap-1 justify-end">
-                    <span className="text-xs text-zinc-400 font-medium">CA Enemigo</span>
+                    <span className="text-xs text-zinc-400 font-medium">{t("CA Enemigo")}</span>
                     <span className="text-sm text-zinc-200 bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5">{ARMOR_CLASSES[defEnemySubclase]}x</span>
                   </div>
                 </div>
@@ -454,12 +457,12 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
 
               <SimStep
                 n={3}
-                title="Con qué arma te ataca"
-                hint="Elegí una de tus armas guardadas o un arma base."
+                title={t("Con qué arma te ataca")}
+                hint={t("Elegí una de tus armas guardadas o un arma base.")}
               />
-              <Card title="Arma Enemiga">
+              <Card title={t("Arma Enemiga")}>
                 <div>
-                  <label className="text-xs text-zinc-400 font-medium block mb-1">Seleccionar arma enemiga</label>
+                  <label className="text-xs text-zinc-400 font-medium block mb-1">{t("Seleccionar arma enemiga")}</label>
                   <select
                     value={enemyWeaponId}
                     onChange={(e) => setEnemyWeaponId(e.target.value)}
@@ -467,18 +470,18 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
                       enemyWeapon ? 'border-zinc-700' : 'border-amber-500/60'
                     }`}
                   >
-                    <option value="">Elegir arma...</option>
+                    <option value="">{t("Elegir arma...")}</option>
                     {customWeapons.length > 0 && (
-                      <optgroup label="Mis armas">
+                      <optgroup label={t("Mis armas")}>
                         {customWeapons.map((w) => (
-                          <option key={w.id} value={w.id}>[{w.subcategoria}] {w.nombre}</option>
+                          <option key={w.id} value={w.id}>[{t(w.subcategoria)}] {w.nombre}</option>
                         ))}
                       </optgroup>
                     )}
                     {defaultWeapons.length > 0 && (
-                      <optgroup label="Armas base">
+                      <optgroup label={t("Armas base")}>
                         {defaultWeapons.map((w) => (
-                          <option key={w.id} value={w.id}>[{w.subcategoria}] {w.nombre}</option>
+                          <option key={w.id} value={w.id}>[{t(w.subcategoria)}] {w.nombre}</option>
                         ))}
                       </optgroup>
                     )}
@@ -486,23 +489,23 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
                   {enemyWeaponCalc && (
                     <div className="mt-2 grid grid-cols-3 sm:grid-cols-5 gap-3 text-center text-sm">
                       <div>
-                        <div className="text-xs text-zinc-500">Dano</div>
+                        <div className="text-xs text-zinc-500">{t('Daño')}</div>
                         <div className="font-semibold text-zinc-200">{enemyWeaponCalc.danoMin}-{enemyWeaponCalc.danoMax}</div>
                       </div>
                       <div>
-                        <div className="text-xs text-zinc-500">Promedio</div>
+                        <div className="text-xs text-zinc-500">{t("Promedio")}</div>
                         <div className="font-semibold text-zinc-200">{enemyWeaponCalc.danoPromedio}</div>
                       </div>
                       <div>
-                        <div className="text-xs text-zinc-500">DPS</div>
+                        <div className="text-xs text-zinc-500">{t("DPS")}</div>
                         <div className="font-bold text-red-400">{enemyWeaponCalc.dpsEfectivo}</div>
                       </div>
                       <div>
-                        <div className="text-xs text-zinc-500">Crit</div>
+                        <div className="text-xs text-zinc-500">{t("Crit")}</div>
                         <div className="font-semibold text-zinc-200">{enemyWeaponCalc.critTotalPct}%</div>
                       </div>
                       <div>
-                        <div className="text-xs text-zinc-500">Vel</div>
+                        <div className="text-xs text-zinc-500">{t("Vel")}</div>
                         <div className="font-semibold text-zinc-200">{enemyWeaponCalc.velEfectiva}s</div>
                       </div>
                     </div>
@@ -512,12 +515,12 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
 
               <SimStep
                 n={4}
-                title="Joyería del enemigo"
+                title={t("Joyería del enemigo")}
                 optional
-                hint="Sus bonus de daño, crítico y atributos aumentan el daño que te hace."
-                action={enemyJewelryBonusCount > 0 ? <ClearButton onClick={clearEnemyJewelry} label="Limpiar" /> : undefined}
+                hint={t("Sus bonus de daño, crítico y atributos aumentan el daño que te hace.")}
+                action={enemyJewelryBonusCount > 0 ? <ClearButton onClick={clearEnemyJewelry} label={t("Limpiar")} /> : undefined}
               />
-              <Collapsible title={`Joyeria Enemiga (${enemyJewelryBonusCount} bonuses)`} defaultOpen={false}>
+              <Collapsible title={t('Joyería Enemiga ({n} bonus)', { n: enemyJewelryBonusCount })} defaultOpen={false}>
                 <EnemyJewelryEditor
                   jewelry={enemyJewelry}
                   onUpdate={setEnemyJewelry}
@@ -526,19 +529,19 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
 
               <div className="pt-2 flex flex-wrap items-center gap-3">
                 <Button size="lg" onClick={handleSimDefensive} disabled={!enemyWeapon}>
-                  🛡️ Simular 10 golpes del enemigo
+                  {t("🛡️ Simular 10 golpes del enemigo")}
                 </Button>
                 <span className="text-xs text-zinc-500">
                   {enemyWeapon
-                    ? 'Cada vez que simulás, los golpes y los críticos salen al azar.'
-                    : 'Primero elegí con qué arma te ataca (punto 3).'}
+                    ? t('Cada vez que simulás, los golpes y los críticos salen al azar.')
+                    : t('Primero elegí con qué arma te ataca (punto 3).')}
                 </span>
               </div>
 
               {defResult && (
                 <div className="space-y-2 pt-2">
                   <h3 className="text-sm font-semibold text-red-300">
-                    Resultado: daño que recibís de un {defEnemySubclase}{enemyWeapon ? ` con ${enemyWeapon.nombre}` : ''}
+                    {enemyWeapon ? t('Resultado: daño que recibís de un {subclase} con {arma}', { subclase: t(defEnemySubclase), arma: enemyWeapon.nombre }) : t('Resultado: daño que recibís de un {subclase}', { subclase: t(defEnemySubclase) })}
                   </h3>
                   <SimResultados result={defResult} weaponStats={enemyWeaponCalc} />
                 </div>

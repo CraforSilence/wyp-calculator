@@ -1,6 +1,7 @@
 'use client';
 
 import { Button } from '@/components/ui/Button';
+import { useT } from '@/i18n/I18nProvider';
 
 export interface ChecklistItem {
   label: string;
@@ -60,18 +61,19 @@ interface StepNavProps {
 
 /** Botones Volver / Continuar al pie de cada paso del Build. */
 export function StepNav({ prev, next, hint }: StepNavProps) {
+  const t = useT();
   return (
     <div className="mt-6 pt-4 border-t border-zinc-800 flex flex-col-reverse sm:flex-row sm:items-center gap-3">
       {prev ? (
         <Button variant="ghost" onClick={prev.onClick} className="self-start">
-          ← Volver a {prev.label}
+          ← {t('Volver a {paso}', { paso: prev.label })}
         </Button>
       ) : <span />}
       {next && (
         <div className="sm:ml-auto flex flex-col sm:items-end gap-1.5">
           {hint && <p className="text-xs text-zinc-500">{hint}</p>}
           <Button size="lg" onClick={next.onClick}>
-            Continuar con {next.label} →
+            {t('Continuar con {paso}', { paso: next.label })} →
           </Button>
         </div>
       )}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { ArmorSet } from '@/types/armor';
+import { useT } from '@/i18n/I18nProvider';
 
 /** Cuantos modificadores del set tienen un valor distinto de 0. */
 export function countActiveModifiers(armorSet: ArmorSet): number {
@@ -29,6 +30,7 @@ interface ArmorModifiersSectionProps {
  * los usa y son muchos campos. Arranca abierto si ya hay alguno cargado.
  */
 export function ArmorModifiersSection({ title, armorSet, children, className = '' }: ArmorModifiersSectionProps) {
+  const t = useT();
   const active = countActiveModifiers(armorSet);
   const [open, setOpen] = useState(active > 0);
 
@@ -42,13 +44,13 @@ export function ArmorModifiersSection({ title, armorSet, children, className = '
       >
         <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0">
           <span className="text-sm font-semibold text-zinc-200">{title}</span>
-          <span className="text-[12px] uppercase tracking-wider text-zinc-500">Avanzado</span>
+          <span className="text-[12px] uppercase tracking-wider text-zinc-500">{t("Avanzado")}</span>
           {active > 0 ? (
             <span className="rounded-full bg-amber-500/15 border border-amber-600/40 px-2 py-0.5 text-[12px] text-amber-400">
-              {active} {active === 1 ? 'activo' : 'activos'}
+              {active} {active === 1 ? t("activo") : t("activos")}
             </span>
           ) : (
-            <span className="text-[12px] text-zinc-600">sin cambios</span>
+            <span className="text-[12px] text-zinc-600">{t("sin cambios")}</span>
           )}
         </span>
         <svg

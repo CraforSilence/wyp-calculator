@@ -20,8 +20,10 @@ import { useShareImport } from '@/hooks/useShareImport';
 import type { ShareResult } from '@/lib/share';
 import type { Weapon, Subcategoria } from '@/types/weapon';
 import type { Clase, Subclase } from '@/types/character';
+import { useT } from '@/i18n/I18nProvider';
 
 export default function ArmasPage() {
+  const t = useT();
   const { character } = useCharacter();
   const {
     weapons, addWeapon, updateWeapon, deleteWeapon,
@@ -93,10 +95,10 @@ export default function ArmasPage() {
   const handleSave = (weaponData: Omit<Weapon, 'id' | 'createdAt'>) => {
     if (editingWeapon) {
       updateWeapon(editingWeapon.id, weaponData);
-      toast('Arma actualizada', 'success');
+      toast(t("Arma actualizada"), 'success');
     } else {
       addWeapon(weaponData);
-      toast('Arma agregada', 'success');
+      toast(t("Arma agregada"), 'success');
     }
     setShowForm(false);
     setEditingWeapon(null);
@@ -121,19 +123,19 @@ export default function ArmasPage() {
   return (
     <div>
       <PageHeader
-        title="Armas"
-        description={`${defaultCount} base, ${tempCount} personalizadas${hiddenCount > 0 ? `, ${hiddenCount} ocultas` : ''}`}
+        title={t("Armas")}
+        description={t('{base} base, {propias} personalizadas', { base: defaultCount, propias: tempCount }) + (hiddenCount > 0 ? t(', {n} ocultas', { n: hiddenCount }) : '')}
         actions={
           <div className="flex gap-2">
             {hiddenCount > 0 && (
               <Button variant="ghost" size="sm" onClick={() => setShowHidden(!showHidden)}>
-                {showHidden ? 'Cerrar ocultas' : `Ocultas (${hiddenCount})`}
+                {showHidden ? t("Cerrar ocultas") : `Ocultas (${hiddenCount})`}
               </Button>
             )}
-            <Button variant="secondary" size="sm" onClick={resetAll}>Reset todo</Button>
-            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar</Button>
+            <Button variant="secondary" size="sm" onClick={resetAll}>{t("Reset todo")}</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>{t("Importar")}</Button>
             <Button size="sm" onClick={() => { setEditingWeapon(null); setShowForm(!showForm); }}>
-              {showForm ? 'Cerrar' : '+ Nueva arma'}
+              {showForm ? t("Cerrar") : t("+ Nueva arma")}
             </Button>
           </div>
         }
@@ -142,7 +144,7 @@ export default function ArmasPage() {
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-zinc-500">Clase:</span>
+          <span className="text-xs text-zinc-500">{t("Clase:")}</span>
           {(['Todas', 'Guerrero', 'Arquero', 'Mago'] as const).map((c) => (
             <button
               key={c}
@@ -153,13 +155,13 @@ export default function ArmasPage() {
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
-              {c}
+              {t(c)}
             </button>
           ))}
         </div>
         {subclaseOptions.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-500">Subclase:</span>
+            <span className="text-xs text-zinc-500">{t("Subclase:")}</span>
             <button
               onClick={() => { setSubclaseFilter('Todas'); setSubcatFilter('Todas'); }}
               className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
@@ -168,7 +170,7 @@ export default function ArmasPage() {
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
-              Todas
+              {t("Todas")}
             </button>
             {subclaseOptions.map((sc) => (
               <button
@@ -187,7 +189,7 @@ export default function ArmasPage() {
         )}
         {subcatOptions.length > 1 && (
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs text-zinc-500">Tipo:</span>
+            <span className="text-xs text-zinc-500">{t("Tipo:")}</span>
             <button
               onClick={() => setSubcatFilter('Todas')}
               className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
@@ -196,7 +198,7 @@ export default function ArmasPage() {
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
-              Todas
+              {t("Todas")}
             </button>
             {subcatOptions.map((sc) => (
               <button
@@ -218,7 +220,7 @@ export default function ArmasPage() {
       {/* Hidden weapons panel */}
       {showHidden && hiddenCount > 0 && (
         <div className="mb-6 bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-zinc-400 mb-2">Armas ocultas</h3>
+          <h3 className="text-sm font-medium text-zinc-400 mb-2">{t("Armas ocultas")}</h3>
           <div className="flex flex-wrap gap-2">
             {hiddenIds.map((id) => {
               const w = DEFAULT_WEAPONS.find((dw) => dw.id === id);
@@ -252,7 +254,7 @@ export default function ArmasPage() {
         {allCustomResults.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-4 border-b border-amber-800/40 pb-2">
-              <h2 className="text-base font-bold text-amber-400">Mis armas</h2>
+              <h2 className="text-base font-bold text-amber-400">{t("Mis armas")}</h2>
               <Badge variant="damage">{allCustomResults.length}</Badge>
             </div>
             <div className="space-y-6">
@@ -271,8 +273,8 @@ export default function ArmasPage() {
                               weapon={weapon}
                               calcResult={result}
                               onEdit={() => handleEdit(weapon)}
-                              onDelete={() => { deleteWeapon(weapon.id); toast('Arma eliminada', 'info'); }}
-                              onDuplicate={() => { duplicateAsTemp(weapon.id); toast('Arma duplicada', 'success'); }}
+                              onDelete={() => { deleteWeapon(weapon.id); toast(t("Arma eliminada"), 'info'); }}
+                              onDuplicate={() => { duplicateAsTemp(weapon.id); toast(t("Arma duplicada"), 'success'); }}
                               onShare={() => handleShare(weapon)}
                               isModified={false}
                             />
@@ -298,7 +300,7 @@ export default function ArmasPage() {
         {allBaseResults.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-4 border-b border-zinc-700/60 pb-2">
-              <h2 className="text-base font-bold text-zinc-400">Armas base</h2>
+              <h2 className="text-base font-bold text-zinc-400">{t("Armas base")}</h2>
               <Badge variant="info">{allBaseResults.length}</Badge>
             </div>
             <div className="space-y-6">
@@ -317,10 +319,10 @@ export default function ArmasPage() {
                               weapon={weapon}
                               calcResult={result}
                               onEdit={() => handleEdit(weapon)}
-                              onDelete={() => { hideWeapon(weapon.id); toast('Arma oculta', 'info'); }}
-                              onDuplicate={() => { duplicateAsTemp(weapon.id); toast('Arma duplicada', 'success'); }}
+                              onDelete={() => { hideWeapon(weapon.id); toast(t("Arma oculta"), 'info'); }}
+                              onDuplicate={() => { duplicateAsTemp(weapon.id); toast(t("Arma duplicada"), 'success'); }}
                               onShare={() => handleShare(weapon)}
-                              onReset={isModified(weapon.id) ? () => { resetWeapon(weapon.id); toast('Arma reseteada', 'info'); } : undefined}
+                              onReset={isModified(weapon.id) ? () => { resetWeapon(weapon.id); toast(t("Arma reseteada"), 'info'); } : undefined}
                               isModified={isModified(weapon.id)}
                             />
                           ))}
@@ -343,8 +345,8 @@ export default function ArmasPage() {
 
         {weapons.length === 0 && (
           <div className="text-center py-12 text-zinc-500">
-            <p>Todas las armas estan ocultas.</p>
-            <Button className="mt-4" onClick={resetAll}>Mostrar todo</Button>
+            <p>{t('Todas las armas están ocultas.')}</p>
+            <Button className="mt-4" onClick={resetAll}>{t("Mostrar todo")}</Button>
           </div>
         )}
       </div>

@@ -17,8 +17,10 @@ import { DEFAULT_JEWELRY } from '@/data/default-jewelry';
 import { JEWELRY_ICONS } from '@/lib/engine/constants';
 import Link from 'next/link';
 import type { JewelryItem } from '@/types/jewelry';
+import { useT } from '@/i18n/I18nProvider';
 
 export default function JoyeriaPage() {
+  const t = useT();
   const {
     items, addItem, updateItem, deleteItem,
     hideItem, showItem, resetItem, resetAll,
@@ -47,10 +49,10 @@ export default function JoyeriaPage() {
   const handleSave = (data: Omit<JewelryItem, 'id' | 'createdAt'>) => {
     if (editingItem) {
       updateItem(editingItem.id, data);
-      toast('Joya actualizada', 'success');
+      toast(t("Joya actualizada"), 'success');
     } else {
       addItem(data);
-      toast('Joya agregada', 'success');
+      toast(t("Joya agregada"), 'success');
     }
     setShowForm(false);
     setEditingItem(null);
@@ -73,31 +75,31 @@ export default function JoyeriaPage() {
   const handleDelete = (item: JewelryItem) => {
     if (item.isDefault) {
       hideItem(item.id);
-      toast('Joya oculta', 'info');
+      toast(t("Joya oculta"), 'info');
     } else {
       deleteItem(item.id);
-      toast('Joya eliminada', 'info');
+      toast(t("Joya eliminada"), 'info');
     }
   };
 
   return (
     <div>
       <PageHeader
-        title="Joyeria"
-        description={`${baseCount} base, ${customCount} personalizadas${hiddenCount > 0 ? `, ${hiddenCount} ocultas` : ''}`}
+        title={t('Joyería')}
+        description={t('{base} base, {propias} personalizadas', { base: baseCount, propias: customCount }) + (hiddenCount > 0 ? t(', {n} ocultas', { n: hiddenCount }) : '')}
         actions={
           <div className="flex gap-2">
             {hiddenCount > 0 && (
               <Button variant="ghost" size="sm" onClick={() => setShowHidden(!showHidden)}>
-                {showHidden ? 'Cerrar ocultas' : `Ocultas (${hiddenCount})`}
+                {showHidden ? t("Cerrar ocultas") : `Ocultas (${hiddenCount})`}
               </Button>
             )}
             {(customCount > 0 || hiddenCount > 0) && (
-              <Button variant="secondary" size="sm" onClick={resetAll}>Reset todo</Button>
+              <Button variant="secondary" size="sm" onClick={resetAll}>{t("Reset todo")}</Button>
             )}
-            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>{t("Importar")}</Button>
             <Button size="sm" onClick={() => { setEditingItem(null); setShowForm(!showForm); }}>
-              {showForm ? 'Cerrar' : '+ Nueva joya'}
+              {showForm ? t("Cerrar") : t("+ Nueva joya")}
             </Button>
           </div>
         }
@@ -106,7 +108,7 @@ export default function JoyeriaPage() {
       {/* Hidden items panel */}
       {showHidden && hiddenCount > 0 && (
         <div className="mb-6 bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-zinc-400 mb-2">Joyas ocultas</h3>
+          <h3 className="text-sm font-medium text-zinc-400 mb-2">{t("Joyas ocultas")}</h3>
           <div className="flex flex-wrap gap-2">
             {hiddenIds.map((id) => {
               const j = DEFAULT_JEWELRY.find((dj) => dj.id === id);
@@ -140,7 +142,7 @@ export default function JoyeriaPage() {
         {allCustomItems.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-4 border-b border-amber-800/40 pb-2">
-              <h2 className="text-base font-bold text-amber-400">Mis joyas</h2>
+              <h2 className="text-base font-bold text-amber-400">{t("Mis joyas")}</h2>
               <Badge variant="damage">{customCount}</Badge>
             </div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg">
@@ -148,7 +150,7 @@ export default function JoyeriaPage() {
                 items={customItems}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                onDuplicate={(item) => { duplicateAsCustom(item.id); toast('Joya duplicada', 'success'); }}
+                onDuplicate={(item) => { duplicateAsCustom(item.id); toast(t("Joya duplicada"), 'success'); }}
                 onShare={handleShare}
               />
             </div>
@@ -167,7 +169,7 @@ export default function JoyeriaPage() {
         {allBaseItems.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-4 border-b border-zinc-700/60 pb-2">
-              <h2 className="text-base font-bold text-zinc-400">Joyas base</h2>
+              <h2 className="text-base font-bold text-zinc-400">{t("Joyas base")}</h2>
               <Badge variant="info">{baseCount}</Badge>
             </div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg">
@@ -175,9 +177,9 @@ export default function JoyeriaPage() {
                 items={baseItems}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
-                onDuplicate={(item) => { duplicateAsCustom(item.id); toast('Joya duplicada', 'success'); }}
+                onDuplicate={(item) => { duplicateAsCustom(item.id); toast(t("Joya duplicada"), 'success'); }}
                 onShare={handleShare}
-                onReset={(item) => { resetItem(item.id); toast('Joya reseteada', 'info'); }}
+                onReset={(item) => { resetItem(item.id); toast(t("Joya reseteada"), 'info'); }}
                 isModified={isModified}
               />
             </div>
@@ -201,20 +203,20 @@ export default function JoyeriaPage() {
                 </span>
               ))}
             </div>
-            <h2 className="text-base font-semibold text-zinc-200">Todavía no guardaste joyas</h2>
+            <h2 className="text-base font-semibold text-zinc-200">{t("Todavía no guardaste joyas")}</h2>
             <p className="mt-1 text-sm text-zinc-400">
-              Guardá tus anillos y amuletos acá para precargarlos en el Build con un click, o compartilos con un código.
+              {t('Guardá tus anillos y amuletos acá para precargarlos en el Build con un clic, o compartilos con un código.')}
             </p>
             <div className="mt-5 flex flex-wrap justify-center gap-2">
-              <Button onClick={() => { setEditingItem(null); setShowForm(true); }}>+ Nueva joya</Button>
-              <Button variant="secondary" onClick={() => setShowImport(true)}>Importar código</Button>
+              <Button onClick={() => { setEditingItem(null); setShowForm(true); }}>{t("+ Nueva joya")}</Button>
+              <Button variant="secondary" onClick={() => setShowImport(true)}>{t("Importar código")}</Button>
             </div>
             <p className="mt-4 text-xs text-zinc-500">
-              ¿Solo querés probar? Cargá los bonus directo en el{' '}
+              {t('¿Solo querés probar? Cargá los bonus directo en el')}{' '}
               <Link
                 href="/build"
                 onClick={() => { try { window.sessionStorage.setItem('regnum-build-tab', JSON.stringify('armas')); } catch { /* sin sessionStorage */ } }}
-                className="text-amber-400 hover:text-amber-300 underline-offset-2 hover:underline">Build, paso 2</Link>.
+                className="text-amber-400 hover:text-amber-300 underline-offset-2 hover:underline">{t('Build, paso 2')}</Link>.
             </p>
           </div>
         )}

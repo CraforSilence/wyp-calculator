@@ -1,7 +1,7 @@
 # WypForge — Weapons and Protections
 
 Calculadora de armas, armaduras y daño para **Regnum Online**.
-Online en [wypcalculator.vercel.app](https://wypcalculator.vercel.app).
+Online en [wypforge.vercel.app](https://wypforge.vercel.app).
 
 Todo corre en el navegador: no hay cuentas ni servidor. Lo que cargás queda guardado en
 `localStorage` y se comparte con códigos.
@@ -38,6 +38,22 @@ Arma, joya, set de armadura, build completo y comparativo se comparten desde el 
 
 La lógica de importación vive en `src/hooks/useShareImport.ts` y la usan tanto `/importar`
 como los botones "Importar" de cada página.
+
+## Idiomas (español / inglés)
+
+Selector ES/EN en la barra; se guarda en el navegador (`regnum-lang`). La primera vez se
+elige según el idioma del navegador.
+
+- Cada texto visible pasa por `t('texto en español')` (`useT()` de `src/i18n/I18nProvider.tsx`).
+  La clave es el propio texto en español, así el código se sigue leyendo en español.
+- `src/i18n/en.ts`: traducciones al inglés. Si falta una, se muestra el español y en
+  desarrollo aparece un aviso `[i18n] falta traduccion` en la consola.
+- `src/i18n/es.ts`: correcciones para datos guardados sin tilde (por ejemplo, el tipo de
+  bonus `'Dano critico %'` se muestra "Daño crítico %"). Esas claves no se renombran para no
+  romper lo guardado ni los códigos compartidos.
+- Variables con llaves: `t('Quedan {n} lugares', { n })`. Para resaltar partes de la frase,
+  `rich(t, 'La más rápida es {arma}', { arma: <b>…</b> })`.
+- Los nombres de armas y sets precargados son datos del juego y no se traducen.
 
 ## Motor de cálculo
 

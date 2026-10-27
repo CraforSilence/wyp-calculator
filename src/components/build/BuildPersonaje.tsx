@@ -5,8 +5,10 @@ import { ClassSelector } from '@/components/character/ClassSelector';
 import { StatsPanel } from '@/components/character/StatsPanel';
 import { CLASE_SUBCLASES } from '@/lib/engine/constants';
 import type { Clase } from '@/types/character';
+import { useT } from '@/i18n/I18nProvider';
 
 export function BuildPersonaje() {
+  const t = useT();
   const { character, updateCharacter } = useCharacter();
 
   const handleClaseChange = (clase: Clase) => {

@@ -19,8 +19,10 @@ import { useShareImport } from '@/hooks/useShareImport';
 import type { ShareResult } from '@/lib/share';
 import type { CatalogArmorSet } from '@/types/armor';
 import type { Subclase } from '@/types/character';
+import { useT } from '@/i18n/I18nProvider';
 
 export default function ArmaduraPage() {
+  const t = useT();
   const {
     sets, addSet, updateSet, deleteSet,
     hideSet, showSet, resetSet, resetAll,
@@ -85,10 +87,10 @@ export default function ArmaduraPage() {
   const handleDelete = (set: CatalogArmorSet) => {
     if (set.isDefault) {
       hideSet(set.id);
-      toast('Set oculto', 'info');
+      toast(t("Set oculto"), 'info');
     } else {
       deleteSet(set.id);
-      toast('Set eliminado', 'info');
+      toast(t("Set eliminado"), 'info');
     }
     setSelectedIds((prev) => prev.filter((x) => x !== set.id));
   };
@@ -104,16 +106,16 @@ export default function ArmaduraPage() {
 
   const handleDuplicate = (set: CatalogArmorSet) => {
     duplicateAsCustom(set.id);
-    toast('Set duplicado', 'success');
+    toast(t("Set duplicado"), 'success');
   };
 
   const handleSave = (setData: Omit<CatalogArmorSet, 'id' | 'createdAt'>) => {
     if (editingSet) {
       updateSet(editingSet.id, setData);
-      toast('Set actualizado', 'success');
+      toast(t("Set actualizado"), 'success');
     } else {
       addSet(setData);
-      toast('Set agregado', 'success');
+      toast(t("Set agregado"), 'success');
     }
     setShowForm(false);
     setEditingSet(null);
@@ -127,13 +129,13 @@ export default function ArmaduraPage() {
   return (
     <div>
       <PageHeader
-        title="Armaduras"
-        description={`${baseCount} base${claseFilter !== 'Todas' ? ` (${claseFilter})` : ''}, ${customCount} personalizadas${hiddenCount > 0 ? `, ${hiddenCount} ocultas` : ''} — Clase: ${armorClass.toFixed(2)} (${character.subclase})`}
+        title={t("Armaduras")}
+        description={t('{base} base', { base: baseCount }) + (claseFilter !== 'Todas' ? ` (${t(claseFilter)})` : '') + t(', {propias} personalizadas', { propias: customCount }) + (hiddenCount > 0 ? t(', {n} ocultas', { n: hiddenCount }) : '') + ` — ${t('Clase de armadura')}: ${armorClass.toFixed(2)} (${t(character.subclase)})`}
         actions={
           <div className="flex gap-2">
             {hiddenCount > 0 && (
               <Button variant="ghost" size="sm" onClick={() => setShowHidden(!showHidden)}>
-                {showHidden ? 'Cerrar ocultas' : `Ocultas (${hiddenCount})`}
+                {showHidden ? t("Cerrar ocultas") : `Ocultas (${hiddenCount})`}
               </Button>
             )}
             {selectedIds.length > 0 && (
@@ -141,10 +143,10 @@ export default function ArmaduraPage() {
                 Deseleccionar ({selectedIds.length})
               </Button>
             )}
-            <Button variant="secondary" size="sm" onClick={resetAll}>Reset todo</Button>
-            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>Importar</Button>
+            <Button variant="secondary" size="sm" onClick={resetAll}>{t("Reset todo")}</Button>
+            <Button variant="secondary" size="sm" onClick={() => setShowImport(true)}>{t("Importar")}</Button>
             <Button size="sm" onClick={() => { setEditingSet(null); setShowForm(!showForm); }}>
-              {showForm ? 'Cerrar' : '+ Nuevo set'}
+              {showForm ? t("Cerrar") : t("+ Nuevo set")}
             </Button>
           </div>
         }
@@ -163,7 +165,7 @@ export default function ArmaduraPage() {
       {/* Filters */}
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex items-center gap-2">
-          <span className="text-xs text-zinc-500">Clase:</span>
+          <span className="text-xs text-zinc-500">{t("Clase:")}</span>
           {(['Todas', 'Guerrero', 'Arquero', 'Mago'] as const).map((c) => (
             <button
               key={c}
@@ -174,13 +176,13 @@ export default function ArmaduraPage() {
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
-              {c}
+              {t(c)}
             </button>
           ))}
         </div>
         {subclaseOptions.length > 0 && (
           <div className="flex items-center gap-2">
-            <span className="text-xs text-zinc-500">Subclase:</span>
+            <span className="text-xs text-zinc-500">{t("Subclase:")}</span>
             <button
               onClick={() => setSubclaseFilter('Todas')}
               className={`px-3 py-1 rounded text-xs border transition-colors cursor-pointer ${
@@ -189,7 +191,7 @@ export default function ArmaduraPage() {
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
-              Todas
+              {t("Todas")}
             </button>
             {subclaseOptions.map((sc) => (
               <button
@@ -211,7 +213,7 @@ export default function ArmaduraPage() {
       {/* Hidden sets panel */}
       {showHidden && hiddenCount > 0 && (
         <div className="mb-6 bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-          <h3 className="text-sm font-medium text-zinc-400 mb-2">Sets ocultos</h3>
+          <h3 className="text-sm font-medium text-zinc-400 mb-2">{t("Sets ocultos")}</h3>
           <div className="flex flex-wrap gap-2">
             {hiddenIds.map((id) => {
               const s = CATALOG_ARMOR_SETS.find((cs) => cs.id === id);
@@ -234,7 +236,7 @@ export default function ArmaduraPage() {
       {selectedSets.length >= 2 && (
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-4 border-b border-cyan-800/40 pb-2">
-            <h2 className="text-base font-bold text-cyan-400">Comparacion</h2>
+            <h2 className="text-base font-bold text-cyan-400">{t('Comparación')}</h2>
             <Badge variant="info">{selectedSets.length} sets</Badge>
           </div>
           <ArmorComparison sets={selectedSets} armorClass={armorClass} />
@@ -243,7 +245,7 @@ export default function ArmaduraPage() {
 
       {selectedSets.length === 1 && (
         <div className="mb-6 text-center py-3 text-zinc-500 text-sm bg-zinc-900 border border-zinc-800 rounded-lg">
-          Selecciona al menos un set mas para comparar.
+          {t('Seleccioná al menos un set más para comparar.')}
         </div>
       )}
 
@@ -252,14 +254,14 @@ export default function ArmaduraPage() {
         {allCustomSets.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-4 border-b border-amber-800/40 pb-2">
-              <h2 className="text-base font-bold text-amber-400">Mis sets</h2>
+              <h2 className="text-base font-bold text-amber-400">{t("Mis sets")}</h2>
               <Badge variant="damage">{customCount}</Badge>
             </div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg">
               <ArmorSetTable
                 sets={customSets}
                 armorClass={armorClass}
-                subclase={character.subclase}
+                subclase={t(character.subclase)}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
@@ -283,19 +285,19 @@ export default function ArmaduraPage() {
         {allBaseSets.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-4 border-b border-zinc-700/60 pb-2">
-              <h2 className="text-base font-bold text-zinc-400">Sets base</h2>
+              <h2 className="text-base font-bold text-zinc-400">{t("Sets base")}</h2>
               <Badge variant="info">{baseCount}</Badge>
             </div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-lg">
               <ArmorSetTable
                 sets={baseSets}
                 armorClass={armorClass}
-                subclase={character.subclase}
+                subclase={t(character.subclase)}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
                 onShare={handleShare}
-                onReset={(set) => { resetSet(set.id); toast('Set reseteado', 'info'); }}
+                onReset={(set) => { resetSet(set.id); toast(t("Set reseteado"), 'info'); }}
                 isModified={isModified}
                 selectedIds={selectedIds}
                 onToggleSelect={toggleSelect}
@@ -314,8 +316,8 @@ export default function ArmaduraPage() {
 
         {sets.length === 0 && (
           <div className="text-center py-12 text-zinc-500">
-            <p>Todos los sets estan ocultos.</p>
-            <Button className="mt-4" onClick={resetAll}>Mostrar todo</Button>
+            <p>{t('Todos los sets están ocultos.')}</p>
+            <Button className="mt-4" onClick={resetAll}>{t("Mostrar todo")}</Button>
           </div>
         )}
       </div>

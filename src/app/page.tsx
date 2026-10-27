@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useT } from '@/i18n/I18nProvider';
 
 const SECTIONS = [
   {
@@ -47,6 +50,7 @@ const FEATURES = [
 ];
 
 export default function HomePage() {
+  const t = useT();
   return (
     <div className="max-w-5xl mx-auto">
       {/* Hero */}
@@ -61,32 +65,32 @@ export default function HomePage() {
           />
         </h1>
         <p className="text-base text-zinc-300 mt-5 max-w-2xl">
-          Calculadora de armas, armaduras y daño para <span className="text-zinc-100 font-semibold">Regnum Online</span>.
-          Armá tu personaje, compará armas y descubrí cuánto pegás de verdad contra la armadura del enemigo.
+          {t('Calculadora de armas, armaduras y daño para')} <span className="text-zinc-100 font-semibold">Regnum Online</span>.{' '}
+          {t('Armá tu personaje, compará armas y descubrí cuánto pegás de verdad contra la armadura del enemigo.')}
         </p>
         <div className="flex flex-wrap justify-center gap-3 mt-6">
           <Link
             href="/build"
             className="px-5 py-2.5 rounded-md bg-amber-600 hover:bg-amber-500 text-zinc-950 font-semibold text-sm transition-colors"
           >
-            Armar mi build
+            {t("Armar mi build")}
           </Link>
           <Link
             href="/rankings"
             className="px-5 py-2.5 rounded-md border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-800/60 text-zinc-200 text-sm transition-colors"
           >
-            Ver ranking de armas
+            {t("Ver ranking de armas")}
           </Link>
         </div>
         <p className="text-xs text-zinc-500 mt-3">
           ¿Te pasaron un código o un link?{' '}
-          <Link href="/importar" className="text-amber-500 hover:text-amber-400 underline-offset-2 hover:underline">Importalo acá</Link>
+          <Link href="/importar" className="text-amber-500 hover:text-amber-400 underline-offset-2 hover:underline">{t("Importalo acá")}</Link>
         </p>
       </section>
 
       {/* Secciones */}
       <section>
-        <h2 className="text-xs uppercase tracking-wider text-zinc-500 mb-3">Qué podés hacer</h2>
+        <h2 className="text-xs uppercase tracking-wider text-zinc-500 mb-3">{t("Qué podés hacer")}</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {SECTIONS.map((s) => (
             <Link
@@ -105,10 +109,10 @@ export default function HomePage() {
               </span>
               <span className="min-w-0">
                 <span className="flex items-center gap-1 text-sm font-semibold text-zinc-100 group-hover:text-amber-400 transition-colors">
-                  {s.title}
+                  {t(s.title)}
                   <span className="text-zinc-600 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-transform">→</span>
                 </span>
-                <span className="block text-xs text-zinc-400 mt-1">{s.description}</span>
+                <span className="block text-xs text-zinc-400 mt-1">{t(s.description)}</span>
               </span>
             </Link>
           ))}
@@ -119,8 +123,8 @@ export default function HomePage() {
       <section className="grid gap-3 sm:grid-cols-3 mt-8">
         {FEATURES.map((f) => (
           <div key={f.title} className="rounded-lg border border-zinc-800/70 px-4 py-3">
-            <div className="text-sm font-semibold text-zinc-200">{f.title}</div>
-            <div className="text-xs text-zinc-500 mt-1">{f.text}</div>
+            <div className="text-sm font-semibold text-zinc-200">{t(f.title)}</div>
+            <div className="text-xs text-zinc-500 mt-1">{t(f.text)}</div>
           </div>
         ))}
       </section>

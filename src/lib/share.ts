@@ -148,25 +148,26 @@ function validatePayload(type: ShareType, data: unknown): boolean {
   }
 }
 
-export function getSharePreview(result: ShareResult): string {
+/** Descripcion corta de lo que trae un codigo. `t` traduce las etiquetas (opcional). */
+export function getSharePreview(result: ShareResult, t: (key: string, vars?: Record<string, string | number>) => string = (k) => k): string {
   const obj = result.data as Record<string, unknown>;
   switch (result.type) {
     case 'weapon':
-      return `Arma: ${obj.nombre}`;
+      return `${t('Arma')}: ${obj.nombre}`;
     case 'jewelry':
-      return `Joya: ${obj.nombre}`;
+      return `${t('Joya')}: ${obj.nombre}`;
     case 'armor':
-      return `Armadura: ${obj.nombre}`;
+      return `${t('Armadura')}: ${obj.nombre}`;
     case 'build': {
       const char = obj.character as Record<string, unknown>;
       const weapon = obj.weapon as Record<string, unknown>;
-      return `Build: ${char?.subclase ?? '?'} — ${weapon?.nombre ?? 'Sin arma'}`;
+      return `${t('Build')}: ${t(String(char?.subclase ?? '?'))} — ${weapon?.nombre ?? t('Sin arma')}`;
     }
     case 'compare': {
       const names = (obj.weapons as { nombre: string }[]).map((w) => w.nombre);
-      return `Comparativo: ${names.join(' vs ')}`;
+      return `${t('Comparativo')}: ${names.join(' vs ')}`;
     }
     default:
-      return 'Desconocido';
+      return t('Desconocido');
   }
 }

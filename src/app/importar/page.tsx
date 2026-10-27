@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/Toast';
 import { useShareImport } from '@/hooks/useShareImport';
 import { decodeShareCode, getSharePreview, SHARE_TYPE_LABELS } from '@/lib/share';
 import type { ShareResult, ShareType, ComparePayload } from '@/lib/share';
+import { useT } from '@/i18n/I18nProvider';
 
 /** Que pasa con cada tipo al importarlo, para que nadie se lleve sorpresas */
 const WHAT_HAPPENS: Record<ShareType, string> = {
@@ -27,6 +28,7 @@ const TYPE_ICONS: Record<ShareType, string> = {
 };
 
 export default function ImportarPage() {
+  const t = useT();
   const router = useRouter();
   const { toast } = useToast();
   const { importShare } = useShareImport();
@@ -45,7 +47,7 @@ export default function ImportarPage() {
     }
     const decoded = decodeShareCode(value);
     setResult(decoded);
-    setError(decoded ? '' : 'No reconozco este código. Revisá que esté completo (empieza con WYP-) o pegá el link entero.');
+    setError(decoded ? '' : t('No reconozco este código. Revisá que esté completo (empieza con WYP-) o pegá el link entero.'));
   };
 
   // Link de compartir: el codigo viene en el hash (/importar#WYP-...)
@@ -73,19 +75,19 @@ export default function ImportarPage() {
   return (
     <div className="max-w-2xl mx-auto">
       <PageHeader
-        title="Importar"
-        description="Pegá un código o un link de WypForge: armas, joyas, armaduras, builds o comparativos. Lo detectamos solo y te llevamos a la sección que corresponde."
+        title={t("Importar")}
+        description={t("Pegá un código o un link de WypForge: armas, joyas, armaduras, builds o comparativos. Lo detectamos solo y te llevamos a la sección que corresponde.")}
       />
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-4">
         <div>
-          <label htmlFor="share-code" className="block text-sm text-zinc-300 mb-1">Código o link</label>
+          <label htmlFor="share-code" className="block text-sm text-zinc-300 mb-1">{t("Código o link")}</label>
           <textarea
             id="share-code"
             autoFocus
             value={code}
             onChange={(e) => handleChange(e.target.value)}
-            placeholder="WYP-B:... o https://.../importar#WYP-..."
+            placeholder={t("WYP-B:... o https://.../importar#WYP-...")}
             rows={5}
             className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-200 placeholder:text-zinc-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500/30 font-mono resize-none break-all"
           />
@@ -102,9 +104,9 @@ export default function ImportarPage() {
                 <img src={TYPE_ICONS[result.type]} alt="" className="w-full h-full object-contain" />
               </span>
               <div className="min-w-0">
-                <div className="text-xs uppercase tracking-wider text-emerald-500">{SHARE_TYPE_LABELS[result.type]}</div>
-                <div className="text-sm font-medium text-zinc-100 break-words">{getSharePreview(result)}</div>
-                <p className={`text-xs mt-1 ${result.type === 'build' ? 'text-amber-400' : 'text-zinc-400'}`}>{WHAT_HAPPENS[result.type]}</p>
+                <div className="text-xs uppercase tracking-wider text-emerald-500">{t(SHARE_TYPE_LABELS[result.type])}</div>
+                <div className="text-sm font-medium text-zinc-100 break-words">{getSharePreview(result, t)}</div>
+                <p className={`text-xs mt-1 ${result.type === 'build' ? 'text-amber-400' : 'text-zinc-400'}`}>{t(WHAT_HAPPENS[result.type])}</p>
               </div>
             </div>
 
@@ -117,25 +119,25 @@ export default function ImportarPage() {
                   className="mt-1 accent-amber-500"
                 />
                 <span>
-                  Usar también su personaje
+                  {t("Usar también su personaje")}
                   <span className="block text-xs text-zinc-500">
-                    {compareChar.subclase} · FUE {compareChar.stats.STR} · DES {compareChar.stats.DXT} · INT {compareChar.stats.INT}.
-                    Así ves los mismos números que vio quien lo compartió.
+                    {t(compareChar.subclase)} · {t('FUE')} {compareChar.stats.STR} · {t('DES')} {compareChar.stats.DXT} · INT {compareChar.stats.INT}.{' '}
+                    {t('Así ves los mismos números que vio quien lo compartió.')}
                   </span>
                 </span>
               </label>
             )}
 
             <Button className="w-full" onClick={handleImport}>
-              Cargar y abrir {SHARE_TYPE_LABELS[result.type].toLowerCase()}
+              {t('Cargar y abrir {tipo}', { tipo: t(SHARE_TYPE_LABELS[result.type]).toLowerCase() })}
             </Button>
           </div>
         )}
       </div>
 
       <p className="text-xs text-zinc-500 mt-4">
-        Para compartir algo tuyo usá el botón Compartir en Armas, Joyería, Armaduras, Comparar o el Build.
-        La data viaja dentro del código: no se guarda en ningún servidor.
+        {t('Para compartir algo tuyo usá el botón Compartir en Armas, Joyería, Armaduras, Comparar o el Build.')}{' '}
+        {t('La data viaja dentro del código: no se guarda en ningún servidor.')}
       </p>
     </div>
   );

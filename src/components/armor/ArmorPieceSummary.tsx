@@ -5,6 +5,7 @@ import {
 } from '@/lib/engine/constants';
 import { bonusIcon } from '@/lib/bonusDisplay';
 import type { ArmorPiece, ProtectionQuality } from '@/types/armor';
+import { useT } from '@/i18n/I18nProvider';
 
 // En grid-cols-3: los físicos en la primera fila, los mágicos en la segunda
 const SUMMARY_DAMAGE_TYPES = [...PHYSICAL_DAMAGE_TYPES, ...MAGICAL_DAMAGE_TYPES];
@@ -20,6 +21,7 @@ export const QUALITY_STYLES: Record<ProtectionQuality, string> = {
 
 /** Vista de solo lectura de una pieza: PBA, calidad por tipo de dano, bonus y mejoras. */
 export function ArmorPieceSummary({ piece }: { piece: ArmorPiece }) {
+  const t = useT();
   const bonuses = piece.bonuses || [];
   const upgrades = piece.upgrades || [];
 
@@ -27,20 +29,20 @@ export function ArmorPieceSummary({ piece }: { piece: ArmorPiece }) {
     <div className="space-y-3">
       <div className="flex items-baseline gap-1.5">
         <span className="text-2xl font-bold text-zinc-100">{piece.pba}</span>
-        <span className="text-xs text-zinc-500">PBA</span>
+        <span className="text-xs text-zinc-500">{t("PBA")}</span>
         {piece.bcmt > 0 && <span className="text-sm text-amber-400 font-semibold">(+{piece.bcmt})</span>}
       </div>
 
       <div className="grid grid-cols-3 gap-1">
-        {SUMMARY_DAMAGE_TYPES.map((t) => {
-          const q = piece.protectionFactors[t] || 'Normal';
+        {SUMMARY_DAMAGE_TYPES.map((dt) => {
+          const q = piece.protectionFactors[dt] || 'Normal';
           return (
             <span
-              key={t}
-              title={`${DAMAGE_TYPE_LABELS[t]}: ${q}`}
+              key={dt}
+              title={`${t(DAMAGE_TYPE_LABELS[dt])}: ${q}`}
               className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[12px] whitespace-nowrap ${QUALITY_STYLES[q]}`}
             >
-              <span aria-hidden>{DAMAGE_TYPE_ICONS[t]}</span>{q}
+              <span aria-hidden>{DAMAGE_TYPE_ICONS[dt]}</span>{q}
             </span>
           );
         })}
@@ -48,12 +50,12 @@ export function ArmorPieceSummary({ piece }: { piece: ArmorPiece }) {
 
       <div className="text-xs">
         {bonuses.length === 0 ? (
-          <span className="text-zinc-600">Sin bonus</span>
+          <span className="text-zinc-600">{t("Sin bonus")}</span>
         ) : (
           <div className="flex flex-wrap gap-x-3 gap-y-0.5">
             {bonuses.map((b, i) => (
               <span key={i}>
-                <span className="text-zinc-400">{bonusIcon(b.type)} {ARMOR_BONUS_LABELS[b.type]}</span>{' '}
+                <span className="text-zinc-400">{bonusIcon(b.type)} {t(ARMOR_BONUS_LABELS[b.type])}</span>{' '}
                 <span className="text-amber-400 font-semibold">+{b.value}</span>
               </span>
             ))}

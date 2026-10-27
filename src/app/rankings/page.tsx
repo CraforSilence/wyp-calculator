@@ -19,6 +19,7 @@ import { SUBCATEGORIAS_POR_CLASE, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, PHYSICA
 import type { WeaponCalcResult, DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 import type { Weapon } from '@/types/weapon';
+import { useT } from '@/i18n/I18nProvider';
 
 type SortKey = 'dps' | 'prom' | 'crit' | 'sg' | 'gps';
 
@@ -39,14 +40,15 @@ function SortTh({ k, active, bestFirst, onSort, className = '' }: {
 }) {
   // Flecha segun el orden real de los numeros (desc/asc), no segun "mejor primero"
   const desc = SORTS[k].higherIsBetter === bestFirst;
+  const t = useT();
   return (
     <th className={`py-2 px-2 text-right ${className}`} aria-sort={active ? (desc ? 'descending' : 'ascending') : undefined}>
       <button
         onClick={() => onSort(k)}
-        title={`${SORTS[k].title}. Click para ordenar.`}
+        title={t('{titulo}. Clic para ordenar.', { titulo: t(SORTS[k].title) })}
         className={`inline-flex items-center gap-0.5 cursor-pointer transition-colors ${active ? 'text-amber-400' : 'hover:text-zinc-300'}`}
       >
-        {SORTS[k].label}
+        {t(SORTS[k].label)}
         <span className={`text-[10px] ${active ? '' : 'opacity-0'}`}>{desc ? '▼' : '▲'}</span>
       </button>
     </th>
@@ -54,6 +56,7 @@ function SortTh({ k, active, bestFirst, onSort, className = '' }: {
 }
 
 export default function RankingsPage() {
+  const t = useT();
   const { character } = useCharacter();
   const { weapons } = useWeapons();
   const { jewelry } = useJewelry();
@@ -77,7 +80,7 @@ export default function RankingsPage() {
     setWeapon(weapon);
     // Abre el Build directo en el paso del arma
     try { window.sessionStorage.setItem('regnum-build-tab', JSON.stringify('armas')); } catch { /* sin sessionStorage */ }
-    toast(`"${weapon.nombre}" cargada en el Build`, 'success');
+    toast(t('"{arma}" cargada en el Build', { arma: weapon.nombre }), 'success');
     router.push('/build');
   };
 
@@ -111,18 +114,18 @@ export default function RankingsPage() {
 
   return (
     <div>
-      <PageHeader title="Rankings" description="Ranking de armas con tu personaje. Tocá una columna para ordenar y un arma para ver el detalle." />
+      <PageHeader title={t("Rankings")} description={t("Ranking de armas con tu personaje. Tocá una columna para ordenar y un arma para ver el detalle.")} />
 
       <div className="flex flex-wrap gap-3 mb-4">
         <Select
-          label="Clase"
+          label={t("Clase")}
           value={filterClase}
           onChange={(e) => { setFilterClase(e.target.value); setFilterSubcat('Todas'); }}
           options={[{ value: 'Todas', label: 'Todas' }, { value: 'Guerrero', label: 'Guerrero' }, { value: 'Arquero', label: 'Arquero' }, { value: 'Mago', label: 'Mago' }]}
         />
         <div className="sm:hidden">
           <Select
-            label="Ordenar por"
+            label={t("Ordenar por")}
             value={sortKey}
             onChange={(e) => { setSortKey(e.target.value as SortKey); setBestFirst(true); }}
             options={(Object.keys(SORTS) as SortKey[]).map((k) => ({ value: k, label: SORTS[k].label }))}
@@ -130,7 +133,7 @@ export default function RankingsPage() {
         </div>
         {subcatOptions.length > 0 && (
           <Select
-            label="Subcategoria"
+            label={t('Subcategoría')}
             value={filterSubcat}
             onChange={(e) => setFilterSubcat(e.target.value)}
             options={[{ value: 'Todas', label: 'Todas' }, ...subcatOptions.map((s) => ({ value: s, label: s }))]}
@@ -152,10 +155,10 @@ export default function RankingsPage() {
                   <span className="text-xs text-zinc-500 font-mono">#{i + 1}</span>
                   <span className="text-sm font-medium text-zinc-200 truncate">{result.nombre}</span>
                 </div>
-                <Badge variant={rarezaToBadgeVariant(weapon.rareza)} className="mt-1">{weapon.rareza}</Badge>
+                <Badge variant={rarezaToBadgeVariant(weapon.rareza)} className="mt-1">{t(weapon.rareza)}</Badge>
               </div>
               <div className="text-right shrink-0">
-                <div className="text-xs text-zinc-500">DPS</div>
+                <div className="text-xs text-zinc-500">{t("DPS")}</div>
                 <div className="text-base font-bold text-amber-400">{result.dpsEfectivo}</div>
               </div>
             </div>
@@ -164,15 +167,15 @@ export default function RankingsPage() {
             </div>
             <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-center">
               <div>
-                <div className="text-zinc-500">Dano</div>
+                <div className="text-zinc-500">{t('Daño')}</div>
                 <div className="text-zinc-300">{result.danoMin}-{result.danoMax}</div>
               </div>
               <div>
-                <div className="text-zinc-500">Crit</div>
+                <div className="text-zinc-500">{t("Crit")}</div>
                 <div className="text-zinc-300">{result.critTotalPct}%</div>
               </div>
               <div>
-                <div className="text-zinc-500">Vel</div>
+                <div className="text-zinc-500">{t("Vel")}</div>
                 <div className="text-zinc-300">{result.velEfectiva}s</div>
               </div>
             </div>
@@ -186,16 +189,16 @@ export default function RankingsPage() {
           <thead>
             <tr className="border-b border-zinc-800 text-left text-xs text-zinc-500">
               <th className="py-2 px-2 w-8">#</th>
-              <th className="py-2 px-2">Nombre</th>
-              <th className="py-2 px-2 text-right">Dano</th>
+              <th className="py-2 px-2">{t("Nombre")}</th>
+              <th className="py-2 px-2 text-right">{t('Daño')}</th>
               {sortTh('prom')}
               {sortTh('crit')}
               {sortTh('sg')}
               {sortTh('gps')}
               {sortTh('dps', 'font-bold w-40')}
-              <th className="py-2 px-2 text-right">Riposte</th>
-              <th className="py-2 px-2 text-right">Impacto</th>
-              <th className="py-2 px-2 text-right">Cruz del Sur</th>
+              <th className="py-2 px-2 text-right">{t("Riposte")}</th>
+              <th className="py-2 px-2 text-right">{t("Impacto")}</th>
+              <th className="py-2 px-2 text-right">{t("Cruz del Sur")}</th>
             </tr>
           </thead>
           <tbody>
@@ -209,7 +212,7 @@ export default function RankingsPage() {
                 <td className="py-2 px-2">
                   <div className="flex items-center gap-2">
                     <span className="text-zinc-200">{result.nombre}</span>
-                    <Badge variant={rarezaToBadgeVariant(weapon.rareza)} className="hidden sm:inline-flex">{weapon.rareza}</Badge>
+                    <Badge variant={rarezaToBadgeVariant(weapon.rareza)} className="hidden sm:inline-flex">{t(weapon.rareza)}</Badge>
                   </div>
                 </td>
                 <td className="py-2 px-2 text-right text-zinc-300">{result.danoMin}-{result.danoMax}</td>
@@ -239,7 +242,7 @@ export default function RankingsPage() {
       </div>
 
       {results.length === 0 && (
-        <div className="text-center py-12 text-zinc-500">No hay armas que coincidan con el filtro.</div>
+        <div className="text-center py-12 text-zinc-500">{t("No hay armas que coincidan con el filtro.")}</div>
       )}
 
       <Modal
@@ -251,9 +254,9 @@ export default function RankingsPage() {
         {selectedDetail && (
           <div className="space-y-3">
             <div className="flex items-center gap-1.5 flex-wrap -mt-1">
-              <Badge variant={rarezaToBadgeVariant(selectedDetail.weapon.rareza)}>{selectedDetail.weapon.rareza}</Badge>
+              <Badge variant={rarezaToBadgeVariant(selectedDetail.weapon.rareza)}>{t(selectedDetail.weapon.rareza)}</Badge>
               <span className="text-xs text-zinc-500">
-                {selectedDetail.weapon.clase} &middot; {selectedDetail.weapon.subcategoria} &middot; {selectedDetail.weapon.velocidad}
+                {t(selectedDetail.weapon.clase)} &middot; {t(selectedDetail.weapon.subcategoria)} &middot; {t(selectedDetail.weapon.velocidad)}
               </span>
             </div>
 
@@ -281,26 +284,26 @@ export default function RankingsPage() {
               return (
                 <div
                   className="rounded-md border border-zinc-700/70 bg-zinc-950/70 px-3 py-2.5"
-                  title="Calculado con los atributos de tu personaje y tu joyería"
+                  title={t("Calculado con los atributos de tu personaje y tu joyería")}
                 >
-                  <span className="text-[11px] uppercase tracking-wider text-amber-500/80 font-semibold">Con tu personaje</span>
+                  <span className="text-[11px] uppercase tracking-wider text-amber-500/80 font-semibold">{t("Con tu personaje")}</span>
                   <div className="mt-1.5 grid grid-cols-3 gap-1.5">
-                    {tiles.map((t) => (
-                      <div key={t.label} className="rounded bg-zinc-900/80 px-1.5 py-1.5 text-center">
-                        <div className="text-[11px] uppercase tracking-wider text-zinc-500">{t.label}</div>
-                        <div className={`text-sm font-semibold tabular-nums ${t.color ?? 'text-zinc-100'}`}>{t.value}</div>
-                        {t.sub && <div className="text-[11px] text-zinc-500 tabular-nums">{t.sub}</div>}
+                    {tiles.map((dt) => (
+                      <div key={dt.label} className="rounded bg-zinc-900/80 px-1.5 py-1.5 text-center">
+                        <div className="text-[11px] uppercase tracking-wider text-zinc-500">{t(dt.label)}</div>
+                        <div className={`text-sm font-semibold tabular-nums ${dt.color ?? 'text-zinc-100'}`}>{dt.value}</div>
+                        {dt.sub && <div className="text-[11px] text-zinc-500 tabular-nums">{dt.sub}</div>}
                       </div>
                     ))}
                   </div>
 
                   <div className="mt-2 pt-1.5 border-t border-zinc-800/80">
-                    <div className="text-[11px] uppercase tracking-wider text-zinc-600">Desglose por tipo</div>
+                    <div className="text-[11px] uppercase tracking-wider text-zinc-600">{t("Desglose por tipo")}</div>
                     {(Object.entries(r.desglose) as [DamageTypeName, [number, number]][]).map(([tipo, [min, max]]) => (
                       <div key={tipo} className="flex items-baseline justify-between gap-2 py-0.5">
                         <span className="text-xs text-zinc-500 inline-flex items-center gap-1">
                           <span className={`w-1.5 h-1.5 rounded-full ${PHYSICAL_DAMAGE_TYPES.includes(tipo) ? 'bg-orange-500' : 'bg-blue-500'}`} />
-                          {DAMAGE_TYPE_ICONS[tipo]} {DAMAGE_TYPE_LABELS[tipo] || tipo}
+                          {DAMAGE_TYPE_ICONS[tipo]} {t(DAMAGE_TYPE_LABELS[tipo] || tipo)}
                         </span>
                         <span className="text-sm text-zinc-200 tabular-nums">{min === max ? min : `${min} – ${max}`}</span>
                       </div>
@@ -311,8 +314,8 @@ export default function RankingsPage() {
             })()}
 
             <div className="grid grid-cols-2 gap-2">
-              <Button size="sm" className="w-full" onClick={() => loadInBuild(selectedDetail.weapon)}>Usar en el Build</Button>
-              <Button size="sm" variant="secondary" className="w-full" onClick={() => addToCompare(selectedDetail.weapon.id)}>Agregar a Comparar</Button>
+              <Button size="sm" className="w-full" onClick={() => loadInBuild(selectedDetail.weapon)}>{t("Usar en el Build")}</Button>
+              <Button size="sm" variant="secondary" className="w-full" onClick={() => addToCompare(selectedDetail.weapon.id)}>{t("Agregar a Comparar")}</Button>
             </div>
           </div>
         )}

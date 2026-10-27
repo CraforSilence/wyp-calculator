@@ -6,6 +6,7 @@ import { DAMAGE_TYPE_LABELS, ALL_DAMAGE_TYPES, ARMOR_BONUS_LABELS } from '@/lib/
 import { calcTotalProtection, filterArmorForSubclase, setBonusesFor } from '@/lib/engine/armor';
 import type { Subclase } from '@/types/character';
 import type { CatalogArmorSet, ArmorBonus, ArmorBonusType } from '@/types/armor';
+import { useT } from '@/i18n/I18nProvider';
 
 interface ArmorComparisonProps {
   sets: CatalogArmorSet[];
@@ -13,6 +14,7 @@ interface ArmorComparisonProps {
 }
 
 export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
+  const t = useT();
   const results = useMemo(() => {
     return sets.map((set) => {
       const fakeArmorSet = {
@@ -34,8 +36,8 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
   const maxTotal = Math.max(...results.map((r) => r.totalProt), 1);
   const maxPerType = useMemo(() => {
     const m: Record<string, number> = {};
-    for (const t of ALL_DAMAGE_TYPES) {
-      m[t] = Math.max(...results.map((r) => r.prot.perType[t] || 0), 1);
+    for (const dt of ALL_DAMAGE_TYPES) {
+      m[dt] = Math.max(...results.map((r) => r.prot.perType[dt] || 0), 1);
     }
     return m;
   }, [results]);
@@ -76,16 +78,16 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
   return (
     <div className="space-y-4">
       {/* Protection comparison table */}
-      <Card title="Proteccion por tipo de dano">
+      <Card title={t('Protección por tipo de daño')}>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-zinc-800 text-xs text-zinc-500 text-left">
-                <th className="py-2 px-2">Set</th>
-                {ALL_DAMAGE_TYPES.map((t) => (
-                  <th key={t} className="py-2 px-2 text-right">{DAMAGE_TYPE_LABELS[t]}</th>
+                <th className="py-2 px-2">{t("Set")}</th>
+                {ALL_DAMAGE_TYPES.map((dt) => (
+                  <th key={dt} className="py-2 px-2 text-right">{t(DAMAGE_TYPE_LABELS[dt])}</th>
                 ))}
-                <th className="py-2 px-2 text-right font-bold text-amber-500">Total</th>
+                <th className="py-2 px-2 text-right font-bold text-amber-500">{t("Total")}</th>
               </tr>
             </thead>
             <tbody>
@@ -94,11 +96,11 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
                 return (
                   <tr key={set.id} className="border-b border-zinc-800/50">
                     <td className="py-2 px-2 text-zinc-200 max-w-48 truncate">{set.nombre}</td>
-                    {ALL_DAMAGE_TYPES.map((t) => {
-                      const val = Math.round(prot.perType[t] || 0);
-                      const isTypeBest = val === Math.round(maxPerType[t]) && results.length > 1;
+                    {ALL_DAMAGE_TYPES.map((dt) => {
+                      const val = Math.round(prot.perType[dt] || 0);
+                      const isTypeBest = val === Math.round(maxPerType[dt]) && results.length > 1;
                       return (
-                        <td key={t} className={`py-2 px-2 text-right tabular-nums ${isTypeBest ? 'text-green-400 font-medium' : 'text-zinc-300'}`}>
+                        <td key={dt} className={`py-2 px-2 text-right tabular-nums ${isTypeBest ? 'text-green-400 font-medium' : 'text-zinc-300'}`}>
                           {val}
                         </td>
                       );
@@ -116,7 +118,7 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
 
       {/* Bar charts */}
       <div className="grid sm:grid-cols-2 gap-4">
-        <Card title="Proteccion Total">
+        <Card title={t('Protección Total')}>
           <div className="space-y-2">
             {results
               .sort((a, b) => b.totalProt - a.totalProt)
@@ -138,14 +140,14 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
         </Card>
 
         {allBonusTypes.length > 0 && (
-          <Card title="Bonus Totales">
+          <Card title={t("Bonus Totales")}>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-zinc-800 text-xs text-zinc-500 text-left">
-                    <th className="py-1 px-2">Set</th>
-                    {allBonusTypes.map((t) => (
-                      <th key={t} className="py-1 px-2 text-right">{ARMOR_BONUS_LABELS[t as keyof typeof ARMOR_BONUS_LABELS] ?? t}</th>
+                    <th className="py-1 px-2">{t("Set")}</th>
+                    {allBonusTypes.map((dt) => (
+                      <th key={dt} className="py-1 px-2 text-right">{ARMOR_BONUS_LABELS[dt as keyof typeof ARMOR_BONUS_LABELS] ?? dt}</th>
                     ))}
                   </tr>
                 </thead>
@@ -155,10 +157,10 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
                     return (
                       <tr key={set.id} className="border-b border-zinc-800/50">
                         <td className="py-1 px-2 text-zinc-200 truncate max-w-32">{set.nombre}</td>
-                        {allBonusTypes.map((t) => {
-                          const val = getBonusValue(bonuses, t);
+                        {allBonusTypes.map((dt) => {
+                          const val = getBonusValue(bonuses, dt);
                           return (
-                            <td key={t} className={`py-1 px-2 text-right tabular-nums ${val > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
+                            <td key={dt} className={`py-1 px-2 text-right tabular-nums ${val > 0 ? 'text-amber-400' : 'text-zinc-600'}`}>
                               {val > 0 ? `+${val}` : '-'}
                             </td>
                           );
@@ -174,16 +176,16 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
       </div>
 
       {/* Per damage type bars */}
-      <Card title="Proteccion por tipo">
+      <Card title={t('Protección por tipo')}>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {ALL_DAMAGE_TYPES.map((t) => (
-            <div key={t}>
-              <p className="text-xs text-zinc-500 mb-2">{DAMAGE_TYPE_LABELS[t]}</p>
+          {ALL_DAMAGE_TYPES.map((dt) => (
+            <div key={dt}>
+              <p className="text-xs text-zinc-500 mb-2">{t(DAMAGE_TYPE_LABELS[dt])}</p>
               <div className="space-y-1.5">
                 {results
-                  .sort((a, b) => (b.prot.perType[t] || 0) - (a.prot.perType[t] || 0))
+                  .sort((a, b) => (b.prot.perType[dt] || 0) - (a.prot.perType[dt] || 0))
                   .map(({ set, prot }) => {
-                    const val = Math.round(prot.perType[t] || 0);
+                    const val = Math.round(prot.perType[dt] || 0);
                     return (
                       <div key={set.id}>
                         <div className="flex justify-between text-xs mb-0.5">
@@ -193,7 +195,7 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
                         <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
                           <div
                             className="h-full bg-cyan-600 rounded-full transition-all"
-                            style={{ width: `${maxPerType[t] > 0 ? (val / maxPerType[t]) * 100 : 0}%` }}
+                            style={{ width: `${maxPerType[dt] > 0 ? (val / maxPerType[dt]) * 100 : 0}%` }}
                           />
                         </div>
                       </div>

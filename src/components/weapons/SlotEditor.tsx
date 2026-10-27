@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { isMuescaSpeedType } from '@/lib/engine/constants';
+import { useT } from '@/i18n/I18nProvider';
 
 /** Un slot de bonus o muesca. `tipo: ''` = slot vacio. */
 export interface SlotRow {
@@ -59,6 +60,7 @@ interface SlotEditorProps<T extends SlotRow> {
 export function SlotEditor<T extends SlotRow>({
   rows, max, options, onChange, valueInput, selectTooltip, noun, limitLabel, valueWidthClass = 'w-20', collapseEmpty = false,
 }: SlotEditorProps<T>) {
+  const t = useT();
   const slots = fitSlots(rows, max);
   // En modo compacto, el slot vacio que el usuario abrio con "+ Agregar"
   const [adding, setAdding] = useState(false);
@@ -92,7 +94,7 @@ export function SlotEditor<T extends SlotRow>({
           <div key={i} className="flex gap-2 items-end">
             <span
               className={`shrink-0 w-5 pb-1.5 text-xs text-right ${invalid ? 'text-red-400' : 'text-zinc-500'}`}
-              title={extra ? 'Excede el limite de esta rareza' : invalid ? 'Esta rareza no admite este tipo' : undefined}
+              title={extra ? t('Excede el límite de esta rareza') : invalid ? t("Esta rareza no admite este tipo") : undefined}
             >
               {i + 1}
             </span>
@@ -105,7 +107,7 @@ export function SlotEditor<T extends SlotRow>({
                 { value: '', label: '— Vacío —' },
                 ...options,
                 // Se muestra el tipo no permitido para que se vea que hay que cambiarlo.
-                ...(isAllowed(row.tipo) ? [] : [{ value: row.tipo, label: `${row.tipo} (no permitido)` }]),
+                ...(isAllowed(row.tipo) ? [] : [{ value: row.tipo, label: `${t(row.tipo)} (${t('no permitido')})` }]),
               ]}
               className={`w-full ${row.tipo ? '' : 'text-zinc-500'} ${invalid ? 'border-red-500/70' : ''}`}
             />
@@ -114,17 +116,17 @@ export function SlotEditor<T extends SlotRow>({
               type="number"
               min={1}
               max={vi?.max}
-              tooltip={vi?.tooltip}
-              placeholder={vi?.placeholder ?? 'Valor'}
+              tooltip={vi?.tooltip && t(vi.tooltip)}
+              placeholder={t(vi?.placeholder ?? 'Valor')}
               disabled={!row.tipo}
               value={row.valor || ''}
               onChange={(e) => update(i, { valor: Number(e.target.value) })}
               className={`${valueWidthClass} shrink-0 disabled:opacity-40`}
             />
             {(row.tipo || extra) ? (
-              <Button size="sm" variant="danger-ghost" onClick={() => clear(i)} title={extra ? 'Quitar' : 'Vaciar slot'}>x</Button>
+              <Button size="sm" variant="danger-ghost" onClick={() => clear(i)} title={extra ? t("Quitar") : t("Vaciar slot")}>x</Button>
             ) : collapseEmpty ? (
-              <Button size="sm" variant="ghost" onClick={() => setAdding(false)} title="Cancelar">x</Button>
+              <Button size="sm" variant="ghost" onClick={() => setAdding(false)} title={t("Cancelar")}>x</Button>
             ) : null}
           </div>
         );
@@ -135,18 +137,18 @@ export function SlotEditor<T extends SlotRow>({
           onClick={() => setAdding(true)}
           className="w-full rounded border border-dashed border-zinc-700 hover:border-amber-600/60 hover:bg-amber-400/5 py-2 text-xs text-amber-400 hover:text-amber-300 transition-colors"
         >
-          + Agregar {noun.one}
-          <span className="ml-1 text-zinc-500">({freeCount} {freeCount === 1 ? 'libre' : 'libres'})</span>
+          + {t('Agregar {cosa}', { cosa: t(noun.one) })}
+          <span className="ml-1 text-zinc-500">({freeCount} {freeCount === 1 ? t("libre") : t("libres")})</span>
         </button>
       )}
       {overflow > 0 && (
         <p className="text-xs text-red-400">
-          {limitLabel} permite {max} {max === 1 ? noun.one : noun.many}. Sacá {overflow} (en rojo).
+          {t('{limite} permite {max} {cosas}. Sacá {sobran} (en rojo).', { limite: limitLabel, max, cosas: t(max === 1 ? noun.one : noun.many), sobran: overflow })}
         </p>
       )}
       {disallowed > 0 && (
         <p className="text-xs text-red-400">
-          {limitLabel} solo admite: {options.map((o) => o.label).join(', ')}. Cambiá o sacá lo marcado en rojo.
+          {t('{limite} solo admite: {opciones}. Cambiá o sacá lo marcado en rojo.', { limite: limitLabel, opciones: options.map((o) => t(o.label.replace(/^[^\p{L}]*/u, ''))).join(', ') })}
         </p>
       )}
     </div>

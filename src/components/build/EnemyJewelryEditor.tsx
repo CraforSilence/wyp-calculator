@@ -8,6 +8,7 @@ import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_CATEGORIES, JE
 import { JEWELRY_PRESETS } from '@/data/jewelry-presets';
 import { aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import type { JewelrySet, JewelrySlot, JewelryBonusType, JewelryBonus } from '@/types/jewelry';
+import { useT } from '@/i18n/I18nProvider';
 
 const SLOT_LABELS: Record<JewelrySlot, string> = {
   anillo1: 'Anillo 1',
@@ -23,13 +24,14 @@ interface EnemyJewelryEditorProps {
 }
 
 export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProps) {
+  const t = useT();
   const totals = aggregateJewelryBonuses(jewelry);
 
   const addBonus = (slot: JewelrySlot) => {
     const piece = jewelry[slot];
     if (piece.bonuses.length >= MAX_BONUSES) return;
     const usedTypes = piece.bonuses.map((b) => b.type);
-    const available = JEWELRY_BONUS_TYPES.find((t) => !usedTypes.includes(t));
+    const available = JEWELRY_BONUS_TYPES.find((dt) => !usedTypes.includes(dt));
     if (!available) return;
     onUpdate({
       ...jewelry,
@@ -61,7 +63,7 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
       {JEWELRY_PRESETS.length > 0 && (
         <div className="w-64">
           <Select
-            label="Cargar precargado"
+            label={t("Cargar precargado")}
             value=""
             onChange={(e) => {
               const preset = JEWELRY_PRESETS.find((p) => p.id === e.target.value);
@@ -84,14 +86,14 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
           return (
             <Card key={slot} title={
               <span className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={JEWELRY_ICONS[slot]} alt={SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
-                {SLOT_LABELS[slot]}
+                <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={JEWELRY_ICONS[slot]} alt={t(SLOT_LABELS[slot])} className="w-full h-full object-contain" /></span>
+                {t(SLOT_LABELS[slot])}
               </span>
             }>
               <div className="flex flex-col gap-2">
                 {piece.bonuses.map((bonus, idx) => {
                   const availableTypes = JEWELRY_BONUS_TYPES.filter(
-                    (t) => t === bonus.type || !usedTypes.includes(t)
+                    (dt) => dt === bonus.type || !usedTypes.includes(dt)
                   );
                   const typeOptions = bonusSelectOptions(availableTypes, (t) => JEWELRY_BONUS_LABELS[t as JewelryBonusType]);
 
@@ -99,7 +101,7 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
                     <div key={idx} className="flex items-end gap-2">
                       <div className="flex-1">
                         <Select
-                          label={idx === 0 ? 'Tipo' : undefined}
+                          label={idx === 0 ? t("Tipo") : undefined}
                           value={bonus.type}
                           onChange={(e) =>
                             updateBonus(slot, idx, {
@@ -112,7 +114,7 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
                       </div>
                       <div className="w-24">
                         <Input
-                          label={idx === 0 ? 'Valor' : undefined}
+                          label={idx === 0 ? t("Valor") : undefined}
                           type="number"
                           min={0}
                           max={999}
@@ -128,7 +130,7 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
                       <button
                         onClick={() => removeBonus(slot, idx)}
                         className="px-2 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded transition-colors"
-                        title="Eliminar bonus"
+                        title={t("Eliminar bonus")}
                       >
                         ✕
                       </button>
@@ -141,12 +143,12 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
                     onClick={() => addBonus(slot)}
                     className="text-sm text-amber-400 hover:text-amber-300 py-1 transition-colors text-left"
                   >
-                    + Agregar bonus
+                    {t("+ Agregar bonus")}
                   </button>
                 )}
 
                 {piece.bonuses.length === 0 && (
-                  <p className="text-xs text-zinc-500">Sin bonus configurados</p>
+                  <p className="text-xs text-zinc-500">{t("Sin bonus configurados")}</p>
                 )}
               </div>
             </Card>
@@ -156,19 +158,19 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
 
       {/* Resumen */}
       {Object.keys(totals).length > 0 && (
-        <Card title="Resumen joyeria enemiga">
+        <Card title={t('Resumen joyería enemiga')}>
           <div className="flex flex-col gap-3">
             {Object.entries(JEWELRY_BONUS_CATEGORIES).map(([catName, catTypes]) => {
-              const catEntries = catTypes.filter((t) => totals[t]);
+              const catEntries = catTypes.filter((dt) => totals[dt]);
               if (catEntries.length === 0) return null;
               return (
                 <div key={catName}>
                   <p className="text-xs text-zinc-500 mb-1">{catName}</p>
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
-                    {catEntries.map((t) => (
-                      <div key={t}>
-                        <span className="text-zinc-400">{JEWELRY_BONUS_LABELS[t]}:</span>{' '}
-                        <span className="text-red-400 font-semibold">+{totals[t]}</span>
+                    {catEntries.map((dt) => (
+                      <div key={dt}>
+                        <span className="text-zinc-400">{t(JEWELRY_BONUS_LABELS[dt])}:</span>{' '}
+                        <span className="text-red-400 font-semibold">+{totals[dt]}</span>
                       </div>
                     ))}
                   </div>

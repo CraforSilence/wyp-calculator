@@ -5,6 +5,7 @@ import { Badge, rarezaToBadgeVariant } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { DAMAGE_TYPE_LABELS } from '@/lib/engine/constants';
 import type { DamageTypeName } from '@/types/weapon';
+import { useT } from '@/i18n/I18nProvider';
 
 interface WeaponCardProps {
   weapon: Weapon;
@@ -18,6 +19,7 @@ interface WeaponCardProps {
 }
 
 export function WeaponCard({ weapon, calcResult, onEdit, onDelete, onDuplicate, onReset, onShare, isModified }: WeaponCardProps) {
+  const t = useT();
   return (
     <div className={`bg-zinc-900 border rounded-lg p-4 hover:border-zinc-700 transition-colors ${
       !weapon.isDefault ? 'border-amber-800/50' : isModified ? 'border-yellow-800/50' : 'border-zinc-800'
@@ -26,54 +28,54 @@ export function WeaponCard({ weapon, calcResult, onEdit, onDelete, onDuplicate, 
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="text-sm font-semibold text-zinc-100 truncate">{weapon.nombre}</h3>
-            <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{weapon.rareza}</Badge>
-            {!weapon.isDefault && <Badge variant="info">Temporal</Badge>}
-            {isModified && <Badge variant="damage">Modificada</Badge>}
+            <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{t(weapon.rareza)}</Badge>
+            {!weapon.isDefault && <Badge variant="info">{t("Temporal")}</Badge>}
+            {isModified && <Badge variant="damage">{t("Modificada")}</Badge>}
           </div>
           <div className="text-xs text-zinc-500 mt-0.5">
-            {weapon.subcategoria} &middot; {weapon.velocidad}
+            {t(weapon.subcategoria)} &middot; {t(weapon.velocidad)}
           </div>
         </div>
         <div className="flex gap-1 shrink-0">
           {onShare && (
-            <Button size="sm" variant="ghost" onClick={onShare} title="Compartir">
+            <Button size="sm" variant="ghost" onClick={onShare} title={t("Compartir")}>
               <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
               </svg>
             </Button>
           )}
           {onDuplicate && (
-            <Button size="sm" variant="ghost" onClick={onDuplicate} title="Duplicar como temporal">Dup</Button>
+            <Button size="sm" variant="ghost" onClick={onDuplicate} title={t("Duplicar como temporal")}>{t("Dup")}</Button>
           )}
-          <Button size="sm" variant="ghost" onClick={onEdit}>Editar</Button>
+          <Button size="sm" variant="ghost" onClick={onEdit}>{t("Editar")}</Button>
           {onReset && (
-            <Button size="sm" variant="secondary" onClick={onReset} title="Restaurar original">Reset</Button>
+            <Button size="sm" variant="secondary" onClick={onReset} title={t("Restaurar original")}>{t("Reset")}</Button>
           )}
-          <Button size="sm" variant="danger-ghost" onClick={onDelete} title={weapon.isDefault ? 'Ocultar' : 'Eliminar'}>
-            {weapon.isDefault ? 'Ocultar' : 'x'}
+          <Button size="sm" variant="danger-ghost" onClick={onDelete} title={weapon.isDefault ? t("Ocultar") : t("Eliminar")}>
+            {weapon.isDefault ? t('Ocultar') : 'x'}
           </Button>
         </div>
       </div>
 
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-3 text-center">
         <div>
-          <div className="text-xs text-zinc-500">Dano</div>
+          <div className="text-xs text-zinc-500">{t('Daño')}</div>
           <div className="text-sm font-semibold text-zinc-200">{calcResult.danoMin}-{calcResult.danoMax}</div>
         </div>
         <div>
-          <div className="text-xs text-zinc-500">Promedio</div>
+          <div className="text-xs text-zinc-500">{t("Promedio")}</div>
           <div className="text-sm font-semibold text-zinc-200">{calcResult.danoPromedio}</div>
         </div>
         <div>
-          <div className="text-xs text-zinc-500">DPS</div>
+          <div className="text-xs text-zinc-500">{t("DPS")}</div>
           <div className="text-sm font-bold text-amber-400">{calcResult.dpsEfectivo}</div>
         </div>
         <div>
-          <div className="text-xs text-zinc-500">Crit</div>
+          <div className="text-xs text-zinc-500">{t("Crit")}</div>
           <div className="text-sm font-semibold text-zinc-200">{calcResult.critTotalPct}%</div>
         </div>
         <div>
-          <div className="text-xs text-zinc-500">Vel</div>
+          <div className="text-xs text-zinc-500">{t("Vel")}</div>
           <div className="text-sm font-semibold text-zinc-200">{calcResult.velEfectiva}s</div>
         </div>
       </div>
@@ -82,19 +84,19 @@ export function WeaponCard({ weapon, calcResult, onEdit, onDelete, onDuplicate, 
         <div className="mt-2 pt-2 border-t border-zinc-800 flex gap-4">
           {calcResult.riposteDmg && (
             <div className="text-xs">
-              <span className="text-zinc-500">Riposte:</span>{' '}
+              <span className="text-zinc-500">{t("Riposte:")}</span>{' '}
               <span className="text-red-400 font-semibold">{calcResult.riposteDmg}</span>
             </div>
           )}
           {calcResult.impactoVigoroso && (
             <div className="text-xs">
-              <span className="text-zinc-500">Impacto Vig:</span>{' '}
+              <span className="text-zinc-500">{t("Impacto Vig:")}</span>{' '}
               <span className="text-orange-400 font-semibold">{calcResult.impactoVigoroso.min}-{calcResult.impactoVigoroso.max}</span>
             </div>
           )}
           {calcResult.cruzDelSur && (
             <div className="text-xs">
-              <span className="text-zinc-500">Cruz del Sur:</span>{' '}
+              <span className="text-zinc-500">{t("Cruz del Sur:")}</span>{' '}
               <span className="text-sky-400 font-semibold">{calcResult.cruzDelSur.min}-{calcResult.cruzDelSur.max}</span>
             </div>
           )}
@@ -104,7 +106,7 @@ export function WeaponCard({ weapon, calcResult, onEdit, onDelete, onDuplicate, 
       <div className="mt-2 pt-2 border-t border-zinc-800 flex flex-wrap gap-2">
         {Object.entries(calcResult.desglose).map(([tipo, [min, max]]) => (
           <span key={tipo} className="text-xs text-zinc-400">
-            <span className="text-zinc-500">{DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo}:</span>{' '}
+            <span className="text-zinc-500">{t(DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo)}:</span>{' '}
             {min}-{max}
           </span>
         ))}

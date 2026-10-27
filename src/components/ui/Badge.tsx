@@ -1,3 +1,7 @@
+'use client';
+
+import { useT } from '@/i18n/I18nProvider';
+
 type BadgeVariant = 'default' | 'legendary' | 'epic' | 'magic' | 'arcane' | 'damage' | 'info';
 
 const variantStyles: Record<BadgeVariant, string> = {
@@ -17,6 +21,9 @@ interface BadgeProps {
 }
 
 export function Badge({ children, variant = 'default', className = '' }: BadgeProps) {
+  const t = useT();
+  // Las rarezas (Épica, Mágica...) llegan como texto: se traducen
+  if (typeof children === 'string') children = t(children);
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${variantStyles[variant]} ${className}`}>
       {children}
