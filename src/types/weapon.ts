@@ -10,6 +10,9 @@ export type MuescaSpeedType = 'attackSpeed' | 'castSpeed';
 /** Una muesca puede dar dano de un tipo, o velocidad de ataque/invocacion */
 export type MuescaType = DamageTypeName | MuescaSpeedType;
 
+/** Atributos que puede dar un arma. Solo suma daño el stat principal de la subclase. */
+export type WeaponAttr = 'STR' | 'DXT' | 'INT' | 'CON' | 'FOC';
+
 export type Velocidad = 'lenta' | 'media' | 'rapida';
 export type Rareza = 'Épica' | 'Mágica' | 'Legendaria' | 'Arcana';
 export type Subcategoria =
@@ -24,7 +27,10 @@ export interface Weapon {
   subcategoria: Subcategoria;
   rareza: Rareza;
   velocidad: Velocidad;
+  /** Legacy: bonus al stat principal de la clase del arma. Se ignora si hay `atributos`. */
   bonusStat: number;
+  /** Fuerza, Destreza, Inteligencia, Constitucion y Concentracion que da el arma */
+  atributos?: Partial<Record<WeaponAttr, number>>;
   bonusAtributo: number;
   critChanceExtra: number;
   critDmgExtra: number;

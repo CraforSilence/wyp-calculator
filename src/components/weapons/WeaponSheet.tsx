@@ -2,7 +2,8 @@
 
 import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, MUESCA_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES, RAREZA_SLOTS, isMuescaSpeedType } from '@/lib/engine/constants';
 import { bonusIcon } from '@/lib/bonusDisplay';
-import type { DamageTypeName, MuescaType, Weapon } from '@/types/weapon';
+import type { DamageTypeName, MuescaType, Weapon, WeaponAttr } from '@/types/weapon';
+import { getWeaponAttributes, WEAPON_ATTR_LABELS } from '@/lib/weaponAttributes';
 import { useT } from '@/i18n/I18nProvider';
 
 function Row({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
@@ -16,18 +17,13 @@ function Row({ label, children }: { label: React.ReactNode; children: React.Reac
 
 const fmtPct = (n: number) => `${n > 0 ? '+' : ''}${n}%`;
 
-/** Stat principal que sube el bonus de stat del arma, segun la clase. */
-const MAIN_STAT_BY_CLASE: Record<Weapon['clase'], string> = {
-  Guerrero: 'Fuerza',
-  Arquero: 'Destreza',
-  Mago: 'Inteligencia',
-};
-
 /** Bonus del arma tal como se cargan en sus slots (mismos nombres que el formulario del Build). */
 function weaponBonusList(weapon: Weapon): { key: string; label: string; value: string; dmgType?: string }[] {
   const list: { key: string; label: string; value: string; dmgType?: string }[] = [];
-  const mainStat = MAIN_STAT_BY_CLASE[weapon.clase];
-  if (weapon.bonusStat) list.push({ key: mainStat, label: mainStat, value: `+${weapon.bonusStat}` });
+  for (const [attr, valor] of Object.entries(getWeaponAttributes(weapon)) as [WeaponAttr, number][]) {
+    const label = WEAPON_ATTR_LABELS[attr];
+    if (valor) list.push({ key: label, label, value: `+${valor}` });
+  }
   if (weapon.critChanceExtra) list.push({ key: 'Chance de critico %', label: 'Chance de crítico', value: fmtPct(weapon.critChanceExtra) });
   if (weapon.critDmgExtra) list.push({ key: 'Dano critico %', label: 'Daño crítico', value: fmtPct(weapon.critDmgExtra) });
   if (weapon.attackSpeedPct) list.push({ key: 'Vel ataque %', label: 'Vel. ataque', value: fmtPct(weapon.attackSpeedPct) });

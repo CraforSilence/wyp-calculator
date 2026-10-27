@@ -8,9 +8,10 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, RAREZA_SLOTS, bonusOptionsForRareza } from '@/lib/engine/constants';
 import { SlotEditor, muescaValueInput } from './SlotEditor';
-import type { Weapon, DamageTypeName, MuescaType, Velocidad, Rareza, Subcategoria } from '@/types/weapon';
+import type { Weapon, WeaponAttr, DamageTypeName, MuescaType, Velocidad, Rareza, Subcategoria } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 import { useT } from '@/i18n/I18nProvider';
+import { getWeaponAttributes, weaponAttrFromLabel, WEAPON_ATTR_LABELS } from '@/lib/weaponAttributes';
 
 interface DamageRow {
   tipo: DamageTypeName;
@@ -30,7 +31,8 @@ interface MuescaRow {
 }
 
 const BONUS_TYPES = [
-  'Fuerza', 'Chance de critico %', 'Dano critico %',
+  'Fuerza', 'Destreza', 'Inteligencia', 'Constitucion', 'Concentracion',
+  'Chance de critico %', 'Dano critico %',
   'Vel ataque %', 'Atributo de clase %',
   ...ALL_DAMAGE_TYPES.map((dt) => `Dano ${DAMAGE_TYPE_LABELS[dt]}`),
 ];
@@ -63,7 +65,9 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
   const [bonusRows, setBonusRows] = useState<BonusRow[]>(() => {
     if (!editingWeapon) return [];
     const rows: BonusRow[] = [];
-    if (editingWeapon.bonusStat > 0) rows.push({ tipo: 'Fuerza', valor: editingWeapon.bonusStat });
+    for (const [attr, valor] of Object.entries(getWeaponAttributes(editingWeapon))) {
+      if (valor) rows.push({ tipo: WEAPON_ATTR_LABELS[attr as WeaponAttr], valor });
+    }
     if (editingWeapon.critChanceExtra > 0) rows.push({ tipo: 'Chance de critico %', valor: editingWeapon.critChanceExtra });
     if (editingWeapon.critDmgExtra > 0) rows.push({ tipo: 'Dano critico %', valor: editingWeapon.critDmgExtra });
     if (editingWeapon.attackSpeedPct > 0) rows.push({ tipo: 'Vel ataque %', valor: editingWeapon.attackSpeedPct });
@@ -91,12 +95,17 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
       if (row.max > 0) tiposDano[row.tipo] = [row.min, row.max];
     }
 
-    let bonusStat = 0, critChanceExtra = 0, critDmgExtra = 0, attackSpeedPct = 0, atributoClasePct = 0;
+    let critChanceExtra = 0, critDmgExtra = 0, attackSpeedPct = 0, atributoClasePct = 0;
     const bonusDano: Partial<Record<DamageTypeName, number>> = {};
+    const atributos: Partial<Record<WeaponAttr, number>> = {};
 
     for (const row of bonusRows) {
+      const attr = weaponAttrFromLabel(row.tipo);
+      if (attr) {
+        atributos[attr] = (atributos[attr] || 0) + row.valor;
+        continue;
+      }
       switch (row.tipo) {
-        case 'Fuerza': bonusStat = row.valor; break;
         case 'Chance de critico %': critChanceExtra = row.valor; break;
         case 'Dano critico %': critDmgExtra = row.valor; break;
         case 'Vel ataque %': attackSpeedPct = row.valor; break;
@@ -120,7 +129,8 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
       subcategoria: subcategoria as Subcategoria,
       velocidad,
       rareza,
-      bonusStat,
+      bonusStat: 0,
+      atributos,
       bonusAtributo,
       critChanceExtra,
       critDmgExtra,

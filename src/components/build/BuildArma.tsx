@@ -14,9 +14,10 @@ import { useBuildWeapon, DEFAULT_WEAPON, DEFAULT_ARROWS } from '@/hooks/useBuild
 import { useCharacter } from '@/hooks/useCharacter';
 import { useWeapons } from '@/hooks/useWeapons';
 import { useToast } from '@/components/ui/Toast';
-import type { Weapon, DamageTypeName, MuescaType, Velocidad, Rareza, Subcategoria, ArrowSet, WeaponMode } from '@/types/weapon';
+import type { Weapon, WeaponAttr, DamageTypeName, MuescaType, Velocidad, Rareza, Subcategoria, ArrowSet, WeaponMode } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 import { useT } from '@/i18n/I18nProvider';
+import { getWeaponAttributes, weaponAttrFromLabel, WEAPON_ATTR_LABELS } from '@/lib/weaponAttributes';
 
 interface DamageRow {
   tipo: DamageTypeName;
@@ -58,7 +59,9 @@ function weaponToDamageRows(w: Weapon): DamageRow[] {
 
 function weaponToBonusRows(w: Weapon): BonusRow[] {
   const rows: BonusRow[] = [];
-  if (w.bonusStat > 0) rows.push({ tipo: 'Fuerza', valor: w.bonusStat });
+  for (const [attr, valor] of Object.entries(getWeaponAttributes(w))) {
+    if (valor) rows.push({ tipo: WEAPON_ATTR_LABELS[attr as WeaponAttr], valor });
+  }
   if (w.critChanceExtra > 0) rows.push({ tipo: 'Chance de critico %', valor: w.critChanceExtra });
   if (w.critDmgExtra > 0) rows.push({ tipo: 'Dano critico %', valor: w.critDmgExtra });
   if (w.attackSpeedPct > 0) rows.push({ tipo: 'Vel ataque %', valor: w.attackSpeedPct });
@@ -146,17 +149,17 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
       if (row.max > 0) tiposDano[row.tipo] = [row.min, row.max];
     }
 
-    let bonusStat = 0, critChanceExtra = 0, critDmgExtra = 0, attackSpeedPct = 0, atributoClasePct = 0;
+    let critChanceExtra = 0, critDmgExtra = 0, attackSpeedPct = 0, atributoClasePct = 0;
     const bonusDano: Partial<Record<DamageTypeName, number>> = {};
+    const atributos: Partial<Record<WeaponAttr, number>> = {};
 
     for (const row of bonusRows) {
+      const attr = weaponAttrFromLabel(row.tipo);
+      if (attr) {
+        atributos[attr] = (atributos[attr] || 0) + row.valor;
+        continue;
+      }
       switch (row.tipo) {
-        case 'Fuerza':
-        case 'Concentracion':
-        case 'Inteligencia':
-        case 'Constitucion':
-        case 'Destreza':
-          bonusStat += row.valor; break;
         case 'Chance de critico %': critChanceExtra = row.valor; break;
         case 'Dano critico %': critDmgExtra = row.valor; break;
         case 'Vel ataque %': attackSpeedPct = row.valor; break;
@@ -177,7 +180,7 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
     onWeaponChange({
       ...weapon,
       nombre, clase, subcategoria: subcategoria as Subcategoria, velocidad, rareza,
-      bonusStat, bonusAtributo, critChanceExtra, critDmgExtra, attackSpeedPct, atributoClasePct,
+      bonusStat: 0, atributos, bonusAtributo, critChanceExtra, critDmgExtra, attackSpeedPct, atributoClasePct,
       tiposDano, bonusDano, muescas, notas: '',
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps

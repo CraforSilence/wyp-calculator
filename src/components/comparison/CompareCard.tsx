@@ -5,7 +5,8 @@ import { WeaponAbility } from '@/components/weapons/WeaponAbility';
 import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, MUESCA_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import { isMuescaSpeedType } from '@/lib/engine/constants';
 import { bonusIcon } from '@/lib/bonusDisplay';
-import type { DamageTypeName, MuescaType, Weapon, WeaponCalcResult } from '@/types/weapon';
+import type { DamageTypeName, MuescaType, Weapon, WeaponAttr, WeaponCalcResult } from '@/types/weapon';
+import { getWeaponAttributes, WEAPON_ATTR_LABELS } from '@/lib/weaponAttributes';
 import { useT } from '@/i18n/I18nProvider';
 
 export interface BestFlags {
@@ -53,6 +54,7 @@ export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemo
   const t = useT();
   const { arma, muescas } = result.attackSpeedSources;
   // Las muescas de velocidad ya se muestran en la seccion Velocidad
+  const attrEntries = (Object.entries(getWeaponAttributes(weapon)) as [WeaponAttr, number][]).filter(([, v]) => v);
   const muescaEntries = Object.entries(weapon.muescas).filter(([dt, v]) => v && !isMuescaSpeedType(dt)) as [MuescaType, number][];
 
   return (
@@ -141,10 +143,12 @@ export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemo
         <Row label={t("Multiplicador")}>x{result.critMult}</Row>
       </Section>
 
-      {(weapon.bonusAtributo !== 0 || weapon.bonusStat !== 0 || weapon.atributoClasePct !== 0 || muescaEntries.length > 0) && (
+      {(weapon.bonusAtributo !== 0 || attrEntries.length > 0 || weapon.atributoClasePct !== 0 || muescaEntries.length > 0) && (
         <Section title={t("Bonus del arma")}>
           {weapon.bonusAtributo !== 0 && <Row label={t("Atributo")}>+{weapon.bonusAtributo}</Row>}
-          {weapon.bonusStat !== 0 && <Row label={t("Stat principal")}>+{weapon.bonusStat}</Row>}
+          {attrEntries.map(([attr, valor]) => (
+            <Row key={attr} label={`${bonusIcon(attr)} ${t(WEAPON_ATTR_LABELS[attr])}`}>+{valor}</Row>
+          ))}
           {weapon.atributoClasePct !== 0 && <Row label={t("Atributo de clase")}>{fmtPct(weapon.atributoClasePct)}</Row>}
           {muescaEntries.map(([tipo, valor]) => (
             <Row key={tipo} label={`${bonusIcon(tipo)} ${t('Muesca {tipo}', { tipo: t(MUESCA_TYPE_LABELS[tipo] || tipo) })}`}>+{valor}</Row>

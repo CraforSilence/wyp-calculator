@@ -12,7 +12,7 @@ const ATTRIBUTE: Record<string, string> = {
   destreza: '🎯', DXT: '🎯', Destreza: '🎯',
   inteligencia: '🧠', INT: '🧠', Inteligencia: '🧠',
   constitucion: '🧱', CON: '🧱', Constitucion: '🧱',
-  concentracion: '🧘', Concentracion: '🧘',
+  concentracion: '🧘', FOC: '🧘', Concentracion: '🧘',
   classAttribute: '⭐', 'Atributo de clase %': '⭐',
 };
 

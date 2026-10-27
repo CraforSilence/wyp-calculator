@@ -4,6 +4,7 @@ import type { JewelrySet } from '@/types/jewelry';
 import { ATTRIBUTE_MULTIPLIERS, SUBCLASE_MAIN_STAT, VELOCIDADES, SUBCATEGORIA_TO_CATEGORIA, CRIT_BASE, isMuescaSpeedType } from './constants';
 import { aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import { roundTo } from '../utils';
+import { getWeaponAttributes, sumWeaponAttributes } from '../weaponAttributes';
 
 function calcAttributeBonus(
   mainStatValue: number,
@@ -72,7 +73,6 @@ export function calcWeaponDamage(
   const tipos = arrows ? mergeArrowDamage(weapon.tiposDano, arrows) : weapon.tiposDano;
   const bonusDano = weapon.bonusDano;
   const muescas = weapon.muescas;
-  const bonusStat = weapon.bonusStat + (arrows?.bonusStat || 0);
   const bonusAtributo = weapon.bonusAtributo;
   const atributoClasePct = weapon.atributoClasePct;
 
@@ -84,6 +84,8 @@ export function calcWeaponDamage(
   // Determinar stat principal y multiplicador según subclase
   const mainStat = SUBCLASE_MAIN_STAT[character.subclase];
   const attributeMultiplier = ATTRIBUTE_MULTIPLIERS[character.subclase];
+  // Solo el atributo principal de la subclase suma daño (las flechas dan Destreza)
+  const bonusStat = (getWeaponAttributes(weapon)[mainStat] || 0) + (arrows?.bonusStat || 0);
 
   // Antes de Paso 1: Sumar bonus de stats de joyería (STR/DXT/INT + Atributo de Clase) al stat principal
   const statBonus = (jBonus[mainStat] || 0) + (jBonus.classAttribute || 0);
@@ -303,7 +305,8 @@ export function calcDualDamage(
     tiposDano: mergedTipos as Weapon['tiposDano'],
     bonusDano: mergedBonusDano as Weapon['bonusDano'],
     muescas: mergedMuescas as Weapon['muescas'],
-    bonusStat: primary.bonusStat + secondary.bonusStat,
+    bonusStat: 0,
+    atributos: sumWeaponAttributes(getWeaponAttributes(primary), getWeaponAttributes(secondary)),
     bonusAtributo: primary.bonusAtributo + secondary.bonusAtributo,
     critChanceExtra: primary.critChanceExtra + secondary.critChanceExtra,
     critDmgExtra: primary.critDmgExtra + secondary.critDmgExtra,
