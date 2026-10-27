@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cinzel, Geist, Geist_Mono } from "next/font/google";
 import { Navbar } from "@/components/layout/Navbar";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ShareProvider } from "@/components/ui/ShareProvider";
 import { ScrollToTop } from "@/components/ui/ScrollToTop";
 import "./globals.css";
 
@@ -15,18 +16,26 @@ const geistMono = Geist_Mono({
   subsets: ["latin", "latin-ext"],
 });
 
+// Tipografia del subtitulo del logo ("Weapons and Protections")
+const cinzel = Cinzel({
+  variable: "--font-cinzel",
+  subsets: ["latin"],
+  weight: ["600"],
+});
+
 export const metadata: Metadata = {
-  title: "W&P Calculator",
+  metadataBase: new URL("https://wypcalculator.vercel.app"),
+  title: "WypForge",
   description: "Calculadora de armas, armadura y simulador de daño para Regnum Online",
   openGraph: {
-    title: "W&P Calculator - Regnum Online",
+    title: "WypForge - Regnum Online",
     description: "Calculadora de armas, armadura y simulador de daño para Regnum Online",
     type: "website",
     locale: "es_AR",
   },
   twitter: {
-    card: "summary",
-    title: "W&P Calculator",
+    card: "summary_large_image",
+    title: "WypForge",
     description: "Calculadora de armas y armadura para Regnum Online",
   },
 };
@@ -35,17 +44,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${cinzel.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100">
         <ToastProvider>
+        <ShareProvider>
         <Navbar />
         <main className="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
           {children}
         </main>
         <footer className="border-t border-zinc-800 py-6 mt-8">
           <div className="max-w-7xl mx-auto px-4 text-center text-sm text-zinc-500">
-            <p>W&amp;P Calculator (Weapon and Protection Calculator) es un proyecto libre y de codigo abierto.</p>
+            <p>WypForge, calculadora de armas y armaduras para Regnum Online, es un proyecto libre y de código abierto.</p>
             <p className="mt-1">
               <a href="https://github.com/CraforSilence/wyp-calculator" target="_blank" rel="noopener noreferrer" className="text-amber-500 hover:text-amber-400 transition-colors">
                 GitHub
@@ -62,6 +72,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         </footer>
         <ScrollToTop />
+        </ShareProvider>
         </ToastProvider>
       </body>
     </html>

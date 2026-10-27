@@ -1,6 +1,9 @@
 @AGENTS.md
 
-# W&P Calculator - Project Rules
+# WypForge - Project Rules
+
+Nombre de la app: **WypForge** (antes "W&P Calculator"). El repo y el proyecto de Vercel
+conservan los nombres viejos (`wyp-calculator` / `wypcalculator`).
 
 ## Deploy workflow
 
