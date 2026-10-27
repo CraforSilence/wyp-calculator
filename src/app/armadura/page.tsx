@@ -14,7 +14,8 @@ import { useToast } from '@/components/ui/Toast';
 import { CATALOG_ARMOR_SETS } from '@/data/catalog-armor';
 import { ARMOR_CLASSES } from '@/lib/engine/constants';
 import { ImportModal } from '@/components/ui/ImportModal';
-import { encodeShareCode } from '@/lib/share';
+import { useShare } from '@/components/ui/ShareProvider';
+import { useShareImport } from '@/hooks/useShareImport';
 import type { ShareResult } from '@/lib/share';
 import type { CatalogArmorSet } from '@/types/armor';
 import type { Subclase } from '@/types/character';
@@ -27,6 +28,8 @@ export default function ArmaduraPage() {
   } = useArmorSets();
   const { character } = useCharacter();
   const { toast } = useToast();
+  const { share } = useShare();
+  const { importShare } = useShareImport();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showHidden, setShowHidden] = useState(false);
   const [showImport, setShowImport] = useState(false);
@@ -92,17 +95,11 @@ export default function ArmaduraPage() {
 
   const handleShare = (set: CatalogArmorSet) => {
     const { id, createdAt, isDefault, ...data } = set;
-    const code = encodeShareCode('armor', data);
-    navigator.clipboard.writeText(code).then(
-      () => toast('Codigo copiado al portapapeles', 'success'),
-      () => toast('Error al copiar', 'error'),
-    );
+    share('armor', data);
   };
 
   const handleImport = (result: ShareResult) => {
-    const data = result.data as Omit<CatalogArmorSet, 'id' | 'createdAt' | 'isDefault'>;
-    addSet({ ...data, isDefault: false });
-    toast('Set importado', 'success');
+    toast(importShare(result).message, 'success');
   };
 
   const handleDuplicate = (set: CatalogArmorSet) => {

@@ -14,7 +14,9 @@ import { useToast } from '@/components/ui/Toast';
 import { DEFAULT_WEAPONS } from '@/data/default-weapons';
 import { CLASE_SUBCLASES, SUBCATEGORIAS_POR_SUBCLASE, SUBCATEGORIAS_POR_CLASE } from '@/lib/engine/constants';
 import { ImportModal } from '@/components/ui/ImportModal';
-import { encodeShareCode, stripWeapon } from '@/lib/share';
+import { stripWeapon } from '@/lib/share';
+import { useShare } from '@/components/ui/ShareProvider';
+import { useShareImport } from '@/hooks/useShareImport';
 import type { ShareResult } from '@/lib/share';
 import type { Weapon, Subcategoria } from '@/types/weapon';
 import type { Clase, Subclase } from '@/types/character';
@@ -27,6 +29,8 @@ export default function ArmasPage() {
     duplicateAsTemp, isModified, hiddenIds, hiddenCount,
   } = useWeapons();
   const { toast } = useToast();
+  const { share } = useShare();
+  const { importShare } = useShareImport();
   const [showForm, setShowForm] = useState(false);
   const [editingWeapon, setEditingWeapon] = useState<Weapon | null>(null);
   const [showHidden, setShowHidden] = useState(false);
@@ -104,17 +108,11 @@ export default function ArmasPage() {
   };
 
   const handleShare = (weapon: Weapon) => {
-    const code = encodeShareCode('weapon', stripWeapon(weapon));
-    navigator.clipboard.writeText(code).then(
-      () => toast('Codigo copiado al portapapeles', 'success'),
-      () => toast('Error al copiar', 'error'),
-    );
+    share('weapon', stripWeapon(weapon));
   };
 
   const handleImport = (result: ShareResult) => {
-    const data = result.data as Omit<Weapon, 'id' | 'createdAt'>;
-    addWeapon(data);
-    toast('Arma importada', 'success');
+    toast(importShare(result).message, 'success');
   };
 
   const tempCount = allCustomResults.length;

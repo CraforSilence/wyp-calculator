@@ -36,14 +36,19 @@ export function useWeapons() {
 
   const MAX_CUSTOM = 50;
 
-  const addWeapon = useCallback((weapon: Omit<Weapon, 'id' | 'createdAt'>) => {
+  /** Devuelve el id de la nueva arma, o null si ya se llego al maximo de personalizadas. */
+  const addWeapon = useCallback((weapon: Omit<Weapon, 'id' | 'createdAt'>): string | null => {
+    const id = generateId();
+    let added = false;
     setTempWeapons((prev) => {
       if (prev.length >= MAX_CUSTOM) return prev;
+      added = true;
       return [
         ...prev,
-        { ...weapon, id: generateId(), isDefault: false, createdAt: new Date().toISOString() } as Weapon,
+        { ...weapon, id, isDefault: false, createdAt: new Date().toISOString() } as Weapon,
       ];
     });
+    return added ? id : null;
   }, [setTempWeapons]);
 
   const updateWeapon = useCallback((id: string, updates: Partial<Weapon>) => {

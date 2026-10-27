@@ -10,9 +10,12 @@ import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { useToast } from '@/components/ui/Toast';
 import { ImportModal } from '@/components/ui/ImportModal';
-import { encodeShareCode } from '@/lib/share';
+import { useShare } from '@/components/ui/ShareProvider';
+import { useShareImport } from '@/hooks/useShareImport';
 import type { ShareResult } from '@/lib/share';
 import { DEFAULT_JEWELRY } from '@/data/default-jewelry';
+import { JEWELRY_ICONS } from '@/lib/engine/constants';
+import Link from 'next/link';
 import type { JewelryItem } from '@/types/jewelry';
 
 export default function JoyeriaPage() {
@@ -22,6 +25,8 @@ export default function JoyeriaPage() {
     duplicateAsCustom, isModified, hiddenIds, hiddenCount,
   } = useJewelryItems();
   const { toast } = useToast();
+  const { share } = useShare();
+  const { importShare } = useShareImport();
   const [showForm, setShowForm] = useState(false);
   const [editingItem, setEditingItem] = useState<JewelryItem | null>(null);
   const [showHidden, setShowHidden] = useState(false);
@@ -58,17 +63,11 @@ export default function JoyeriaPage() {
 
   const handleShare = (item: JewelryItem) => {
     const { id, createdAt, isDefault, ...data } = item;
-    const code = encodeShareCode('jewelry', data);
-    navigator.clipboard.writeText(code).then(
-      () => toast('Codigo copiado al portapapeles', 'success'),
-      () => toast('Error al copiar', 'error'),
-    );
+    share('jewelry', data);
   };
 
   const handleImport = (result: ShareResult) => {
-    const data = result.data as Omit<JewelryItem, 'id' | 'createdAt'>;
-    addItem(data);
-    toast('Joya importada', 'success');
+    toast(importShare(result).message, 'success');
   };
 
   const handleDelete = (item: JewelryItem) => {
@@ -194,9 +193,29 @@ export default function JoyeriaPage() {
         )}
 
         {items.length === 0 && !showForm && (
-          <div className="text-center py-12 text-zinc-500">
-            <p>No hay joyas cargadas.</p>
-            <p className="text-xs mt-1">Usa el boton &quot;+ Nueva joya&quot; para agregar una.</p>
+          <div className="mx-auto max-w-lg rounded-lg border-2 border-dashed border-zinc-800 px-6 py-10 text-center animate-fade-in-up">
+            <div className="mx-auto mb-4 flex justify-center gap-2" aria-hidden>
+              {[JEWELRY_ICONS.anillo1, JEWELRY_ICONS.amuleto, JEWELRY_ICONS.anillo2].map((icon, i) => (
+                <span key={i} className="inline-flex items-center justify-center w-12 h-12 rounded-lg border border-zinc-700 bg-zinc-800/80 p-1.5">
+                  <img src={icon} alt="" className="w-full h-full object-contain opacity-80" />
+                </span>
+              ))}
+            </div>
+            <h2 className="text-base font-semibold text-zinc-200">Todavía no guardaste joyas</h2>
+            <p className="mt-1 text-sm text-zinc-400">
+              Guardá tus anillos y amuletos acá para precargarlos en el Build con un click, o compartilos con un código.
+            </p>
+            <div className="mt-5 flex flex-wrap justify-center gap-2">
+              <Button onClick={() => { setEditingItem(null); setShowForm(true); }}>+ Nueva joya</Button>
+              <Button variant="secondary" onClick={() => setShowImport(true)}>Importar código</Button>
+            </div>
+            <p className="mt-4 text-xs text-zinc-500">
+              ¿Solo querés probar? Cargá los bonus directo en el{' '}
+              <Link
+                href="/build"
+                onClick={() => { try { window.sessionStorage.setItem('regnum-build-tab', JSON.stringify('armas')); } catch { /* sin sessionStorage */ } }}
+                className="text-amber-400 hover:text-amber-300 underline-offset-2 hover:underline">Build, paso 2</Link>.
+            </p>
           </div>
         )}
       </div>
