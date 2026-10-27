@@ -48,7 +48,7 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
   const full = selectedIds.length >= maxSelected;
 
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <div className="flex flex-col sm:flex-row gap-2 mb-3">
         <div className="relative flex-1">
           <svg className="w-4 h-4 text-zinc-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -83,7 +83,7 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
         </div>
       )}
 
-      <div className="max-h-72 overflow-y-auto rounded border border-zinc-800 divide-y divide-zinc-800/70">
+      <div className="max-h-72 lg:max-h-none lg:flex-1 lg:min-h-0 overflow-y-auto rounded border border-zinc-800 divide-y divide-zinc-800/70">
         {filtered.length === 0 && (
           <div className="py-6 text-center text-sm text-zinc-500">No hay armas que coincidan.</div>
         )}

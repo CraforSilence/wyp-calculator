@@ -8,13 +8,15 @@ import { Card } from '@/components/ui/Card';
 import {
   ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS,
   ARMOR_SLOTS_POR_CLASE, armorSlotsFor, ARMOR_SLOT_LABELS, ARMOR_SLOT_ICONS,
-  ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, SHIELD_ONLY_BONUS_TYPES,
+  ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS,
   PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOT_LABEL_OVERRIDES,
-  CLASE_SUBCLASES,
+  CLASE_SUBCLASES, ARMOR_RAREZAS,
 } from '@/lib/engine/constants';
+import { QUALITY_STYLES } from '@/components/armor/ArmorPieceSummary';
+import { ArmorBonusSlots, armorBonusLimitLabel } from './ArmorBonusSlots';
 import type {
   ArmorSlot, ArmorPiece, ArmorBonus, ArmorUpgrade,
-  ProtectionQuality, ArmorBonusType, CatalogArmorSet,
+  ProtectionQuality, ArmorBonusType, CatalogArmorSet, ArmorRareza,
 } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
@@ -61,6 +63,8 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
   const [clase, setClase] = useState<Clase>(editingSet?.clase || 'Guerrero');
   const [subclase, setSubclase] = useState(editingSet?.subclase || '');
   const [notas, setNotas] = useState(editingSet?.notas || '');
+  // En el catalogo la rareza se define para todo el set
+  const [rareza, setRareza] = useState<ArmorRareza>(editingSet?.rareza ?? 'Legendaria');
 
   const [pieces, setPieces] = useState<Record<string, ArmorPiece>>(() =>
     initPieces(editingSet?.clase || 'Guerrero', editingSet?.pieces)
@@ -86,35 +90,6 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
       ...prev,
       [slot]: { ...prev[slot], ...updates },
     }));
-  };
-
-  const updatePieceBonus = (slot: ArmorSlot, index: number, updates: Partial<ArmorBonus>) => {
-    setPieces((prev) => {
-      const piece = prev[slot];
-      const bonuses = [...piece.bonuses];
-      bonuses[index] = { ...bonuses[index], ...updates };
-      return { ...prev, [slot]: { ...piece, bonuses } };
-    });
-  };
-
-  const addPieceBonus = (slot: ArmorSlot) => {
-    setPieces((prev) => {
-      const piece = prev[slot];
-      const availableTypes = ARMOR_BONUS_TYPES.filter((t) =>
-        slot === 'escudo' || !SHIELD_ONLY_BONUS_TYPES.includes(t)
-      );
-      return {
-        ...prev,
-        [slot]: { ...piece, bonuses: [...piece.bonuses, { type: availableTypes[0], value: 0 }] },
-      };
-    });
-  };
-
-  const removePieceBonus = (slot: ArmorSlot, index: number) => {
-    setPieces((prev) => {
-      const piece = prev[slot];
-      return { ...prev, [slot]: { ...piece, bonuses: piece.bonuses.filter((_, j) => j !== index) } };
-    });
   };
 
   const updatePieceUpgrade = (slot: ArmorSlot, index: number, updates: Partial<ArmorUpgrade>) => {
@@ -148,7 +123,8 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
 
     const cleanPieces: Partial<Record<ArmorSlot, ArmorPiece>> = {};
     for (const slot of slots) {
-      if (pieces[slot]) cleanPieces[slot] = pieces[slot];
+      // La rareza de cada pieza sale del set
+      if (pieces[slot]) cleanPieces[slot] = { ...pieces[slot], rareza: undefined };
     }
 
     const bonusConjunto: ArmorBonus[] = bonusRows
@@ -160,6 +136,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
       clase,
       subclase: subclase || undefined,
       pieces: cleanPieces,
+      rareza,
       bonusConjunto,
       notas,
       isDefault: editingSet?.isDefault ?? false,
@@ -167,8 +144,6 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
   };
 
   const subclaseOptions = CLASE_SUBCLASES[clase].map((sc) => ({ value: sc, label: sc }));
-  const availableBonusTypes = (slot: ArmorSlot) =>
-    ARMOR_BONUS_TYPES.filter((t) => slot === 'escudo' || !SHIELD_ONLY_BONUS_TYPES.includes(t));
 
   return (
     <Card title={editingSet ? 'Editar Set de Armadura' : 'Nuevo Set de Armadura'}>
@@ -191,6 +166,13 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
             label="Subclase" value={subclase}
             onChange={(e) => setSubclase(e.target.value)}
             options={[{ value: '', label: '(ninguna)' }, ...subclaseOptions]}
+          />
+          <Select
+            label="Rareza"
+            tooltip="Define cuantos bonus puede tener cada pieza. Artesano (Magnanitas, Champion) trae bonus fijos: definilos aca."
+            value={rareza}
+            onChange={(e) => setRareza(e.target.value as ArmorRareza)}
+            options={ARMOR_RAREZAS.map((r) => ({ value: r, label: r }))}
           />
         </div>
 
@@ -227,13 +209,13 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
 
                   {/* Protection factors */}
                   <div>
-                    <span className="text-[10px] text-zinc-500 mb-1 block">Factor de proteccion</span>
+                    <span className="text-[11px] text-zinc-500 mb-1 block">Factor de proteccion</span>
                     <div className="grid grid-cols-2 gap-1.5">
                       {DAMAGE_TYPES_PAIRED.map((t) => (
                         <div key={t} className="flex items-center gap-1.5">
                           <span className="text-sm shrink-0" title={DAMAGE_TYPE_LABELS[t]}>{DAMAGE_TYPE_ICONS[t]}</span>
                           <select
-                            className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors"
+                            className={`flex-1 min-w-0 rounded border px-2 py-1.5 text-xs focus:outline-none focus:border-amber-500 transition-colors ${QUALITY_STYLES[piece.protectionFactors[t] || 'Normal']}`}
                             value={piece.protectionFactors[t] || ''}
                             onChange={(e) => {
                               const val = e.target.value as ProtectionQuality | '';
@@ -244,7 +226,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
                             }}
                           >
                             {QUALITY_OPTIONS.map((opt) => (
-                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                              <option key={opt.value} value={opt.value} className="bg-zinc-900 text-zinc-100">{opt.label}</option>
                             ))}
                           </select>
                         </div>
@@ -252,56 +234,21 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
                     </div>
                   </div>
 
-                  {/* Bonus proteccion % */}
+                  {/* Bonuses: los slots dependen de la rareza del set */}
                   <div>
-                    <span className="text-[10px] text-zinc-500 mb-1 block">Bonus proteccion %</span>
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
-                      {ALL_DAMAGE_TYPES.map((t) => (
-                        <Input
-                          key={t}
-                          label={DAMAGE_TYPE_ICONS[t]}
-                          type="number" min={0} max={100}
-                          value={piece.bonusProteccionPct[t] ?? 0}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            const bpp = { ...piece.bonusProteccionPct };
-                            if (val > 0) bpp[t] = val; else delete bpp[t];
-                            updatePiece(slot, { bonusProteccionPct: bpp });
-                          }}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Bonuses */}
-                  <div>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] text-zinc-500">Bonuses</span>
-                      {piece.bonuses.length < 4 && (
-                        <Button size="sm" variant="ghost" onClick={() => addPieceBonus(slot)}>+</Button>
-                      )}
-                    </div>
-                    {piece.bonuses.map((b, i) => (
-                      <div key={i} className="flex gap-1.5 items-end mb-1">
-                        <Select
-                          value={b.type}
-                          onChange={(e) => updatePieceBonus(slot, i, { type: e.target.value as ArmorBonusType })}
-                          options={availableBonusTypes(slot).map((t) => ({ value: t, label: ARMOR_BONUS_LABELS[t] }))}
-                        />
-                        <Input
-                          type="number" placeholder="Valor"
-                          value={b.value || ''} className="w-20"
-                          onChange={(e) => updatePieceBonus(slot, i, { value: Number(e.target.value) })}
-                        />
-                        <Button size="sm" variant="danger" onClick={() => removePieceBonus(slot, i)}>x</Button>
-                      </div>
-                    ))}
+                    <span className="text-[11px] text-zinc-500 mb-1 block">Bonuses · {armorBonusLimitLabel(rareza)}</span>
+                    <ArmorBonusSlots
+                      bonuses={piece.bonuses}
+                      slot={slot}
+                      rareza={rareza}
+                      onChange={(next) => updatePiece(slot, { bonuses: next })}
+                    />
                   </div>
 
                   {/* Upgrades */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-[10px] text-zinc-500">Upgrades</span>
+                      <span className="text-[11px] text-zinc-500">Upgrades</span>
                       {piece.upgrades.length < 3 && (
                         <Button size="sm" variant="ghost" onClick={() => addPieceUpgrade(slot)}>+</Button>
                       )}
@@ -318,7 +265,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
                           onChange={(e) => updatePieceUpgrade(slot, i, { value: Number(e.target.value) })}
                           options={[{ value: '1', label: '+1' }, { value: '2', label: '+2' }]}
                         />
-                        <Button size="sm" variant="danger" onClick={() => removePieceUpgrade(slot, i)}>x</Button>
+                        <Button size="sm" variant="danger-ghost" onClick={() => removePieceUpgrade(slot, i)}>x</Button>
                       </div>
                     ))}
                   </div>
@@ -349,7 +296,7 @@ export function ArmorSetForm({ onSave, editingSet, onCancel }: ArmorSetFormProps
                   value={row.valor || ''} className="w-24"
                   onChange={(e) => { const next = [...bonusRows]; next[i].valor = Number(e.target.value); setBonusRows(next); }}
                 />
-                <Button size="sm" variant="danger" onClick={() => setBonusRows(bonusRows.filter((_, j) => j !== i))}>x</Button>
+                <Button size="sm" variant="danger-ghost" onClick={() => setBonusRows(bonusRows.filter((_, j) => j !== i))}>x</Button>
               </div>
             ))}
           </div>

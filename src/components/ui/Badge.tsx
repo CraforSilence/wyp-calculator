@@ -30,6 +30,7 @@ export function rarezaToBadgeVariant(rareza: string): BadgeVariant {
     case 'Épica': return 'epic';
     case 'Mágica': return 'magic';
     case 'Arcana': return 'arcane';
+    case 'Artesano': return 'info';
     default: return 'default';
   }
 }

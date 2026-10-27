@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { Card } from '@/components/ui/Card';
 import { DAMAGE_TYPE_LABELS, ALL_DAMAGE_TYPES, ARMOR_BONUS_LABELS } from '@/lib/engine/constants';
-import { calcTotalProtection, filterArmorForSubclase } from '@/lib/engine/armor';
+import { calcTotalProtection, filterArmorForSubclase, setBonusesFor } from '@/lib/engine/armor';
 import type { Subclase } from '@/types/character';
 import type { CatalogArmorSet, ArmorBonus, ArmorBonusType } from '@/types/armor';
 
@@ -23,6 +23,7 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
         barrierPoints: {},
         meleeDmgReductionPct: 0,
         rangedDmgReductionPct: 0,
+        bonusConjunto: setBonusesFor(set, set.subclase),
       };
       const prot = calcTotalProtection(fakeArmorSet, armorClass);
       const totalProt = Object.values(prot.perType).reduce((a, b) => a + b, 0);

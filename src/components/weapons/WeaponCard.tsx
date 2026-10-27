@@ -49,7 +49,7 @@ export function WeaponCard({ weapon, calcResult, onEdit, onDelete, onDuplicate, 
           {onReset && (
             <Button size="sm" variant="secondary" onClick={onReset} title="Restaurar original">Reset</Button>
           )}
-          <Button size="sm" variant="danger" onClick={onDelete} title={weapon.isDefault ? 'Ocultar' : 'Eliminar'}>
+          <Button size="sm" variant="danger-ghost" onClick={onDelete} title={weapon.isDefault ? 'Ocultar' : 'Eliminar'}>
             {weapon.isDefault ? 'Ocultar' : 'x'}
           </Button>
         </div>

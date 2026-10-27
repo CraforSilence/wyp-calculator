@@ -33,7 +33,7 @@ function DamagePerTypeBars({ perType, maxReference }: { perType: Record<string, 
             </div>
             <div className="flex-1 h-4 bg-zinc-800 rounded-full overflow-hidden relative">
               <div className="absolute h-full bg-amber-600/70 rounded-full" style={{ width: `${pct}%` }} />
-              <div className="absolute inset-0 flex items-center px-2 text-[11px] font-medium text-white">{val}</div>
+              <div className="absolute inset-0 flex items-center px-2 text-[12px] font-medium text-white">{val}</div>
             </div>
           </div>
         );
@@ -44,6 +44,13 @@ function DamagePerTypeBars({ perType, maxReference }: { perType: Record<string, 
 
 export function SimResultados({ result, weaponStats }: SimResultadosProps) {
   const maxDmg = Math.max(...result.hits.map((h) => h.totalRawDamage), 1);
+  // Las barras no arrancan en 0: si no, todos los golpes llenan casi toda la barra y no se ve
+  // la diferencia entre uno y otro. Se deja un margen bajo el golpe mas chico.
+  const minFinal = Math.min(...result.hits.map((h) => h.finalDamage));
+  const span = maxDmg - minFinal;
+  const scaleFloor = Math.max(0, Math.floor(span > 0 ? minFinal - span * 0.35 : minFinal * 0.9));
+  const barPct = (v: number) => Math.min(100, Math.max(3, ((v - scaleFloor) / Math.max(maxDmg - scaleFloor, 1)) * 100));
+  const avgPct = barPct(result.averageDamage);
   const [expandedHits, setExpandedHits] = useState<Set<number>>(new Set());
 
   const toggleHit = (hitNum: number) => {
@@ -94,11 +101,19 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
       </div>
 
       {/* Hits visual with expandable per-type breakdown */}
-      <Card title={<span>Golpes<HelpTip text="Barra gris = dano bruto. Barra color = dano final. Rojo = critico." /></span>}>
-        <p className="text-xs text-zinc-500 mb-2">Hace click en un golpe para ver el desglose de dano por tipo.</p>
+      <Card title={<span>Golpes<HelpTip text="Barra gris = dano bruto. Barra color = dano final. Rojo = critico. La linea blanca marca el promedio." /></span>}>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 mb-2 text-xs text-zinc-500">
+          <p>Hacé click en un golpe para ver el desglose de daño por tipo.</p>
+          <p className="flex items-center gap-3">
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-amber-600" />normal</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-sm bg-red-600" />crítico</span>
+            <span className="flex items-center gap-1"><span className="w-0.5 h-3 bg-white/70" />promedio</span>
+            <span className="text-zinc-600" title="Las barras empiezan en este valor para que se note la diferencia entre golpes">escala desde {scaleFloor}</span>
+          </p>
+        </div>
         <div className="space-y-1">
           {result.hits.map((hit) => {
-            const pct = (hit.totalRawDamage / maxDmg) * 100;
+            const pct = barPct(hit.totalRawDamage);
             const reducPct = hit.totalRawDamage > 0
               ? ((hit.totalRawDamage - hit.finalDamage) / hit.totalRawDamage * 100).toFixed(0)
               : '0';
@@ -115,8 +130,9 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
                       <div className="absolute h-full bg-zinc-700 rounded-full" style={{ width: `${pct}%` }} />
                       <div
                         className={`absolute h-full rounded-full ${hit.isCrit ? 'bg-red-600' : 'bg-amber-600'}`}
-                        style={{ width: `${(hit.finalDamage / maxDmg) * 100}%` }}
+                        style={{ width: `${barPct(hit.finalDamage)}%` }}
                       />
+                      <div className="absolute inset-y-0 w-0.5 bg-white/70" style={{ left: `${avgPct}%` }} aria-hidden />
                       <div className="absolute inset-0 flex items-center px-2 text-xs font-medium text-white">
                         {hit.finalDamage}
                         {hit.isCrit && <span className="ml-1 text-red-300">CRIT</span>}

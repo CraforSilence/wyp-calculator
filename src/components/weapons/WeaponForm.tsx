@@ -1,11 +1,13 @@
 'use client';
 
+import { bonusSelectOptions } from '@/lib/bonusDisplay';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
-import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, isMuescaSpeedType } from '@/lib/engine/constants';
+import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, RAREZA_SLOTS, bonusOptionsForRareza } from '@/lib/engine/constants';
+import { SlotEditor, muescaValueInput } from './SlotEditor';
 import type { Weapon, DamageTypeName, MuescaType, Velocidad, Rareza, Subcategoria } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 
@@ -20,8 +22,9 @@ interface BonusRow {
   valor: number;
 }
 
+/** `tipo: ''` = slot de muesca vacio. */
 interface MuescaRow {
-  tipo: MuescaType;
+  tipo: MuescaType | '';
   valor: number;
 }
 
@@ -71,9 +74,9 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
 
   const [muescaRows, setMuescaRows] = useState<MuescaRow[]>(() => {
     if (editingWeapon?.muescas) {
-      return Object.entries(editingWeapon.muescas).map(([tipo, valor]) => ({
-        tipo: tipo as MuescaType, valor: valor as number,
-      }));
+      return Object.entries(editingWeapon.muescas)
+        .filter(([, valor]) => valor)
+        .map(([tipo, valor]) => ({ tipo: tipo as MuescaType, valor: valor as number }));
     }
     return [];
   });
@@ -105,6 +108,7 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
 
     const muescas: Partial<Record<MuescaType, number>> = {};
     for (const row of muescaRows) {
+      if (!row.tipo || !row.valor) continue;
       muescas[row.tipo] = (muescas[row.tipo] || 0) + row.valor;
     }
 
@@ -164,51 +168,44 @@ export function WeaponForm({ onSave, editingWeapon, onCancel }: WeaponFormProps)
                 <Input type="number" placeholder="Min" value={row.min || ''} onChange={(e) => { const next = [...damageRows]; next[i].min = Number(e.target.value); setDamageRows(next); }} className="w-20" />
                 <Input type="number" placeholder="Max" value={row.max || ''} onChange={(e) => { const next = [...damageRows]; next[i].max = Number(e.target.value); setDamageRows(next); }} className="w-20" />
                 {damageRows.length > 1 && (
-                  <Button size="sm" variant="danger" onClick={() => setDamageRows(damageRows.filter((_, j) => j !== i))}>x</Button>
+                  <Button size="sm" variant="danger-ghost" onClick={() => setDamageRows(damageRows.filter((_, j) => j !== i))}>x</Button>
                 )}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Bonuses */}
+        {/* Bonuses: la cantidad de slots depende de la rareza */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-zinc-400">Bonus</span>
-            {bonusRows.length < 8 && (
-              <Button size="sm" variant="ghost" onClick={() => setBonusRows([...bonusRows, { tipo: 'Fuerza', valor: 0 }])}>+ Bonus</Button>
-            )}
+            <span className="text-xs text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].bonus} {RAREZA_SLOTS[rareza].bonus === 1 ? 'slot' : 'slots'}</span>
           </div>
-          <div className="space-y-2">
-            {bonusRows.map((row, i) => (
-              <div key={i} className="flex gap-2 items-end">
-                <Select value={row.tipo} onChange={(e) => { const next = [...bonusRows]; next[i].tipo = e.target.value; setBonusRows(next); }}
-                  options={BONUS_TYPES.map((t) => ({ value: t, label: t }))} />
-                <Input type="number" placeholder="Valor" value={row.valor || ''} onChange={(e) => { const next = [...bonusRows]; next[i].valor = Number(e.target.value); setBonusRows(next); }} className="w-24" />
-                <Button size="sm" variant="danger" onClick={() => setBonusRows(bonusRows.filter((_, j) => j !== i))}>x</Button>
-              </div>
-            ))}
-          </div>
+          <SlotEditor
+            rows={bonusRows}
+            max={RAREZA_SLOTS[rareza].bonus}
+            options={bonusSelectOptions(bonusOptionsForRareza(rareza, BONUS_TYPES).map((o) => o.value))}
+            onChange={setBonusRows}
+            noun={{ one: 'bonus', many: 'bonus' }}
+            limitLabel={`Un arma ${rareza}`}
+          />
         </div>
 
-        {/* Muescas */}
+        {/* Muescas: 1, salvo las Arcanas que tienen 2 */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-zinc-400">Muescas</span>
-            {muescaRows.length < 3 && (
-              <Button size="sm" variant="ghost" onClick={() => setMuescaRows([...muescaRows, { tipo: 'fuego', valor: 0 }])}>+ Muesca</Button>
-            )}
+            <span className="text-xs text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].muescas} {RAREZA_SLOTS[rareza].muescas === 1 ? 'muesca' : 'muescas'}</span>
           </div>
-          <div className="space-y-2">
-            {muescaRows.map((row, i) => (
-              <div key={i} className="flex gap-2 items-end">
-                <Select value={row.tipo} onChange={(e) => { const next = [...muescaRows]; next[i].tipo = e.target.value as MuescaType; setMuescaRows(next); }}
-                  options={MUESCA_TYPES.map((t) => ({ value: t, label: MUESCA_TYPE_LABELS[t] }))} />
-                <Input type="number" min={1} max={isMuescaSpeedType(row.tipo) ? 100 : 30} placeholder={isMuescaSpeedType(row.tipo) ? '%' : 'Valor'} value={row.valor || ''} onChange={(e) => { const next = [...muescaRows]; next[i].valor = Number(e.target.value); setMuescaRows(next); }} className="w-24" />
-                <Button size="sm" variant="danger" onClick={() => setMuescaRows(muescaRows.filter((_, j) => j !== i))}>x</Button>
-              </div>
-            ))}
-          </div>
+          <SlotEditor
+            rows={muescaRows}
+            max={RAREZA_SLOTS[rareza].muescas}
+            options={bonusSelectOptions(MUESCA_TYPES, (t) => MUESCA_TYPE_LABELS[t as MuescaType])}
+            onChange={(rows) => setMuescaRows(rows as MuescaRow[])}
+            valueInput={muescaValueInput}
+            noun={{ one: 'muesca', many: 'muescas' }}
+            limitLabel={`Un arma ${rareza}`}
+          />
         </div>
 
         {/* Notes */}

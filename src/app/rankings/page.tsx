@@ -1,17 +1,57 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useWeapons } from '@/hooks/useWeapons';
 import { useJewelry } from '@/hooks/useJewelry';
+import { useBuildWeapon } from '@/hooks/useBuildWeapon';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useToast } from '@/components/ui/Toast';
+import { Button } from '@/components/ui/Button';
+import { WeaponSheet } from '@/components/weapons/WeaponSheet';
 import { calcWeaponDamage } from '@/lib/engine/damage';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { Badge, rarezaToBadgeVariant } from '@/components/ui/Badge';
-import { SUBCATEGORIAS_POR_CLASE, DAMAGE_TYPE_LABELS } from '@/lib/engine/constants';
+import { SUBCATEGORIAS_POR_CLASE, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, PHYSICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import type { WeaponCalcResult, DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
+import type { Weapon } from '@/types/weapon';
+
+type SortKey = 'dps' | 'prom' | 'crit' | 'sg' | 'gps';
+
+/** Columnas ordenables: valor y si "mejor" es mas alto (desc) o mas bajo (asc). */
+const SORTS: Record<SortKey, { label: string; title: string; get: (r: WeaponCalcResult) => number; higherIsBetter: boolean }> = {
+  prom: { label: 'Prom', title: 'Daño promedio por golpe', get: (r) => r.danoPromedio, higherIsBetter: true },
+  crit: { label: 'Crit%', title: 'Chance de crítico total', get: (r) => r.critTotalPct, higherIsBetter: true },
+  sg: { label: 's/g', title: 'Segundos por golpe (menos es más rápido)', get: (r) => r.velEfectiva, higherIsBetter: false },
+  gps: { label: 'g/s', title: 'Golpes por segundo', get: (r) => r.golpesPorSeg, higherIsBetter: true },
+  dps: { label: 'DPS', title: 'Daño por segundo con crítico incluido', get: (r) => r.dpsEfectivo, higherIsBetter: true },
+};
+
+const COMPARE_KEY = 'regnum-compare-selected';
+const MAX_COMPARE = 5;
+
+function SortTh({ k, active, bestFirst, onSort, className = '' }: {
+  k: SortKey; active: boolean; bestFirst: boolean; onSort: (k: SortKey) => void; className?: string;
+}) {
+  // Flecha segun el orden real de los numeros (desc/asc), no segun "mejor primero"
+  const desc = SORTS[k].higherIsBetter === bestFirst;
+  return (
+    <th className={`py-2 px-2 text-right ${className}`} aria-sort={active ? (desc ? 'descending' : 'ascending') : undefined}>
+      <button
+        onClick={() => onSort(k)}
+        title={`${SORTS[k].title}. Click para ordenar.`}
+        className={`inline-flex items-center gap-0.5 cursor-pointer transition-colors ${active ? 'text-amber-400' : 'hover:text-zinc-300'}`}
+      >
+        {SORTS[k].label}
+        <span className={`text-[10px] ${active ? '' : 'opacity-0'}`}>{desc ? '▼' : '▲'}</span>
+      </button>
+    </th>
+  );
+}
 
 export default function RankingsPage() {
   const { character } = useCharacter();
@@ -20,6 +60,31 @@ export default function RankingsPage() {
   const [filterClase, setFilterClase] = useState<string>('Todas');
   const [filterSubcat, setFilterSubcat] = useState<string>('Todas');
   const [selectedDetail, setSelectedDetail] = useState<{ weapon: (typeof weapons)[0]; result: WeaponCalcResult } | null>(null);
+  const [sortKey, setSortKey] = useState<SortKey>('dps');
+  // true = orden "mejor primero" de la columna; al tocar de nuevo se invierte
+  const [bestFirst, setBestFirst] = useState(true);
+  const router = useRouter();
+  const { toast } = useToast();
+  const { setWeapon } = useBuildWeapon();
+  const [, setCompareIds] = useLocalStorage<string[]>(COMPARE_KEY, []);
+
+  const toggleSort = (key: SortKey) => {
+    if (key === sortKey) setBestFirst(!bestFirst);
+    else { setSortKey(key); setBestFirst(true); }
+  };
+
+  const loadInBuild = (weapon: Weapon) => {
+    setWeapon(weapon);
+    // Abre el Build directo en el paso del arma
+    try { window.sessionStorage.setItem('regnum-build-tab', JSON.stringify('armas')); } catch { /* sin sessionStorage */ }
+    toast(`"${weapon.nombre}" cargada en el Build`, 'success');
+    router.push('/build');
+  };
+
+  const addToCompare = (id: string) => {
+    setCompareIds((prev) => (prev.includes(id) ? prev : [...prev, id].slice(-MAX_COMPARE)));
+    router.push('/comparar');
+  };
 
   const results = useMemo(() => {
     return weapons
@@ -29,8 +94,16 @@ export default function RankingsPage() {
         return true;
       })
       .map((w) => ({ weapon: w, result: calcWeaponDamage(w, character, jewelry) }))
-      .sort((a, b) => b.result.dpsEfectivo - a.result.dpsEfectivo);
-  }, [weapons, character, jewelry, filterClase, filterSubcat]);
+      .sort((a, b) => {
+        const { get, higherIsBetter } = SORTS[sortKey];
+        const diff = get(b.result) - get(a.result);
+        return (higherIsBetter === bestFirst ? diff : -diff) || b.result.dpsEfectivo - a.result.dpsEfectivo;
+      });
+  }, [weapons, character, jewelry, filterClase, filterSubcat, sortKey, bestFirst]);
+  const maxDps = Math.max(...results.map((r) => r.result.dpsEfectivo), 1);
+  const sortTh = (k: SortKey, className?: string) => (
+    <SortTh k={k} active={sortKey === k} bestFirst={bestFirst} onSort={toggleSort} className={className} />
+  );
 
   const subcatOptions = filterClase !== 'Todas'
     ? SUBCATEGORIAS_POR_CLASE[filterClase as Clase] || []
@@ -38,15 +111,23 @@ export default function RankingsPage() {
 
   return (
     <div>
-      <PageHeader title="Rankings" description="Ranking de armas por DPS efectivo" />
+      <PageHeader title="Rankings" description="Ranking de armas con tu personaje. Tocá una columna para ordenar y un arma para ver el detalle." />
 
-      <div className="flex gap-3 mb-4">
+      <div className="flex flex-wrap gap-3 mb-4">
         <Select
           label="Clase"
           value={filterClase}
           onChange={(e) => { setFilterClase(e.target.value); setFilterSubcat('Todas'); }}
           options={[{ value: 'Todas', label: 'Todas' }, { value: 'Guerrero', label: 'Guerrero' }, { value: 'Arquero', label: 'Arquero' }, { value: 'Mago', label: 'Mago' }]}
         />
+        <div className="sm:hidden">
+          <Select
+            label="Ordenar por"
+            value={sortKey}
+            onChange={(e) => { setSortKey(e.target.value as SortKey); setBestFirst(true); }}
+            options={(Object.keys(SORTS) as SortKey[]).map((k) => ({ value: k, label: SORTS[k].label }))}
+          />
+        </div>
         {subcatOptions.length > 0 && (
           <Select
             label="Subcategoria"
@@ -78,6 +159,9 @@ export default function RankingsPage() {
                 <div className="text-base font-bold text-amber-400">{result.dpsEfectivo}</div>
               </div>
             </div>
+            <div className="mt-2 h-1 bg-zinc-800 rounded-full overflow-hidden" aria-hidden>
+              <div className="h-full bg-amber-500/80 rounded-full" style={{ width: `${(result.dpsEfectivo / maxDps) * 100}%` }} />
+            </div>
             <div className="mt-2 grid grid-cols-3 gap-2 text-xs text-center">
               <div>
                 <div className="text-zinc-500">Dano</div>
@@ -104,11 +188,11 @@ export default function RankingsPage() {
               <th className="py-2 px-2 w-8">#</th>
               <th className="py-2 px-2">Nombre</th>
               <th className="py-2 px-2 text-right">Dano</th>
-              <th className="py-2 px-2 text-right">Prom</th>
-              <th className="py-2 px-2 text-right">Crit%</th>
-              <th className="py-2 px-2 text-right">s/g</th>
-              <th className="py-2 px-2 text-right">g/s</th>
-              <th className="py-2 px-2 text-right font-bold text-amber-500">DPS</th>
+              {sortTh('prom')}
+              {sortTh('crit')}
+              {sortTh('sg')}
+              {sortTh('gps')}
+              {sortTh('dps', 'font-bold w-40')}
               <th className="py-2 px-2 text-right">Riposte</th>
               <th className="py-2 px-2 text-right">Impacto</th>
               <th className="py-2 px-2 text-right">Cruz del Sur</th>
@@ -133,7 +217,14 @@ export default function RankingsPage() {
                 <td className="py-2 px-2 text-right text-zinc-300">{result.critTotalPct}%</td>
                 <td className="py-2 px-2 text-right text-zinc-400">{result.velEfectiva}</td>
                 <td className="py-2 px-2 text-right text-zinc-400">{result.golpesPorSeg}</td>
-                <td className="py-2 px-2 text-right font-bold text-amber-400">{result.dpsEfectivo}</td>
+                <td className="py-2 px-2">
+                  <div className="flex items-center justify-end gap-2">
+                    <div className="h-1.5 flex-1 max-w-24 bg-zinc-800 rounded-full overflow-hidden" aria-hidden>
+                      <div className="h-full bg-amber-500/80 rounded-full" style={{ width: `${(result.dpsEfectivo / maxDps) * 100}%` }} />
+                    </div>
+                    <span className="font-bold text-amber-400 tabular-nums w-12 text-right">{result.dpsEfectivo}</span>
+                  </div>
+                </td>
                 <td className="py-2 px-2 text-right text-red-400">{result.riposteDmg ?? '-'}</td>
                 <td className="py-2 px-2 text-right text-orange-400">
                   {result.impactoVigoroso ? `${result.impactoVigoroso.min}-${result.impactoVigoroso.max}` : '-'}
@@ -155,50 +246,74 @@ export default function RankingsPage() {
         open={!!selectedDetail}
         onClose={() => setSelectedDetail(null)}
         title={selectedDetail?.result.nombre || ''}
+        size="md"
       >
         {selectedDetail && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div><span className="text-zinc-500">Clase:</span> {selectedDetail.weapon.clase}</div>
-              <div><span className="text-zinc-500">Subcategoria:</span> {selectedDetail.weapon.subcategoria}</div>
-              <div><span className="text-zinc-500">Velocidad:</span> {selectedDetail.weapon.velocidad}</div>
-              <div><span className="text-zinc-500">Rareza:</span> {selectedDetail.weapon.rareza}</div>
-              <div><span className="text-zinc-500">Bonus Stat:</span> +{selectedDetail.weapon.bonusStat}</div>
-              <div><span className="text-zinc-500">Bonus Atributo:</span> +{selectedDetail.weapon.bonusAtributo}</div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-1.5 flex-wrap -mt-1">
+              <Badge variant={rarezaToBadgeVariant(selectedDetail.weapon.rareza)}>{selectedDetail.weapon.rareza}</Badge>
+              <span className="text-xs text-zinc-500">
+                {selectedDetail.weapon.clase} &middot; {selectedDetail.weapon.subcategoria} &middot; {selectedDetail.weapon.velocidad}
+              </span>
             </div>
 
-            <div>
-              <h4 className="text-xs font-medium text-zinc-400 mb-2">Calculo</h4>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div><span className="text-zinc-500">Dano:</span> <span className="text-zinc-200">{selectedDetail.result.danoMin}-{selectedDetail.result.danoMax}</span></div>
-                <div><span className="text-zinc-500">Promedio:</span> <span className="text-zinc-200">{selectedDetail.result.danoPromedio}</span></div>
-                <div><span className="text-zinc-500">DPS:</span> <span className="text-amber-400 font-bold">{selectedDetail.result.dpsEfectivo}</span></div>
-                <div><span className="text-zinc-500">Crit:</span> <span className="text-zinc-200">{selectedDetail.result.critTotalPct}% (x{selectedDetail.result.critMult})</span></div>
-                <div><span className="text-zinc-500">Velocidad:</span> <span className="text-zinc-200">{selectedDetail.result.velEfectiva}s ({selectedDetail.result.golpesPorSeg} g/s)</span></div>
-                {selectedDetail.result.riposteDmg && <div><span className="text-zinc-500">Riposte:</span> <span className="text-red-400 font-bold">{selectedDetail.result.riposteDmg}</span></div>}
-                {selectedDetail.result.impactoVigoroso && <div><span className="text-zinc-500">Impacto:</span> <span className="text-orange-400 font-bold">{selectedDetail.result.impactoVigoroso.min}-{selectedDetail.result.impactoVigoroso.max}</span></div>}
-                {selectedDetail.result.cruzDelSur && <div><span className="text-zinc-500">Cruz del Sur:</span> <span className="text-sky-400 font-bold">{selectedDetail.result.cruzDelSur.min}-{selectedDetail.result.cruzDelSur.max}</span></div>}
-              </div>
-            </div>
+            <WeaponSheet weapon={selectedDetail.weapon} />
 
-            <div>
-              <h4 className="text-xs font-medium text-zinc-400 mb-2">Desglose por tipo</h4>
-              <div className="space-y-1">
-                {Object.entries(selectedDetail.result.desglose).map(([tipo, [min, max]]) => (
-                  <div key={tipo} className="flex justify-between text-sm">
-                    <span className="text-zinc-400">{DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo}</span>
-                    <span className="text-zinc-200">{min} - {max}</span>
+            {(() => {
+              const r = selectedDetail.result;
+              const ability = r.riposteDmg
+                ? { label: 'Riposte', value: String(r.riposteDmg), color: 'text-red-400' }
+                : r.impactoVigoroso
+                  ? { label: 'Impacto', value: `${r.impactoVigoroso.min}–${r.impactoVigoroso.max}`, color: 'text-orange-400' }
+                  : r.cruzDelSur
+                    ? { label: 'Cruz del Sur', value: `${r.cruzDelSur.min}–${r.cruzDelSur.max}`, color: 'text-sky-400' }
+                    : null;
+              const tiles: { label: string; value: React.ReactNode; sub?: string; color?: string }[] = [
+                { label: 'Daño', value: `${r.danoMin}–${r.danoMax}` },
+                { label: 'Promedio', value: r.danoPromedio },
+                { label: 'DPS', value: r.dpsEfectivo, color: 'text-amber-400' },
+                { label: 'Crítico', value: `${r.critTotalPct}%`, sub: `x${r.critMult}` },
+                { label: 'Velocidad', value: `${r.velEfectiva}s`, sub: `${r.golpesPorSeg} g/s` },
+                ability
+                  ? { label: ability.label, value: ability.value, color: ability.color }
+                  : { label: 'Habilidad', value: '—', color: 'text-zinc-600' },
+              ];
+              return (
+                <div
+                  className="rounded-md border border-zinc-700/70 bg-zinc-950/70 px-3 py-2.5"
+                  title="Calculado con los atributos de tu personaje y tu joyería"
+                >
+                  <span className="text-[11px] uppercase tracking-wider text-amber-500/80 font-semibold">Con tu personaje</span>
+                  <div className="mt-1.5 grid grid-cols-3 gap-1.5">
+                    {tiles.map((t) => (
+                      <div key={t.label} className="rounded bg-zinc-900/80 px-1.5 py-1.5 text-center">
+                        <div className="text-[11px] uppercase tracking-wider text-zinc-500">{t.label}</div>
+                        <div className={`text-sm font-semibold tabular-nums ${t.color ?? 'text-zinc-100'}`}>{t.value}</div>
+                        {t.sub && <div className="text-[11px] text-zinc-500 tabular-nums">{t.sub}</div>}
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
 
-            {selectedDetail.weapon.notas && (
-              <div>
-                <h4 className="text-xs font-medium text-zinc-400 mb-1">Notas</h4>
-                <p className="text-sm text-zinc-300">{selectedDetail.weapon.notas}</p>
-              </div>
-            )}
+                  <div className="mt-2 pt-1.5 border-t border-zinc-800/80">
+                    <div className="text-[11px] uppercase tracking-wider text-zinc-600">Desglose por tipo</div>
+                    {(Object.entries(r.desglose) as [DamageTypeName, [number, number]][]).map(([tipo, [min, max]]) => (
+                      <div key={tipo} className="flex items-baseline justify-between gap-2 py-0.5">
+                        <span className="text-xs text-zinc-500 inline-flex items-center gap-1">
+                          <span className={`w-1.5 h-1.5 rounded-full ${PHYSICAL_DAMAGE_TYPES.includes(tipo) ? 'bg-orange-500' : 'bg-blue-500'}`} />
+                          {DAMAGE_TYPE_ICONS[tipo]} {DAMAGE_TYPE_LABELS[tipo] || tipo}
+                        </span>
+                        <span className="text-sm text-zinc-200 tabular-nums">{min === max ? min : `${min} – ${max}`}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="grid grid-cols-2 gap-2">
+              <Button size="sm" className="w-full" onClick={() => loadInBuild(selectedDetail.weapon)}>Usar en el Build</Button>
+              <Button size="sm" variant="secondary" className="w-full" onClick={() => addToCompare(selectedDetail.weapon.id)}>Agregar a Comparar</Button>
+            </div>
           </div>
         )}
       </Modal>

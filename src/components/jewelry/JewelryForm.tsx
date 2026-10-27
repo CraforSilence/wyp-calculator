@@ -1,14 +1,15 @@
 'use client';
 
+import { bonusSelectOptions } from '@/lib/bonusDisplay';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
-import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS } from '@/lib/engine/constants';
+import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_MAX_BONUSES } from '@/lib/engine/constants';
 import type { JewelryItem, JewelryItemSlot, JewelryBonusType, JewelryBonus } from '@/types/jewelry';
 
-const MAX_BONUSES = 5;
+const MAX_BONUSES = JEWELRY_MAX_BONUSES;
 
 const SLOT_OPTIONS: { value: string; label: string }[] = [
   { value: 'anillo', label: 'Anillo' },
@@ -96,7 +97,7 @@ export function JewelryForm({ onSave, editingItem, onCancel }: JewelryFormProps)
                     <Select
                       value={bonus.type}
                       onChange={(e) => handleUpdateBonus(idx, 'type', e.target.value)}
-                      options={availableTypes.map((t) => ({ value: t, label: JEWELRY_BONUS_LABELS[t] }))}
+                      options={bonusSelectOptions(availableTypes, (t) => JEWELRY_BONUS_LABELS[t as JewelryBonusType])}
                     />
                   </div>
                   <div className="w-24">

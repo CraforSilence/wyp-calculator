@@ -1,11 +1,13 @@
 'use client';
 
+import { bonusSelectOptions } from '@/lib/bonusDisplay';
 import { useJewelry, aggregateJewelryBonuses } from '@/hooks/useJewelry';
+import { useJewelryItems } from '@/hooks/useJewelryItems';
 import { Card } from '@/components/ui/Card';
-import { Select } from '@/components/ui/Select';
-import { Input } from '@/components/ui/Input';
-import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_CATEGORIES, JEWELRY_ICONS } from '@/lib/engine/constants';
-import { HelpPopover } from '@/components/ui/HelpPopover';
+import { SlotEditor } from '@/components/weapons/SlotEditor';
+import {
+  JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_CATEGORIES, JEWELRY_ICONS, JEWELRY_MAX_BONUSES,
+} from '@/lib/engine/constants';
 import type { JewelrySlot, JewelryBonusType } from '@/types/jewelry';
 
 const SLOT_LABELS: Record<JewelrySlot, string> = {
@@ -14,17 +16,19 @@ const SLOT_LABELS: Record<JewelrySlot, string> = {
   amuleto: 'Amuleto',
 };
 
-const MAX_BONUSES = 5;
+const BONUS_OPTIONS = bonusSelectOptions(JEWELRY_BONUS_TYPES, (t) => JEWELRY_BONUS_LABELS[t as JewelryBonusType]);
 
 export function BuildJoyeria() {
-  const { jewelry, addBonus, removeBonus, updateBonus, clearPiece, clearAll } = useJewelry();
+  const { jewelry, updatePiece, clearPiece, clearAll } = useJewelry();
+  const { items: savedItems } = useJewelryItems();
   const totals = aggregateJewelryBonuses(jewelry);
   const hasAnyBonus = Object.values(jewelry).some((p) => p.bonuses.length > 0);
 
   return (
     <div>
-      {hasAnyBonus && (
-        <div className="flex justify-end mb-2">
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <p className="text-xs text-zinc-500">Cada pieza tiene hasta {JEWELRY_MAX_BONUSES} bonus. Los slots vacíos no suman.</p>
+        {hasAnyBonus && (
           <button
             onClick={clearAll}
             className="text-xs text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1 rounded transition-colors"
@@ -32,21 +36,27 @@ export function BuildJoyeria() {
           >
             Limpiar joyeria
           </button>
-        </div>
-      )}
+        )}
+      </div>
       <div className="grid gap-4 md:grid-cols-3">
         {(['anillo1', 'anillo2', 'amuleto'] as JewelrySlot[]).map((slot) => {
           const piece = jewelry[slot];
-          const usedTypes = piece.bonuses.map((b) => b.type);
+          const filled = piece.bonuses.length;
+          const presets = savedItems.filter((it) => it.slot === (slot === 'amuleto' ? 'amuleto' : 'anillo'));
 
           return (
-            <Card key={slot} title={
+            <Card key={slot} className={filled ? '' : 'border-dashed'} title={
               <span className="flex items-center justify-between w-full gap-2">
                 <span className="flex items-center gap-2">
                   <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={JEWELRY_ICONS[slot]} alt={SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
-                  {SLOT_LABELS[slot]}
+                  <span className="flex flex-col">
+                    {SLOT_LABELS[slot]}
+                    <span className={`text-[12px] font-normal ${filled ? 'text-amber-400' : 'text-zinc-500'}`}>
+                      {filled ? `${filled}/${JEWELRY_MAX_BONUSES} bonus` : 'Sin bonus'}
+                    </span>
+                  </span>
                 </span>
-                {piece.bonuses.length > 0 && (
+                {filled > 0 && (
                   <button
                     onClick={() => clearPiece(slot)}
                     className="text-xs font-normal text-red-400 hover:text-red-300 hover:bg-red-400/10 px-2 py-1 rounded transition-colors"
@@ -57,81 +67,43 @@ export function BuildJoyeria() {
                 )}
               </span>
             }>
-              <div className="flex flex-col gap-2">
-                {piece.bonuses.map((bonus, idx) => {
-                  const availableTypes = JEWELRY_BONUS_TYPES.filter(
-                    (t) => t === bonus.type || !usedTypes.includes(t)
-                  );
-                  const typeOptions = availableTypes.map((t) => ({
-                    value: t,
-                    label: JEWELRY_BONUS_LABELS[t],
-                  }));
-
-                  return (
-                    <div key={idx} className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <Select
-                          label={idx === 0 ? 'Tipo' : undefined}
-                          tooltip={idx === 0 ? 'Tipo de bonus: atributo, resistencia, critico, dano extra, etc. Se suman al total del personaje.' : undefined}
-                          value={bonus.type}
-                          onChange={(e) =>
-                            updateBonus(slot, idx, {
-                              type: e.target.value as JewelryBonusType,
-                              value: bonus.value,
-                            })
-                          }
-                          options={typeOptions}
-                        />
-                      </div>
-                      <div className="w-24">
-                        <Input
-                          label={idx === 0 ? 'Valor' : undefined}
-                          tooltip={idx === 0 ? 'Valor numerico del bonus tal como aparece en el tooltip del item.' : undefined}
-                          type="number"
-                          min={0}
-                          max={999}
-                          value={bonus.value}
-                          onChange={(e) =>
-                            updateBonus(slot, idx, {
-                              type: bonus.type,
-                              value: Number(e.target.value),
-                            })
-                          }
-                        />
-                      </div>
-                      <button
-                        onClick={() => removeBonus(slot, idx)}
-                        className="px-2 py-1.5 text-sm text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded transition-colors"
-                        title="Eliminar bonus"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  );
-                })}
-
-                {piece.bonuses.length < MAX_BONUSES && (
-                  <button
-                    onClick={() => {
-                      const available = JEWELRY_BONUS_TYPES.find((t) => !usedTypes.includes(t));
-                      if (available) addBonus(slot, { type: available, value: 0 });
+              <div className="flex flex-col gap-3">
+                {presets.length > 0 && (
+                  <select
+                    value=""
+                    onChange={(e) => {
+                      const found = presets.find((it) => it.id === e.target.value);
+                      if (found) updatePiece(slot, found.bonuses);
                     }}
-                    className="text-sm text-amber-400 hover:text-amber-300 py-1 transition-colors text-left"
+                    className="w-full bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-zinc-300 focus:outline-none focus:border-amber-500"
+                    title="Copia los bonus de una joya guardada en /joyeria"
                   >
-                    + Agregar bonus
-                  </button>
+                    <option value="" disabled>Precargar desde Mis joyas...</option>
+                    {presets.map((it) => (
+                      <option key={it.id} value={it.id}>{it.nombre}</option>
+                    ))}
+                  </select>
                 )}
-
-                {piece.bonuses.length === 0 && (
-                  <p className="text-xs text-zinc-500">Sin bonus configurados</p>
-                )}
+                <SlotEditor
+                  rows={piece.bonuses.map((b) => ({ tipo: b.type, valor: b.value }))}
+                  max={JEWELRY_MAX_BONUSES}
+                  options={BONUS_OPTIONS}
+                  selectTooltip="Tipo de bonus: atributo, resistencia, critico, dano extra, etc. Se suman al total del personaje."
+                  valueInput={() => ({ placeholder: 'Valor', max: 999, tooltip: 'Valor del bonus tal como aparece en el tooltip del item.' })}
+                  // Los slots vacios no se guardan: el editor los vuelve a completar al mostrar.
+                  onChange={(rows) => updatePiece(slot, rows.filter((r) => r.tipo).map((r) => ({ type: r.tipo as JewelryBonusType, value: r.valor })))}
+                  noun={{ one: 'bonus', many: 'bonus' }}
+                  limitLabel={SLOT_LABELS[slot]}
+                  valueWidthClass="w-[4.5rem]"
+                  collapseEmpty
+                />
               </div>
             </Card>
           );
         })}
       </div>
 
-      {Object.keys(totals).length > 0 && (
+      {Object.values(totals).some((v) => v) && (
         <Card title="Resumen" className="mt-4">
           <div className="flex flex-col gap-3">
             {Object.entries(JEWELRY_BONUS_CATEGORIES).map(([catName, catTypes]) => {

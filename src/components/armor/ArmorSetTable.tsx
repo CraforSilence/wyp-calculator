@@ -1,7 +1,7 @@
 'use client';
 
 import { ARMOR_BONUS_LABELS, DAMAGE_TYPE_LABELS, ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
-import { calcTotalProtection, filterArmorForSubclase } from '@/lib/engine/armor';
+import { calcTotalProtection, filterArmorForSubclase, setBonusesFor } from '@/lib/engine/armor';
 import type { Subclase } from '@/types/character';
 import type { CatalogArmorSet, ArmorBonus, ArmorBonusType } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
@@ -79,6 +79,7 @@ export function ArmorSetTable({
               barrierPoints: {},
               meleeDmgReductionPct: 0,
               rangedDmgReductionPct: 0,
+              bonusConjunto: setBonusesFor(set, set.subclase),
             };
             const prot = calcTotalProtection(fakeArmorSet, armorClass);
             const totalProt = Object.values(prot.perType).reduce((a, b) => a + b, 0);

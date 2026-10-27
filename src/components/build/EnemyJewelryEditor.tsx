@@ -1,9 +1,10 @@
 'use client';
 
+import { bonusSelectOptions } from '@/lib/bonusDisplay';
 import { Card } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
-import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_CATEGORIES, JEWELRY_ICONS } from '@/lib/engine/constants';
+import { JEWELRY_BONUS_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_CATEGORIES, JEWELRY_ICONS, JEWELRY_MAX_BONUSES } from '@/lib/engine/constants';
 import { JEWELRY_PRESETS } from '@/data/jewelry-presets';
 import { aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import type { JewelrySet, JewelrySlot, JewelryBonusType, JewelryBonus } from '@/types/jewelry';
@@ -14,7 +15,7 @@ const SLOT_LABELS: Record<JewelrySlot, string> = {
   amuleto: 'Amuleto',
 };
 
-const MAX_BONUSES = 5;
+const MAX_BONUSES = JEWELRY_MAX_BONUSES;
 
 interface EnemyJewelryEditorProps {
   jewelry: JewelrySet;
@@ -92,10 +93,7 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
                   const availableTypes = JEWELRY_BONUS_TYPES.filter(
                     (t) => t === bonus.type || !usedTypes.includes(t)
                   );
-                  const typeOptions = availableTypes.map((t) => ({
-                    value: t,
-                    label: JEWELRY_BONUS_LABELS[t],
-                  }));
+                  const typeOptions = bonusSelectOptions(availableTypes, (t) => JEWELRY_BONUS_LABELS[t as JewelryBonusType]);
 
                   return (
                     <div key={idx} className="flex items-end gap-2">

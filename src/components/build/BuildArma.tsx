@@ -1,13 +1,15 @@
 'use client';
 
+import { bonusSelectOptions } from '@/lib/bonusDisplay';
 import { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Collapsible } from '@/components/ui/Collapsible';
-import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, isMuescaSpeedType } from '@/lib/engine/constants';
+import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, RAREZA_SLOTS, bonusOptionsForRareza } from '@/lib/engine/constants';
 import { HelpPopover } from '@/components/ui/HelpPopover';
+import { SlotEditor, muescaValueInput } from '@/components/weapons/SlotEditor';
 import { useBuildWeapon, DEFAULT_WEAPON, DEFAULT_ARROWS } from '@/hooks/useBuildWeapon';
 import { useCharacter } from '@/hooks/useCharacter';
 import { useWeapons } from '@/hooks/useWeapons';
@@ -26,8 +28,9 @@ interface BonusRow {
   valor: number;
 }
 
+/** `tipo: ''` = slot de muesca vacio. */
 interface MuescaRow {
-  tipo: MuescaType;
+  tipo: MuescaType | '';
   valor: number;
 }
 
@@ -67,9 +70,9 @@ function weaponToBonusRows(w: Weapon): BonusRow[] {
 
 function weaponToMuescaRows(w: Weapon): MuescaRow[] {
   if (w.muescas && Object.keys(w.muescas).length > 0) {
-    return Object.entries(w.muescas).map(([tipo, valor]) => ({
-      tipo: tipo as MuescaType, valor: valor as number,
-    }));
+    return Object.entries(w.muescas)
+      .filter(([, valor]) => valor)
+      .map(([tipo, valor]) => ({ tipo: tipo as MuescaType, valor: valor as number }));
   }
   return [];
 }
@@ -129,6 +132,11 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
   const { weapons: savedWeapons } = useWeapons();
   const customOptions = savedWeapons.filter((w) => !w.isDefault);
   const defaultOptions = savedWeapons.filter((w) => w.isDefault);
+  // El arma cargada se reconoce por nombre (prioriza Mis armas): sobrevive a recargas y se
+  // pierde sola al limpiar o renombrar.
+  const loadedWeapon = nombre
+    ? customOptions.find((w) => w.nombre === nombre) ?? defaultOptions.find((w) => w.nombre === nombre)
+    : undefined;
 
   useEffect(() => {
     const tiposDano: Partial<Record<DamageTypeName, [number, number]>> = {};
@@ -160,6 +168,7 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
 
     const muescas: Partial<Record<MuescaType, number>> = {};
     for (const row of muescaRows) {
+      if (!row.tipo || !row.valor) continue;
       muescas[row.tipo] = (muescas[row.tipo] || 0) + row.valor;
     }
 
@@ -193,14 +202,21 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
         <div className="space-y-3">
           {showPreload && (
             <div>
-              <label className="text-xs text-zinc-400 font-medium mb-1 block">Precargar arma existente</label>
+              <label className="text-xs text-zinc-400 font-medium mb-1 flex items-center gap-1.5">
+                Precargar arma existente
+                {loadedWeapon && <span className="text-emerald-400">✓ cargada</span>}
+              </label>
               <select
-                value=""
+                value={loadedWeapon?.id ?? ''}
                 onChange={(e) => {
                   const found = savedWeapons.find((w) => w.id === e.target.value);
                   if (found) loadWeapon(found);
                 }}
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-amber-500"
+                className={`w-full bg-zinc-800 border rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none ${
+                  loadedWeapon
+                    ? 'border-emerald-500 ring-1 ring-emerald-500/40 focus:border-emerald-400'
+                    : 'border-zinc-700 focus:border-amber-500'
+                }`}
               >
                 <option value="" disabled>Elegir arma para cargar...</option>
                 {customOptions.length > 0 && (
@@ -255,7 +271,7 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
               <Input tooltip="Dano minimo del arma para este tipo" type="number" placeholder="Min" value={row.min || ''} onChange={(e) => { const next = [...damageRows]; next[i] = { ...next[i], min: Number(e.target.value) }; setDamageRows(next); }} className="w-20" />
               <Input tooltip="Dano maximo del arma para este tipo" type="number" placeholder="Max" value={row.max || ''} onChange={(e) => { const next = [...damageRows]; next[i] = { ...next[i], max: Number(e.target.value) }; setDamageRows(next); }} className="w-20" />
               {damageRows.length > 1 && (
-                <Button size="sm" variant="danger" onClick={() => setDamageRows(damageRows.filter((_, j) => j !== i))}>x</Button>
+                <Button size="sm" variant="danger-ghost" onClick={() => setDamageRows(damageRows.filter((_, j) => j !== i))}>x</Button>
               )}
             </div>
           ))}
@@ -267,43 +283,38 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
         {/* Card: Bonus */}
         <Card title={
           <span className="flex items-center justify-between w-full">
-            <span className="flex items-center gap-1">Bonus <HelpPopover text="Modificadores adicionales del arma: atributos, critico, velocidad de ataque y dano extra por tipo. Se ven en el tooltip del arma." /></span>
-            {bonusRows.length < 8 && (
-              <Button size="sm" variant="ghost" onClick={() => setBonusRows([...bonusRows, { tipo: 'Fuerza', valor: 0 }])}>+ Bonus</Button>
-            )}
+            <span className="flex items-center gap-1">Bonus <HelpPopover text="Modificadores adicionales del arma: atributos, critico, velocidad de ataque y dano extra por tipo. Se ven en el tooltip del arma. La cantidad de slots depende de la rareza." /></span>
+            <span className="text-xs font-normal text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].bonus} {RAREZA_SLOTS[rareza].bonus === 1 ? 'slot' : 'slots'}</span>
           </span>
         }>
-          <div className="space-y-2">
-            {bonusRows.map((row, i) => (
-              <div key={i} className="flex gap-2 items-end">
-                <Select tooltip="Tipo de bonus (atributo, critico, velocidad, dano extra, etc.)" value={row.tipo} onChange={(e) => { const next = [...bonusRows]; next[i] = { ...next[i], tipo: e.target.value }; setBonusRows(next); }}
-                  options={BONUS_TYPES.map((t) => ({ value: t, label: t }))} />
-                <Input tooltip="Valor numerico del bonus" type="number" placeholder="Valor" value={row.valor || ''} onChange={(e) => { const next = [...bonusRows]; next[i] = { ...next[i], valor: Number(e.target.value) }; setBonusRows(next); }} className="w-24" />
-                <Button size="sm" variant="danger" onClick={() => setBonusRows(bonusRows.filter((_, j) => j !== i))}>x</Button>
-              </div>
-            ))}
-          </div>
+          <SlotEditor
+            rows={bonusRows}
+            max={RAREZA_SLOTS[rareza].bonus}
+            options={bonusSelectOptions(bonusOptionsForRareza(rareza, BONUS_TYPES).map((o) => o.value))}
+            onChange={setBonusRows}
+            selectTooltip="Tipo de bonus (atributo, critico, velocidad, dano extra, etc.)"
+            noun={{ one: 'bonus', many: 'bonus' }}
+            limitLabel={`Un arma ${rareza}`}
+          />
         </Card>
 
         {/* Card: Muescas */}
         <Card title={
           <span className="flex items-center justify-between w-full">
-            <span className="flex items-center gap-1">Muescas <HelpPopover text="Gemas incrustadas en el arma. Las de dano agregan dano especial que solo es reducido por el Factor de Proteccion (FP), no por la armadura completa. Las de Vel. Ataque / Vel. Invocacion agregan % de velocidad." /></span>
-            {muescaRows.length < 3 && (
-              <Button size="sm" variant="ghost" onClick={() => setMuescaRows([...muescaRows, { tipo: 'fuego', valor: 0 }])}>+ Muesca</Button>
-            )}
+            <span className="flex items-center gap-1">Muescas <HelpPopover text="Gemas incrustadas en el arma. Las de dano agregan dano especial que solo es reducido por el Factor de Proteccion (FP), no por la armadura completa. Las de Vel. Ataque / Vel. Invocacion agregan % de velocidad. Solo las Arcanas tienen 2 muescas." /></span>
+            <span className="text-xs font-normal text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].muescas} {RAREZA_SLOTS[rareza].muescas === 1 ? 'muesca' : 'muescas'}</span>
           </span>
         }>
-          <div className="space-y-2">
-            {muescaRows.map((row, i) => (
-              <div key={i} className="flex gap-2 items-end">
-                <Select tooltip="Tipo de la gema: dano o velocidad" value={row.tipo} onChange={(e) => { const next = [...muescaRows]; next[i] = { ...next[i], tipo: e.target.value as MuescaType }; setMuescaRows(next); }}
-                  options={MUESCA_TYPES.map((t) => ({ value: t, label: MUESCA_TYPE_LABELS[t] }))} />
-                <Input tooltip={isMuescaSpeedType(row.tipo) ? 'Porcentaje de velocidad de la gema' : 'Nivel de la gema (1-30)'} type="number" min={1} max={isMuescaSpeedType(row.tipo) ? 100 : 30} placeholder={isMuescaSpeedType(row.tipo) ? '%' : 'Valor'} value={row.valor || ''} onChange={(e) => { const next = [...muescaRows]; next[i] = { ...next[i], valor: Number(e.target.value) }; setMuescaRows(next); }} className="w-24" />
-                <Button size="sm" variant="danger" onClick={() => setMuescaRows(muescaRows.filter((_, j) => j !== i))}>x</Button>
-              </div>
-            ))}
-          </div>
+          <SlotEditor
+            rows={muescaRows}
+            max={RAREZA_SLOTS[rareza].muescas}
+            options={bonusSelectOptions(MUESCA_TYPES, (t) => MUESCA_TYPE_LABELS[t as MuescaType])}
+            onChange={(rows) => setMuescaRows(rows as MuescaRow[])}
+            valueInput={muescaValueInput}
+            selectTooltip="Tipo de la gema: dano o velocidad"
+            noun={{ one: 'muesca', many: 'muescas' }}
+            limitLabel={`Un arma ${rareza}`}
+          />
         </Card>
       </div>
     </div>
@@ -380,7 +391,7 @@ function ArrowForm({ arrows, onArrowsChange }: ArrowFormProps) {
               <Input type="number" placeholder="Min" value={row.min || ''} onChange={(e) => { const next = [...damageRows]; next[i] = { ...next[i], min: Number(e.target.value) }; setDamageRows(next); }} className="w-20" />
               <Input type="number" placeholder="Max" value={row.max || ''} onChange={(e) => { const next = [...damageRows]; next[i] = { ...next[i], max: Number(e.target.value) }; setDamageRows(next); }} className="w-20" />
               {damageRows.length > 1 && (
-                <Button size="sm" variant="danger" onClick={() => setDamageRows(damageRows.filter((_, j) => j !== i))}>x</Button>
+                <Button size="sm" variant="danger-ghost" onClick={() => setDamageRows(damageRows.filter((_, j) => j !== i))}>x</Button>
               )}
             </div>
           ))}
@@ -401,7 +412,7 @@ function ArrowForm({ arrows, onArrowsChange }: ArrowFormProps) {
               <Select value={row.tipo} onChange={(e) => { const next = [...bonusRows]; next[i] = { ...next[i], tipo: e.target.value }; setBonusRows(next); }}
                 options={ARROW_BONUS_TYPES.map((t) => ({ value: t, label: t }))} />
               <Input type="number" placeholder="Valor" value={row.valor || ''} onChange={(e) => { const next = [...bonusRows]; next[i] = { ...next[i], valor: Number(e.target.value) }; setBonusRows(next); }} className="w-24" />
-              <Button size="sm" variant="danger" onClick={() => setBonusRows(bonusRows.filter((_, j) => j !== i))}>x</Button>
+              <Button size="sm" variant="danger-ghost" onClick={() => setBonusRows(bonusRows.filter((_, j) => j !== i))}>x</Button>
             </div>
           ))}
         </div>

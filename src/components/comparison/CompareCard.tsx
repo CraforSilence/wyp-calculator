@@ -2,8 +2,9 @@
 
 import { Badge, rarezaToBadgeVariant } from '@/components/ui/Badge';
 import { WeaponAbility } from '@/components/weapons/WeaponAbility';
-import { DAMAGE_TYPE_LABELS, MUESCA_TYPE_LABELS } from '@/lib/engine/constants';
+import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, MUESCA_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import { isMuescaSpeedType } from '@/lib/engine/constants';
+import { bonusIcon } from '@/lib/bonusDisplay';
 import type { DamageTypeName, MuescaType, Weapon, WeaponCalcResult } from '@/types/weapon';
 
 export interface BestFlags {
@@ -18,6 +19,10 @@ interface CompareCardProps {
   weapon: Weapon;
   result: WeaponCalcResult;
   best: BestFlags;
+  /** Puesto por DPS entre las armas elegidas (1 = la mejor); sin puesto si hay una sola */
+  rank?: number;
+  /** Diferencia de DPS contra la mejor, en %; 0 para la mejor */
+  dpsDiffPct?: number;
   onRemove: () => void;
 }
 
@@ -30,10 +35,10 @@ function Row({ label, children, highlight }: { label: React.ReactNode; children:
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, hint, children }: { title: string; hint?: string; children: React.ReactNode }) {
   return (
     <div className="pt-2 mt-2 border-t border-zinc-800">
-      <div className="text-[10px] uppercase tracking-wider text-zinc-600 mb-1">{title}</div>
+      <div className="text-[11px] uppercase tracking-wider text-zinc-600 mb-1" title={hint}>{title}</div>
       {children}
     </div>
   );
@@ -41,7 +46,9 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 const fmtPct = (n: number) => `${n > 0 ? '+' : ''}${n}%`;
 
-export function CompareCard({ weapon, result, best, onRemove }: CompareCardProps) {
+const RANK_STYLES = ['bg-amber-500 text-zinc-950', 'bg-zinc-300 text-zinc-900', 'bg-orange-800 text-orange-100'];
+
+export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemove }: CompareCardProps) {
   const { arma, muescas } = result.attackSpeedSources;
   // Las muescas de velocidad ya se muestran en la seccion Velocidad
   const muescaEntries = Object.entries(weapon.muescas).filter(([t, v]) => v && !isMuescaSpeedType(t)) as [MuescaType, number][];
@@ -50,11 +57,21 @@ export function CompareCard({ weapon, result, best, onRemove }: CompareCardProps
     <div className={`bg-zinc-900 border rounded-lg p-4 flex flex-col animate-fade-in-up ${best.dps ? 'border-amber-600/60' : 'border-zinc-800'}`}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
+        <div className="min-w-0 flex items-start gap-2">
+          {rank !== undefined && (
+            <span
+              className={`shrink-0 mt-0.5 inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${RANK_STYLES[rank - 1] ?? 'bg-zinc-800 text-zinc-400'}`}
+              title={`Puesto ${rank} por DPS`}
+            >
+              {rank}
+            </span>
+          )}
+          <div className="min-w-0">
           <h3 className="text-sm font-semibold text-zinc-100 leading-snug break-words">{weapon.nombre}</h3>
           <div className="flex items-center gap-1.5 flex-wrap mt-1">
             <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{weapon.rareza}</Badge>
             <span className="text-xs text-zinc-500">{weapon.subcategoria} &middot; {weapon.velocidad}</span>
+          </div>
           </div>
         </div>
         <button
@@ -67,32 +84,45 @@ export function CompareCard({ weapon, result, best, onRemove }: CompareCardProps
       </div>
 
       {/* DPS destacado */}
-      <div className="mt-3 rounded bg-zinc-950/60 border border-zinc-800 px-3 py-2 flex items-baseline justify-between">
-        <span className="text-xs text-zinc-500">DPS</span>
-        <span className="flex items-baseline gap-2">
-          {best.dps && <span className="text-[10px] uppercase tracking-wider text-amber-500">mejor</span>}
-          <span className="text-xl font-bold text-amber-400">{result.dpsEfectivo}</span>
-        </span>
+      <div
+        className={`mt-3 rounded border px-3 py-2 ${best.dps ? 'bg-amber-500/10 border-amber-600/40' : 'bg-zinc-950/60 border-zinc-800'}`}
+        title="Daño por segundo: promedio por golpe × golpes por segundo, con el crítico incluido"
+      >
+        <div className="flex items-baseline justify-between">
+          <span className="text-xs text-zinc-500">DPS efectivo</span>
+          <span className="text-xl font-bold text-amber-400 tabular-nums">{result.dpsEfectivo}</span>
+        </div>
+        {rank !== undefined && (
+          <div className={`text-right text-[12px] ${best.dps ? 'text-amber-500' : 'text-zinc-500'}`}>
+            {best.dps ? '🏆 la mejor' : dpsDiffPct === 0 ? 'empata con la mejor' : `${dpsDiffPct.toFixed(1)}% vs la mejor`}
+          </div>
+        )}
       </div>
 
-      <Section title="Dano">
-        <Row label="Min - Max">{result.danoMin} - {result.danoMax}</Row>
+      <Section title="Daño por golpe" hint="Lo que hace cada golpe, antes de la armadura del enemigo">
+        <Row label="Mín – Máx">{result.danoMin} – {result.danoMax}</Row>
         <Row label="Promedio" highlight={best.prom}>{result.danoPromedio}</Row>
         {Object.entries(result.desglose).map(([tipo, [min, max]]) => {
           const special = result.specialDamagePerType[tipo] || 0;
           const label = DAMAGE_TYPE_LABELS[tipo as DamageTypeName] || tipo;
+          const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(tipo as DamageTypeName);
           return (
-            <Row key={tipo} label={<span className="pl-2">{label}</span>}>
+            <Row key={tipo} label={
+              <span className="pl-2 inline-flex items-center gap-1">
+                <span className={`w-1.5 h-1.5 rounded-full ${isPhysical ? 'bg-orange-500' : 'bg-blue-500'}`} />
+                {DAMAGE_TYPE_ICONS[tipo as DamageTypeName]} {label}
+              </span>
+            }>
               <span className="text-zinc-400">
                 {min === max ? min : `${min}-${max}`}
-                {special > 0 && <span className="text-zinc-600"> (+{special} gema)</span>}
+                {special > 0 && <span className="text-purple-400/80 text-xs" title="Daño especial de gemas: solo lo reduce el factor de protección (PF)"> +{special} esp.</span>}
               </span>
             </Row>
           );
         })}
       </Section>
 
-      <Section title="Velocidad">
+      <Section title="Velocidad" hint="s/g = segundos por golpe (menos es mejor) · g/s = golpes por segundo">
         <Row label="Base">{result.velBase.toFixed(2)} s/g</Row>
         {arma !== 0 && <Row label="Arma">{fmtPct(arma)}</Row>}
         {muescas !== 0 && <Row label="Muescas">{fmtPct(muescas)}</Row>}
@@ -101,7 +131,7 @@ export function CompareCard({ weapon, result, best, onRemove }: CompareCardProps
         </Row>
       </Section>
 
-      <Section title="Critico">
+      <Section title="Crítico" hint="Chance de pegar crítico y cuánto multiplica el daño">
         <Row label="Chance" highlight={best.crit}>
           {result.critTotalPct}%
           {weapon.critChanceExtra !== 0 && <span className="text-zinc-500 text-xs"> ({fmtPct(weapon.critChanceExtra)})</span>}
@@ -115,12 +145,12 @@ export function CompareCard({ weapon, result, best, onRemove }: CompareCardProps
           {weapon.bonusStat !== 0 && <Row label="Stat principal">+{weapon.bonusStat}</Row>}
           {weapon.atributoClasePct !== 0 && <Row label="Atributo de clase">{fmtPct(weapon.atributoClasePct)}</Row>}
           {muescaEntries.map(([tipo, valor]) => (
-            <Row key={tipo} label={`Muesca ${MUESCA_TYPE_LABELS[tipo] || tipo}`}>+{valor}</Row>
+            <Row key={tipo} label={`${bonusIcon(tipo)} Muesca ${MUESCA_TYPE_LABELS[tipo] || tipo}`}>+{valor}</Row>
           ))}
         </Section>
       )}
 
-      <Section title="Habilidad">
+      <Section title="Habilidad" hint="Golpe especial de la categoría del arma (Riposte en lanzas, Impacto Vigoroso en mazas, etc.)">
         <div className={`text-sm ${best.ability ? 'font-semibold' : ''}`}>
           <WeaponAbility result={result} fallback={<span className="text-zinc-600 text-xs">Sin habilidad propia</span>} />
         </div>

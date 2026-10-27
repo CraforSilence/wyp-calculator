@@ -74,8 +74,8 @@ export function BuildProtecciones() {
         <span className="text-zinc-500">CA: {armorClass}</span>
       </div>
 
-      {/* Proteccion por tipo de dano */}
-      <Card title="Proteccion por Tipo de Dano">
+      {/* Proteccion por tipo de dano. En pantallas grandes ya esta en el panel fijo. */}
+      <Card title="Proteccion por Tipo de Dano" className="lg:hidden">
         <div className="space-y-3">
           {ALL_DAMAGE_TYPES.map((t) => {
             const val = protection.perType[t] || 0;

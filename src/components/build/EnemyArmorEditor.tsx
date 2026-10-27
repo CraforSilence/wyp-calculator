@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
@@ -9,8 +10,10 @@ import {
   armorSlotsFor, ARMOR_SLOT_ICONS, CLASE_SUBCLASES,
   PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOT_LABEL_OVERRIDES,
 } from '@/lib/engine/constants';
-import { filterArmorForSubclase } from '@/lib/engine/armor';
+import { filterArmorForSubclase, setBonusesFor } from '@/lib/engine/armor';
 import { DEFAULT_ARMOR_SETS } from '@/data/default-armor';
+import { ArmorPieceSummary, QUALITY_STYLES } from '@/components/armor/ArmorPieceSummary';
+import { ArmorModifiersSection } from '@/components/armor/ArmorModifiersSection';
 import type { ArmorSet, ArmorSlot, ArmorPiece, ProtectionQuality } from '@/types/armor';
 import type { Clase, Subclase } from '@/types/character';
 
@@ -52,6 +55,13 @@ function makeEmptyPiece(slot: ArmorSlot): ArmorPiece {
 export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChangeClase, onChangeSubclase, onUpdateSlot, onUpdateSet, onLoadPreset }: EnemyArmorEditorProps) {
   const slots = armorSlotsFor(enemyClase, enemySubclase);
   const subclaseOptions = CLASE_SUBCLASES[enemyClase].map((sc) => ({ value: sc, label: sc }));
+  // Piezas con el formulario abierto; el resto se ve como resumen
+  const [editing, setEditing] = useState<Set<ArmorSlot>>(new Set());
+  const setSlotEditing = (slot: ArmorSlot, on: boolean) => setEditing((prev) => {
+    const next = new Set(prev);
+    if (on) next.add(slot); else next.delete(slot);
+    return next;
+  });
 
   return (
     <div className="space-y-3">
@@ -97,6 +107,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                     barrierPoints: {},
                     meleeDmgReductionPct: 0,
                     rangedDmgReductionPct: 0,
+                    bonusConjunto: setBonusesFor(set, subclase),
                   }, subclase);
                   onLoadPreset(armorSet, set.clase as Clase, subclase);
                 }}
@@ -115,14 +126,40 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
         {slots.map((slot) => {
           const piece = armorSet.pieces[slot] || makeEmptyPiece(slot);
           const isEmpty = piece.pba === 0;
+          const isEditing = editing.has(slot);
+          const slotLabel = ARMOR_SLOT_LABEL_OVERRIDES[enemyClase]?.[slot] ?? ARMOR_SLOT_LABELS[slot];
 
           return (
             <Card key={slot} title={
-              <span className="flex items-center gap-2">
-                <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={ARMOR_SLOT_LABEL_OVERRIDES[enemyClase]?.[slot] ?? ARMOR_SLOT_LABELS[slot]} className="w-full h-full object-contain" /></span>
-                {ARMOR_SLOT_LABEL_OVERRIDES[enemyClase]?.[slot] ?? ARMOR_SLOT_LABELS[slot]}
+              <span className="flex items-center justify-between w-full gap-2">
+                <span className="flex items-center gap-2 min-w-0">
+                  <span className="inline-flex shrink-0 items-center justify-center w-10 h-10 rounded-lg border border-zinc-700 bg-zinc-800 p-1"><img src={ARMOR_SLOT_ICONS[slot]} alt={slotLabel} className="w-full h-full object-contain" /></span>
+                  <span className="truncate">{slotLabel}</span>
+                </span>
+                {!isEmpty && (
+                  <button
+                    onClick={() => setSlotEditing(slot, !isEditing)}
+                    className={`shrink-0 text-xs font-normal px-2 py-1 rounded transition-colors ${isEditing ? 'bg-amber-600 text-white hover:bg-amber-500' : 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/10'}`}
+                    title={isEditing ? 'Cerrar el formulario' : 'Editar esta pieza'}
+                  >
+                    {isEditing ? 'Listo' : 'Editar'}
+                  </button>
+                )}
               </span>
-            } className={isEmpty ? 'opacity-60' : ''}>
+            } className={isEditing ? 'border-amber-600/60' : isEmpty ? 'border-dashed' : ''}>
+              {!isEditing && !isEmpty ? (
+                <ArmorPieceSummary piece={piece} />
+              ) : !isEditing ? (
+                <div className="flex flex-col items-center justify-center gap-2 py-6 text-center">
+                  <span className="text-xs text-zinc-500">Pieza vacía</span>
+                  <button
+                    onClick={() => setSlotEditing(slot, true)}
+                    className="text-xs text-amber-400 hover:text-amber-300 border border-amber-600/50 hover:bg-amber-400/10 px-3 py-1.5 rounded transition-colors"
+                  >
+                    + Cargar a mano
+                  </button>
+                </div>
+              ) : (
               <div className="space-y-2">
                 <div className="grid grid-cols-2 gap-2">
                   <Input
@@ -143,7 +180,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                     <div key={t} className="flex items-center gap-1.5">
                       <span className="text-sm shrink-0" title={DAMAGE_TYPE_LABELS[t]}>{DAMAGE_TYPE_ICONS[t]}</span>
                       <select
-                        className="flex-1 min-w-0 bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 text-xs text-zinc-100 focus:outline-none focus:border-amber-500 transition-colors"
+                        className={`flex-1 min-w-0 rounded border px-2 py-1.5 text-xs focus:outline-none focus:border-amber-500 transition-colors ${piece.protectionFactors[t] ? QUALITY_STYLES[piece.protectionFactors[t] as ProtectionQuality] : 'bg-zinc-800 border-zinc-700 text-zinc-100'}`}
                         value={piece.protectionFactors[t] || ''}
                         title={`${DAMAGE_TYPE_LABELS[t]}: Factor de proteccion`}
                         onChange={(e) => {
@@ -155,21 +192,33 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                         }}
                       >
                         {QUALITY_OPTIONS.map((opt) => (
-                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          <option key={opt.value} value={opt.value} className="bg-zinc-900 text-zinc-100">{opt.label}</option>
                         ))}
                       </select>
                     </div>
                   ))}
                 </div>
+                {isEmpty && (
+                  <button
+                    onClick={() => setSlotEditing(slot, false)}
+                    className="w-full text-xs text-zinc-400 hover:text-zinc-200 py-1"
+                  >
+                    Cancelar
+                  </button>
+                )}
               </div>
+              )}
             </Card>
           );
         })}
       </div>
 
       {/* Modificadores enemigos */}
-      <Card title={<span>Modificadores enemigo<HelpTip text="Bonificadores adicionales del enemigo: resistencias, barrera magica y reducciones de dano." /></span>}>
-        <div className="space-y-3">
+      <ArmorModifiersSection
+        title={<span>Modificadores enemigo<HelpTip text="Bonificadores adicionales del enemigo: resistencias, barrera magica y reducciones de dano." /></span>}
+        armorSet={armorSet}
+      >
+        <div className="space-y-3 mt-3">
           {/* Armadura % + Resistencias generales */}
           <div className="grid grid-cols-3 gap-3">
             <Input
@@ -250,7 +299,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
             />
           </div>
         </div>
-      </Card>
+      </ArmorModifiersSection>
     </div>
   );
 }
