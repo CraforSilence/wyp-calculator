@@ -55,6 +55,8 @@ export interface WeaponCalcResult {
   danoMax: number;
   danoPromedio: number;
   critTotalPct: number;
+  /** "Chance de critico %" sumado (arma, flechas, joyeria): multiplica el critico base */
+  critBonusPct: number;
   critMult: number;
   velBase: number;
   attackSpeedPct: number;
@@ -69,4 +71,21 @@ export interface WeaponCalcResult {
   cruzDelSur: { min: number; max: number; prom: number } | null;
   desglose: Record<string, [number, number]>;
   specialDamagePerType: Record<string, number>;
+  /** Pasos intermedios del calculo, para mostrar de donde sale el dano */
+  pasos: DamageSteps;
+}
+
+export interface DamageSteps {
+  mainStat: 'STR' | 'DXT' | 'INT';
+  /** Stat principal con joyeria, atributo de clase % y bonus del arma */
+  statEfectivo: number;
+  attributeMultiplier: number;
+  /** (stat - 20) x multiplicador + bonus de atributo del arma; se reparte entre los tipos */
+  bonusAtributo: number;
+  /** Dano base del arma (con % de dano de arma de la joyeria) */
+  danoBase: [number, number];
+  /** Daño +X del arma y de las flechas */
+  bonusPlano: number;
+  /** Muescas y joyeria: solo los reduce el PF */
+  especial: number;
 }

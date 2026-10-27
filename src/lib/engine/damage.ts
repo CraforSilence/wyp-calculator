@@ -169,6 +169,12 @@ export function calcWeaponDamage(
     }
   }
 
+  const baseMin = Object.values(tiposAjustados).reduce((sum, v) => sum + v[0], 0);
+  const baseMax = Object.values(tiposAjustados).reduce((sum, v) => sum + v[1], 0);
+  const especialTotal = Object.values(specialDamagePerType).reduce((sum, v) => sum + v, 0);
+  const bonusPlano = Object.values(bonusDano).reduce<number>((sum, v) => sum + (v || 0), 0)
+    + (arrows ? Object.values(arrows.bonusDano).reduce<number>((sum, v) => sum + (v || 0), 0) : 0);
+
   // Paso 6: Daño final con floor
   const finalMin = Math.floor(Object.values(resultado).reduce((sum, v) => sum + v[0], 0));
   const finalMax = Math.floor(Object.values(resultado).reduce((sum, v) => sum + v[1], 0));
@@ -211,8 +217,6 @@ export function calcWeaponDamage(
   // Cruz del Sur (cortante): daño base del arma +100%, daño bonus +65%
   let cruzDelSur: { min: number; max: number; prom: number } | null = null;
   if (categoria === 'espada' || categoria === 'hacha') {
-    const baseMin = Object.values(tiposAjustados).reduce((sum, v) => sum + v[0], 0);
-    const baseMax = Object.values(tiposAjustados).reduce((sum, v) => sum + v[1], 0);
     const cdsMin = Math.floor(baseMin * 2 + (finalMin - baseMin) * 1.65);
     const cdsMax = Math.floor(baseMax * 2 + (finalMax - baseMax) * 1.65);
     cruzDelSur = { min: cdsMin, max: cdsMax, prom: roundTo((cdsMin + cdsMax) / 2, 1) };
@@ -224,6 +228,7 @@ export function calcWeaponDamage(
     danoMax: finalMax,
     danoPromedio: roundTo(danoPromedio, 1),
     critTotalPct: roundTo(critBaseValue * (1 + critExtra / 100), 1),
+    critBonusPct: roundTo(critExtra, 1),
     critMult: roundTo(critMultTotal, 2),
     velBase,
     attackSpeedPct,
@@ -239,6 +244,15 @@ export function calcWeaponDamage(
       Object.entries(resultado).map(([k, v]) => [k, [roundTo(v[0], 1), roundTo(v[1], 1)]])
     ),
     specialDamagePerType,
+    pasos: {
+      mainStat,
+      statEfectivo: roundTo(mainStatValue + bonusStat, 2),
+      attributeMultiplier,
+      bonusAtributo: roundTo(extraTotal, 1),
+      danoBase: [roundTo(baseMin, 1), roundTo(baseMax, 1)],
+      bonusPlano,
+      especial: especialTotal,
+    },
   };
 }
 

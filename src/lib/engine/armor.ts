@@ -1,4 +1,4 @@
-import type { ArmorPiece, ArmorSet, ProtectionResult } from '@/types/armor';
+import type { ArmorBonus, ArmorPiece, ArmorSet, ProtectionResult } from '@/types/armor';
 import type { DamageTypeName } from '@/types/weapon';
 import type { Subclase } from '@/types/character';
 import { ITEM_DISTRIBUTION, PROTECTION_FACTORS, ALL_DAMAGE_TYPES, ARMOR_SLOTS_POR_SUBCLASE } from './constants';
@@ -11,6 +11,27 @@ export function filterArmorForSubclase<T extends Pick<ArmorSet, 'pieces'>>(armor
     Object.entries(armorSet.pieces).filter(([slot]) => (allowed as string[]).includes(slot)),
   ) as T['pieces'];
   return { ...armorSet, pieces };
+}
+
+/** Bonus de conjunto de un set del catalogo para una subclase (algunos sets cambian segun la subclase). */
+export function setBonusesFor(
+  set: { bonusConjunto?: ArmorBonus[]; bonusConjuntoPorSubclase?: Partial<Record<string, ArmorBonus[]>> },
+  subclase?: string,
+): ArmorBonus[] {
+  return (subclase && set.bonusConjuntoPorSubclase?.[subclase]) || set.bonusConjunto || [];
+}
+
+/** Todos los bonus que aporta la armadura: los de cada pieza y los del conjunto. */
+export function allArmorBonuses(armorSet: Pick<ArmorSet, 'pieces' | 'bonusConjunto'>): ArmorBonus[] {
+  const pieceBonuses = Object.values(armorSet.pieces).flatMap((p) => p?.bonuses || []);
+  return [...pieceBonuses, ...(armorSet.bonusConjunto || [])];
+}
+
+/** Armadura % total: la de modificadores (habilidades/buffs) mas el bonus "Armadura %" de piezas y conjunto. */
+export function effectiveArmorPct(armorSet: ArmorSet): number {
+  return armorSet.bonusArmaduraPct + allArmorBonuses(armorSet)
+    .filter((b) => b.type === 'armaduraPct')
+    .reduce((sum, b) => sum + b.value, 0);
 }
 
 /**
@@ -66,6 +87,7 @@ export function calcTotalProtection(
 ): ProtectionResult {
   const perPiece: Record<string, Record<string, number>> = {};
   const perType: Record<string, number> = {};
+  const armorPct = effectiveArmorPct(armorSet);
 
   // Initialize all types to 0
   for (const t of ALL_DAMAGE_TYPES) {
@@ -74,7 +96,7 @@ export function calcTotalProtection(
 
   for (const [slot, piece] of Object.entries(armorSet.pieces)) {
     if (!piece) continue;
-    const pieceProtection = calcPieceProtection(piece, armorClass, armorSet.bonusArmaduraPct);
+    const pieceProtection = calcPieceProtection(piece, armorClass, armorPct);
     perPiece[slot] = pieceProtection;
 
     for (const [type, value] of Object.entries(pieceProtection)) {

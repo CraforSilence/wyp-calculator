@@ -1,6 +1,6 @@
 import type { Clase, Subclase, MainStat } from '@/types/character';
-import type { ArmorSlot, ArmorBonusType, ProtectionQuality } from '@/types/armor';
-import type { DamageTypeName, MuescaSpeedType, MuescaType } from '@/types/weapon';
+import type { ArmorSlot, ArmorBonusType, ProtectionQuality, ArmorPiece, ArmorRareza } from '@/types/armor';
+import type { DamageTypeName, MuescaSpeedType, MuescaType, Rareza } from '@/types/weapon';
 import type { JewelryBonusType } from '@/types/jewelry';
 
 // Multiplicador de atributo por subclase
@@ -99,6 +99,40 @@ export const MUESCA_SPEED_TYPES: MuescaSpeedType[] = ['attackSpeed', 'castSpeed'
 // Muescas: todos los tipos seleccionables (6 daños + 2 velocidades)
 export const MUESCA_TYPES: MuescaType[] = [...ALL_DAMAGE_TYPES, ...MUESCA_SPEED_TYPES];
 
+// Slots de bonus y muescas que permite cada rareza de arma. `bonusTypes` limita los tipos
+// de bonus posibles (sin definir = cualquiera): las Arcanas solo traen chance de critico.
+export const RAREZA_SLOTS: Record<Rareza, { bonus: number; muescas: number; bonusTypes?: readonly string[] }> = {
+  'Mágica': { bonus: 3, muescas: 1 },
+  'Épica': { bonus: 4, muescas: 1 },
+  'Legendaria': { bonus: 5, muescas: 1 },
+  'Arcana': { bonus: 1, muescas: 2, bonusTypes: ['Chance de critico %'] },
+};
+
+export const ARMOR_RAREZAS: ArmorRareza[] = ['Mágica', 'Épica', 'Legendaria', 'Arcana', 'Artesano'];
+
+/**
+ * Bonus por pieza de armadura segun la rareza. Artesano = `null`: trae bonus fijos (los del set
+ * precargado) y en el Build no se editan.
+ */
+export const ARMOR_RAREZA_BONUS: Record<ArmorRareza, number | null> = {
+  'Mágica': 3,
+  'Épica': 4,
+  'Legendaria': 5,
+  'Arcana': 0,
+  'Artesano': null,
+};
+
+/** Rareza efectiva de una pieza: la propia, la de su set, o Legendaria para datos viejos. */
+export function pieceRareza(piece: Pick<ArmorPiece, 'rareza'> | undefined, setRareza?: ArmorRareza): ArmorRareza {
+  return piece?.rareza ?? setRareza ?? 'Legendaria';
+}
+
+/** Opciones de bonus de arma permitidas para una rareza. */
+export function bonusOptionsForRareza(rareza: Rareza, all: readonly string[]): { value: string; label: string }[] {
+  const allowed = RAREZA_SLOTS[rareza].bonusTypes;
+  return all.filter((t) => !allowed || allowed.includes(t)).map((t) => ({ value: t, label: t }));
+}
+
 // Labels para muescas en UI
 export const MUESCA_TYPE_LABELS: Record<MuescaType, string> = {
   ...DAMAGE_TYPE_LABELS,
@@ -191,6 +225,9 @@ export const JEWELRY_BONUS_TYPES: JewelryBonusType[] = [
   'critChance',
   'reduccionMelee', 'reduccionRango',
 ];
+
+/** Hoy el anillo o amuleto con mas bonus tiene 4. */
+export const JEWELRY_MAX_BONUSES = 4;
 
 // Labels para bonus de joyería
 export const JEWELRY_BONUS_LABELS: Record<JewelryBonusType, string> = {

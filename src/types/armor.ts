@@ -7,6 +7,9 @@ export type ArmorSlot =
 export type ProtectionQuality =
   | 'Muy Mala' | 'Mala' | 'Normal' | 'Buena' | 'Muy Buena';
 
+/** Rareza de una pieza de armadura. Artesano existe solo en armaduras (Magnanitas, Champion). */
+export type ArmorRareza = 'Mágica' | 'Épica' | 'Legendaria' | 'Arcana' | 'Artesano';
+
 export type GeneralDamageType = 'fisico' | 'magico';
 
 export type ArmorBonusType =
@@ -38,6 +41,8 @@ export interface ArmorPiece {
   bonusProteccionPct: Partial<Record<DamageTypeName, number>>;
   bonuses: ArmorBonus[];
   upgrades: ArmorUpgrade[];
+  /** Sin definir en datos viejos: se usa la del set o Legendaria. */
+  rareza?: ArmorRareza;
 }
 
 export interface ArmorSet {
@@ -48,6 +53,8 @@ export interface ArmorSet {
   barrierPoints: Partial<Record<DamageTypeName, number>>;
   meleeDmgReductionPct: number;
   rangedDmgReductionPct: number;
+  /** Bonus del conjunto del set precargado (Armadura %, resistencias, etc.): aplican a toda la armadura */
+  bonusConjunto?: ArmorBonus[];
 }
 
 export interface ProtectionResult {
@@ -61,6 +68,8 @@ export interface DefaultArmorSet {
   clase: 'Guerrero' | 'Arquero' | 'Mago';
   subclase?: string;
   pieces: Partial<Record<ArmorSlot, ArmorPiece>>;
+  /** Rareza de todas las piezas del set (cada pieza puede sobrescribirla). */
+  rareza?: ArmorRareza;
   bonusConjunto: ArmorBonus[];
   bonusConjuntoPorSubclase?: Partial<Record<string, ArmorBonus[]>>;
 }

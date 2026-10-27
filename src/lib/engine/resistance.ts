@@ -17,6 +17,48 @@ import { PHYSICAL_DAMAGE_TYPES } from './constants';
  * 10. Melee/ranged reduction
  * 11. ceil()
  */
+/** Resistencia por tipo % del set: la del modificador mas las mejoras de las piezas. */
+export function typeResistancePct(armorSet: ArmorSet, type: string): number {
+  let typeRes = armorSet.typeResistance[type as keyof typeof armorSet.typeResistance] ?? 0;
+  for (const piece of Object.values(armorSet.pieces)) {
+    if (!piece?.upgrades) continue;
+    for (const upgrade of piece.upgrades) {
+      if (upgrade.type === type) typeRes += upgrade.value;
+    }
+  }
+  return typeRes;
+}
+
+/** Resistencia total % de un tipo: la general (fisica o magica) combinada con la del tipo. */
+export function totalResistancePct(armorSet: ArmorSet, type: string): number {
+  const isPhysical = PHYSICAL_DAMAGE_TYPES.includes(type as never);
+  const general = isPhysical ? armorSet.generalResistance.fisico : armorSet.generalResistance.magico;
+  const typeRes = typeResistancePct(armorSet, type);
+  return 100 - (100 - general) * (100 - typeRes) / 100;
+}
+
+/**
+ * Cuanto pasa de un golpe puro de `amount` de un solo tipo: protección, resistencias y el
+ * piso minimo. Sin barrera ni reduccion melee/rango, y con el piso fijo en 4% (en combate
+ * varia entre 4 y 8%) para que el numero sea estable.
+ */
+export function pureHitPassThrough(amount: number, type: string, protection: ProtectionResult, armorSet: ArmorSet): number {
+  let damage = amount - (protection.perType[type] || 0);
+  if (damage > 0) damage -= damage * totalResistancePct(armorSet, type) / 100;
+  return Math.ceil(Math.max(damage, amount * 0.04));
+}
+
+/**
+ * Hasta que tamano de golpe puro de un tipo la armadura deja pasar solo el minimo (4%).
+ * Sale de igualar (golpe - proteccion) * (1 - res) con golpe * 4%.
+ */
+export function minimumOnlyThreshold(type: string, protection: ProtectionResult, armorSet: ArmorSet): number {
+  const prot = protection.perType[type] || 0;
+  const passFactor = 1 - totalResistancePct(armorSet, type) / 100;
+  if (passFactor <= 0.04) return Infinity;
+  return Math.floor(prot * passFactor / (passFactor - 0.04));
+}
+
 export function applyDamageReduction(
   incomingDamage: Record<string, number>,
   specialDamage: Record<string, number>,
@@ -80,13 +122,7 @@ export function applyDamageReduction(
     }
 
     // Step 3d: Per-type resistance (includes armor piece upgrades)
-    let typeRes = armorSet.typeResistance[type as keyof typeof armorSet.typeResistance] ?? 0;
-    for (const piece of Object.values(armorSet.pieces)) {
-      if (!piece?.upgrades) continue;
-      for (const upgrade of piece.upgrades) {
-        if (upgrade.type === type) typeRes += upgrade.value;
-      }
-    }
+    const typeRes = typeResistancePct(armorSet, type);
     if (typeRes > 0 && damage[type] > 0) {
       const typeReduc = damage[type] * typeRes / 100;
       damage[type] -= typeReduc;

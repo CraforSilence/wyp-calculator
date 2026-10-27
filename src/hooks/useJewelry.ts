@@ -2,9 +2,10 @@
 
 import { useCallback } from 'react';
 import { useLocalStorage } from './useLocalStorage';
+import { JEWELRY_MAX_BONUSES } from '@/lib/engine/constants';
 import type { JewelrySet, JewelryPiece, JewelrySlot, JewelryBonus, JewelryBonusType } from '@/types/jewelry';
 
-const MAX_BONUSES = 5;
+const MAX_BONUSES = JEWELRY_MAX_BONUSES;
 
 export const DEFAULT_JEWELRY: JewelrySet = {
   anillo1: { slot: 'anillo1', bonuses: [] },
@@ -80,7 +81,8 @@ export function useJewelry() {
   const updatePiece = useCallback((slot: JewelrySlot, bonuses: JewelryBonus[]) => {
     setJewelry((prev) => ({
       ...prev,
-      [slot]: { slot, bonuses: bonuses.slice(0, MAX_BONUSES) },
+      // Sin recortar: el editor marca en rojo los que exceden el maximo
+      [slot]: { slot, bonuses },
     }));
   }, [setJewelry]);
 

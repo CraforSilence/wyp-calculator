@@ -18,7 +18,7 @@ export interface JewelryBonus {
 
 export interface JewelryPiece {
   slot: JewelrySlot;
-  bonuses: JewelryBonus[];  // máx 5
+  bonuses: JewelryBonus[];  // máx JEWELRY_MAX_BONUSES (4)
 }
 
 export type JewelrySet = Record<JewelrySlot, JewelryPiece>;

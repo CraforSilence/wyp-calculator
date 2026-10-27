@@ -57,6 +57,7 @@ const MAGNANTIAS_CONJURADOR_PF = {
 export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   {
     id: 'magnantias-caballero',
+    rareza: 'Artesano',
     nombre: 'Set de Magnanitas de Caballero',
     clase: 'Guerrero',
     subclase: 'Caballero',
@@ -117,6 +118,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'magnantias-barbaro',
+    rareza: 'Artesano',
     nombre: 'Set de Magnanitas de Bárbaro',
     clase: 'Guerrero',
     subclase: 'Bárbaro',
@@ -134,6 +136,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'magnantias-tirador',
+    rareza: 'Artesano',
     nombre: 'Set de Magnanitas de Tirador',
     clase: 'Arquero',
     subclase: 'Tirador',
@@ -151,6 +154,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'magnantias-cazador',
+    rareza: 'Artesano',
     nombre: 'Set de Magnanitas de Cazador',
     clase: 'Arquero',
     subclase: 'Cazador',
@@ -168,6 +172,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'magnantias-brujo',
+    rareza: 'Artesano',
     nombre: 'Set de Magnanitas de Brujo',
     clase: 'Mago',
     subclase: 'Brujo',
@@ -184,6 +189,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'magnantias-conjurador',
+    rareza: 'Artesano',
     nombre: 'Set de Magnanitas de Conjurador',
     clase: 'Mago',
     subclase: 'Conjurador',
@@ -200,6 +206,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'champion-caballero',
+    rareza: 'Artesano',
     nombre: 'Set Champion de Caballero',
     clase: 'Guerrero',
     subclase: 'Caballero',
@@ -218,6 +225,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'champion-barbaro',
+    rareza: 'Artesano',
     nombre: 'Set Champion de Bárbaro',
     clase: 'Guerrero',
     subclase: 'Bárbaro',
@@ -235,6 +243,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'champion-conjurador',
+    rareza: 'Artesano',
     nombre: 'Set Champion de Conjurador',
     clase: 'Mago',
     subclase: 'Conjurador',
@@ -251,6 +260,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'champion-brujo',
+    rareza: 'Artesano',
     nombre: 'Set Champion de Brujo',
     clase: 'Mago',
     subclase: 'Brujo',
@@ -267,6 +277,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'champion-cazador',
+    rareza: 'Artesano',
     nombre: 'Set Champion de Cazador',
     clase: 'Arquero',
     subclase: 'Cazador',
@@ -284,6 +295,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'champion-tirador',
+    rareza: 'Artesano',
     nombre: 'Set Champion de Tirador',
     clase: 'Arquero',
     subclase: 'Tirador',
@@ -301,6 +313,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'dragon-guerrero',
+    rareza: 'Épica',
     nombre: 'Set Dragon de Guerrero (Alasthor/Tenax/Vesper)',
     clase: 'Guerrero',
     pieces: {
@@ -369,6 +382,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'dragon-arquero',
+    rareza: 'Épica',
     nombre: 'Set Dragon de Arquero (Alasthor/Tenax/Vesper)',
     clase: 'Arquero',
     pieces: {
@@ -394,6 +408,7 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
   },
   {
     id: 'dragon-mago',
+    rareza: 'Épica',
     nombre: 'Set Dragon de Mago (Alasthor/Tenax/Vesper)',
     clase: 'Mago',
     pieces: {

@@ -4,7 +4,7 @@ import type { JewelrySet } from '@/types/jewelry';
 import type { ArmorSet } from '@/types/armor';
 import type { SimulationHit, SimulationResult } from '@/types/simulation';
 import { calcWeaponDamage } from './damage';
-import { calcTotalProtection, calcAverageProtectionFactors, filterArmorForSubclase } from './armor';
+import { calcTotalProtection, calcAverageProtectionFactors, filterArmorForSubclase, allArmorBonuses } from './armor';
 import { applyDamageReduction } from './resistance';
 import { aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import { ARMOR_CLASSES, PHYSICAL_DAMAGE_TYPES } from './constants';
@@ -25,7 +25,7 @@ const RESISTANCE_BONUS_MAP: Record<string, { field: 'generalResistance' | 'typeR
  * Builds an effective ArmorSet by adding piece-level resistance bonuses
  * and defender jewelry defensive bonuses to the ArmorSet's fields.
  */
-function buildEffectiveArmorSet(armorSet: ArmorSet, defenderJewelry?: JewelrySet | null): ArmorSet {
+export function buildEffectiveArmorSet(armorSet: ArmorSet, defenderJewelry?: JewelrySet | null): ArmorSet {
   const effective: ArmorSet = {
     ...armorSet,
     generalResistance: { ...armorSet.generalResistance },
@@ -34,18 +34,15 @@ function buildEffectiveArmorSet(armorSet: ArmorSet, defenderJewelry?: JewelrySet
     rangedDmgReductionPct: armorSet.rangedDmgReductionPct,
   };
 
-  // Aggregate armor piece resistance bonuses
-  for (const piece of Object.values(armorSet.pieces)) {
-    if (!piece) continue;
-    for (const bonus of piece.bonuses || []) {
-      const mapping = RESISTANCE_BONUS_MAP[bonus.type];
-      if (mapping) {
-        if (mapping.field === 'generalResistance') {
-          effective.generalResistance[mapping.key as 'fisico' | 'magico'] += bonus.value;
-        } else {
-          effective.typeResistance[mapping.key as DamageTypeName] =
-            (effective.typeResistance[mapping.key as DamageTypeName] || 0) + bonus.value;
-        }
+  // Aggregate resistance bonuses from the pieces and the set (conjunto)
+  for (const bonus of allArmorBonuses(armorSet)) {
+    const mapping = RESISTANCE_BONUS_MAP[bonus.type];
+    if (mapping) {
+      if (mapping.field === 'generalResistance') {
+        effective.generalResistance[mapping.key as 'fisico' | 'magico'] += bonus.value;
+      } else {
+        effective.typeResistance[mapping.key as DamageTypeName] =
+          (effective.typeResistance[mapping.key as DamageTypeName] || 0) + bonus.value;
       }
     }
   }
