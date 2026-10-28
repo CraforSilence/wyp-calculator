@@ -18,6 +18,10 @@ import type { Weapon, WeaponAttr, DamageTypeName, MuescaType, Velocidad, Rareza,
 import type { Clase } from '@/types/character';
 import { useT } from '@/i18n/I18nProvider';
 import { getWeaponAttributes, weaponAttrFromLabel, WEAPON_ATTR_LABELS } from '@/lib/weaponAttributes';
+import { WeaponIcon, weaponIconSrc } from '@/components/icons/WeaponIcon';
+import { IconSelect } from '@/components/ui/IconSelect';
+import { SectionHeader } from '@/components/ui/SectionHeader';
+import { DamageIcon } from '@/components/icons/StatIcons';
 
 interface DamageRow {
   tipo: DamageTypeName;
@@ -39,7 +43,7 @@ interface MuescaRow {
 const BONUS_TYPES = [
   'Fuerza', 'Concentracion', 'Inteligencia', 'Constitucion', 'Destreza',
   'Chance de critico %', 'Dano critico %',
-  'Vel ataque %', 'Atributo de clase %',
+  'Vel ataque %', 'Vel invocacion %', 'Atributo de clase %',
   ...ALL_DAMAGE_TYPES.map((dt) => `Dano ${DAMAGE_TYPE_LABELS[dt]}`),
 ];
 
@@ -65,6 +69,7 @@ function weaponToBonusRows(w: Weapon): BonusRow[] {
   if (w.critChanceExtra > 0) rows.push({ tipo: 'Chance de critico %', valor: w.critChanceExtra });
   if (w.critDmgExtra > 0) rows.push({ tipo: 'Dano critico %', valor: w.critDmgExtra });
   if (w.attackSpeedPct > 0) rows.push({ tipo: 'Vel ataque %', valor: w.attackSpeedPct });
+    if ((w.castSpeedPct ?? 0) > 0) rows.push({ tipo: 'Vel invocacion %', valor: w.castSpeedPct! });
   if (w.atributoClasePct > 0) rows.push({ tipo: 'Atributo de clase %', valor: w.atributoClasePct });
   for (const [tipo, valor] of Object.entries(w.bonusDano)) {
     if (valor) rows.push({ tipo: `Dano ${DAMAGE_TYPE_LABELS[tipo as DamageTypeName]}`, valor });
@@ -149,7 +154,7 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
       if (row.max > 0) tiposDano[row.tipo] = [row.min, row.max];
     }
 
-    let critChanceExtra = 0, critDmgExtra = 0, attackSpeedPct = 0, atributoClasePct = 0;
+    let critChanceExtra = 0, critDmgExtra = 0, attackSpeedPct = 0, castSpeedPct = 0, atributoClasePct = 0;
     const bonusDano: Partial<Record<DamageTypeName, number>> = {};
     const atributos: Partial<Record<WeaponAttr, number>> = {};
 
@@ -163,6 +168,7 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
         case 'Chance de critico %': critChanceExtra = row.valor; break;
         case 'Dano critico %': critDmgExtra = row.valor; break;
         case 'Vel ataque %': attackSpeedPct = row.valor; break;
+        case 'Vel invocacion %': castSpeedPct = row.valor; break;
         case 'Atributo de clase %': atributoClasePct = row.valor; break;
         default: {
           const dmgType = ALL_DAMAGE_TYPES.find((dt) => `Dano ${DAMAGE_TYPE_LABELS[dt]}` === row.tipo);
@@ -180,149 +186,154 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
     onWeaponChange({
       ...weapon,
       nombre, clase, subcategoria: subcategoria as Subcategoria, velocidad, rareza,
-      bonusStat: 0, atributos, bonusAtributo, critChanceExtra, critDmgExtra, attackSpeedPct, atributoClasePct,
+      bonusStat: 0, atributos, bonusAtributo, critChanceExtra, critDmgExtra, attackSpeedPct, castSpeedPct, atributoClasePct,
       tiposDano, bonusDano, muescas, notas: '',
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nombre, clase, subcategoria, velocidad, rareza, bonusAtributo, damageRows, bonusRows, muescaRows]);
 
   const subcatOptions = SUBCATEGORIAS_POR_CLASE[clase].map((s) => ({ value: s, label: s }));
+  const slots = RAREZA_SLOTS[rareza];
+  const updateDamage = (i: number, patch: Partial<DamageRow>) =>
+    setDamageRows(damageRows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
 
   return (
-    <div className="space-y-4">
-      {/* Card: Datos del Arma */}
-      <Card title={
-        <span className="flex items-center justify-between w-full gap-2">
-          <span className="flex items-center gap-2">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded border border-zinc-700 bg-zinc-800 p-1">
-              <img src="/icons/arma.png" alt={t("Arma")} className="w-full h-full object-contain" />
-            </span>
-            {t("Datos del Arma")}
+    <Card title={
+      <span className="flex items-center justify-between w-full gap-2">
+        <span>{t("Datos del Arma")}</span>
+        <Button size="sm" variant="ghost" onClick={() => loadWeapon({ ...DEFAULT_WEAPON, id: weapon.id, clase, subcategoria: subcategoria as Subcategoria })}>
+          {t("Limpiar")}
+        </Button>
+      </span>
+    }>
+      <div className="@container space-y-5">
+        {/* Datos básicos: ícono del tipo junto al nombre (y al precargador), el resto en una fila */}
+        <div className="flex gap-3 items-end">
+          <span className="hidden sm:inline-flex shrink-0 items-center justify-center w-14 h-14 rounded-lg border border-zinc-700 bg-zinc-800 p-1.5">
+            <img src={weaponIconSrc(subcategoria)} alt={t(subcategoria)} className="w-full h-full object-contain" />
           </span>
-          <Button size="sm" variant="ghost" onClick={() => loadWeapon({ ...DEFAULT_WEAPON, id: weapon.id, clase, subcategoria: subcategoria as Subcategoria })}>
-            {t("Limpiar")}
-          </Button>
-        </span>
-      }>
-        <div className="space-y-3">
-          {showPreload && (
-            <div>
-              <label className="text-xs text-zinc-400 font-medium mb-1 flex items-center gap-1.5">
-                {t("Precargar arma existente")}
-                {loadedWeapon && <span className="text-emerald-400">{t("✓ cargada")}</span>}
-              </label>
-              <select
-                value={loadedWeapon?.id ?? ''}
-                onChange={(e) => {
-                  const found = savedWeapons.find((w) => w.id === e.target.value);
-                  if (found) loadWeapon(found);
-                }}
-                className={`w-full bg-zinc-800 border rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none ${
-                  loadedWeapon
-                    ? 'border-emerald-500 ring-1 ring-emerald-500/40 focus:border-emerald-400'
-                    : 'border-zinc-700 focus:border-amber-500'
-                }`}
-              >
-                <option value="" disabled>{t("Elegir arma para cargar...")}</option>
-                {customOptions.length > 0 && (
-                  <optgroup label={t("Mis armas")}>
-                    {customOptions.map((w) => (
-                      <option key={w.id} value={w.id}>[{w.clase[0]}] {w.nombre}</option>
-                    ))}
-                  </optgroup>
-                )}
-                {defaultOptions.length > 0 && (
-                  <optgroup label={t("Armas base")}>
-                    {defaultOptions.map((w) => (
-                      <option key={w.id} value={w.id}>[{w.clase[0]}] {w.nombre}</option>
-                    ))}
-                  </optgroup>
-                )}
-              </select>
-            </div>
-          )}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-            <div className="col-span-2 sm:col-span-3">
-              <Input label={t("Nombre")} value={nombre} onChange={(e) => setNombre(e.target.value)} />
-            </div>
-            {showClaseSelector && (
-              <Select label={t("Clase")} value={clase} onChange={(e) => { setClase(e.target.value as Clase); setSubcategoria(SUBCATEGORIAS_POR_CLASE[e.target.value as Clase][0]); }}
-                options={[{ value: 'Guerrero', label: 'Guerrero' }, { value: 'Arquero', label: 'Arquero' }, { value: 'Mago', label: 'Mago' }]} />
+          <div className={`flex-1 min-w-0 grid gap-3 ${showPreload ? 'sm:grid-cols-2' : ''}`}>
+            {showPreload && (
+              <div className="flex flex-col gap-1 min-w-0">
+                <label className="text-xs text-zinc-400 font-medium flex items-center gap-1.5">
+                  {t("Precargar arma existente")}
+                  {loadedWeapon && <span className="text-emerald-400">{t("✓ cargada")}</span>}
+                </label>
+                <select
+                  value={loadedWeapon?.id ?? ''}
+                  onChange={(e) => {
+                    const found = savedWeapons.find((w) => w.id === e.target.value);
+                    if (found) loadWeapon(found);
+                  }}
+                  className={`w-full bg-zinc-800 border rounded px-2.5 py-1.5 text-sm text-zinc-100 focus:outline-none ${
+                    loadedWeapon
+                      ? 'border-emerald-500 ring-1 ring-emerald-500/40 focus:border-emerald-400'
+                      : 'border-zinc-700 focus:border-amber-500'
+                  }`}
+                >
+                  <option value="" disabled>{t("Elegir arma para cargar...")}</option>
+                  {customOptions.length > 0 && (
+                    <optgroup label={t("Mis armas")}>
+                      {customOptions.map((w) => (
+                        <option key={w.id} value={w.id}>[{w.clase[0]}] {w.nombre}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                  {defaultOptions.length > 0 && (
+                    <optgroup label={t("Armas base")}>
+                      {defaultOptions.map((w) => (
+                        <option key={w.id} value={w.id}>[{w.clase[0]}] {w.nombre}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+              </div>
             )}
-            <Select label={t('Subcategoría')} tooltip={t("Tipo de arma. Determina el multiplicador de atributo y animaciones.")} value={subcategoria} onChange={(e) => setSubcategoria(e.target.value)} options={subcatOptions} />
-            <Select label={t("Velocidad")} tooltip={t("Velocidad de ataque del arma. Afecta el DPS final.")} value={velocidad} onChange={(e) => setVelocidad(e.target.value as Velocidad)}
-              options={[{ value: 'lenta', label: 'Lenta' }, { value: 'media', label: 'Media' }, { value: 'rapida', label: 'Rapida' }]} />
-            <Select label={t("Rareza")} tooltip={t('Calidad del arma. Las armas de mayor rareza tienen mejores stats base y más slots de muescas.')} value={rareza} onChange={(e) => setRareza(e.target.value as Rareza)}
-              options={[{ value: 'Épica', label: 'Épica' }, { value: 'Mágica', label: 'Mágica' }, { value: 'Legendaria', label: 'Legendaria' }, { value: 'Arcana', label: 'Arcana' }]} />
-            <Input label={t('Stat Base (+daño)')} tooltip={t('Bonus de atributo base del arma (Fuerza, Inteligencia, etc). Se suma al atributo del personaje para calcular el daño extra.')} type="number" value={bonusAtributo} onChange={(e) => setBonusAtributo(Number(e.target.value))} />
+            <Input label={t("Nombre")} value={nombre} onChange={(e) => setNombre(e.target.value)} />
           </div>
         </div>
-      </Card>
-
-      {/* Card: Daño Base */}
-      <Card title={
-        <span className="flex items-center justify-between w-full">
-          <span className="flex items-center gap-1">{t("Daño Base")} <HelpPopover text={t('Daño nominal del arma visible en el tooltip del juego. Poné el tipo de daño y los valores mínimo y máximo.')} /></span>
-          {damageRows.length < 6 && (
-            <Button size="sm" variant="ghost" onClick={() => setDamageRows([...damageRows, { tipo: 'punzante', min: 0, max: 0 }])}>{t("+ Tipo")}</Button>
+        <div className={`grid grid-cols-2 gap-3 ${showClaseSelector ? "@lg:grid-cols-3 @2xl:grid-cols-5" : "@lg:grid-cols-4"}`}>
+          {showClaseSelector && (
+            <Select label={t("Clase")} value={clase} onChange={(e) => { setClase(e.target.value as Clase); setSubcategoria(SUBCATEGORIAS_POR_CLASE[e.target.value as Clase][0]); }}
+              options={[{ value: 'Guerrero', label: 'Guerrero' }, { value: 'Arquero', label: 'Arquero' }, { value: 'Mago', label: 'Mago' }]} />
           )}
-        </span>
-      }>
-        <div className="space-y-2">
-          {damageRows.map((row, i) => (
-            <div key={i} className="flex gap-2 items-end">
-              <Select tooltip={t('Tipo de daño (Punzante, Cortante, Fuego, etc.)')} value={row.tipo} onChange={(e) => { const next = [...damageRows]; next[i] = { ...next[i], tipo: e.target.value as DamageTypeName }; setDamageRows(next); }}
-                options={ALL_DAMAGE_TYPES.map((dt) => ({ value: dt, label: DAMAGE_TYPE_LABELS[dt] }))} />
-              <Input tooltip={t('Daño mínimo del arma para este tipo')} type="number" placeholder={t('Mín')} value={row.min || ''} onChange={(e) => { const next = [...damageRows]; next[i] = { ...next[i], min: Number(e.target.value) }; setDamageRows(next); }} className="w-20" />
-              <Input tooltip={t('Daño máximo del arma para este tipo')} type="number" placeholder={t('Máx')} value={row.max || ''} onChange={(e) => { const next = [...damageRows]; next[i] = { ...next[i], max: Number(e.target.value) }; setDamageRows(next); }} className="w-20" />
-              {damageRows.length > 1 && (
-                <Button size="sm" variant="danger-ghost" onClick={() => setDamageRows(damageRows.filter((_, j) => j !== i))}>x</Button>
-              )}
-            </div>
-          ))}
+          <IconSelect label={t('Subcategoría')} tooltip={t("Tipo de arma. Determina el multiplicador de atributo y animaciones.")} value={subcategoria} onChange={setSubcategoria} options={subcatOptions} renderIcon={(v) => <WeaponIcon subcategoria={v} />} />
+          <Select label={t("Velocidad")} tooltip={t("Velocidad de ataque del arma. Afecta el DPS final.")} value={velocidad} onChange={(e) => setVelocidad(e.target.value as Velocidad)}
+            options={[{ value: 'lenta', label: 'Lenta' }, { value: 'media', label: 'Media' }, { value: 'rapida', label: 'Rapida' }]} />
+          <Select label={t("Rareza")} tooltip={t('Calidad del arma. Las armas de mayor rareza tienen mejores stats base y más slots de muescas.')} value={rareza} onChange={(e) => setRareza(e.target.value as Rareza)}
+            options={[{ value: 'Épica', label: 'Épica' }, { value: 'Mágica', label: 'Mágica' }, { value: 'Legendaria', label: 'Legendaria' }, { value: 'Arcana', label: 'Arcana' }]} />
+          <Input label={t('Stat Base (+daño)')} tooltip={t('Bonus de atributo base del arma (Fuerza, Inteligencia, etc). Se suma al atributo del personaje para calcular el daño extra.')} type="number" value={bonusAtributo} onChange={(e) => setBonusAtributo(Number(e.target.value))} />
         </div>
-      </Card>
 
-      {/* Bonus y Muescas lado a lado */}
-      <div className="grid md:grid-cols-2 gap-4">
-        {/* Card: Bonus */}
-        <Card title={
-          <span className="flex items-center justify-between w-full">
-            <span className="flex items-center gap-1">{t("Bonus")} <HelpPopover text={t('Modificadores adicionales del arma: atributos, crítico, velocidad de ataque y daño extra por tipo. Se ven en el tooltip del arma. La cantidad de slots depende de la rareza.')} /></span>
-            <span className="text-xs font-normal text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].bonus} {RAREZA_SLOTS[rareza].bonus === 1 ? t("slot") : t("slots")}</span>
-          </span>
-        }>
-          <SlotEditor
-            rows={bonusRows}
-            max={RAREZA_SLOTS[rareza].bonus}
-            options={bonusSelectOptions(bonusOptionsForRareza(rareza, BONUS_TYPES).map((o) => o.value))}
-            onChange={setBonusRows}
-            selectTooltip={t('Tipo de bonus (atributo, crítico, velocidad, daño extra, etc.)')}
-            noun={{ one: 'bonus', many: 'bonus' }}
-            limitLabel={t('Un arma {rareza}', { rareza: t(rareza) })}
-          />
-        </Card>
+        <div className="grid gap-x-6 gap-y-5 @3xl:grid-cols-2">
+          {/* Izquierda: daño base y muescas */}
+          <div className="space-y-5">
+            <section>
+              <SectionHeader title={t("Daño Base")} help={t('Daño nominal del arma visible en el tooltip del juego. Poné el tipo de daño y los valores mínimo y máximo.')}>
+                {damageRows.length < 6 && (
+                  <button type="button" onClick={() => setDamageRows([...damageRows, { tipo: 'punzante', min: 0, max: 0 }])}
+                    className="text-xs text-amber-400 hover:text-amber-300">{t("+ Tipo")}</button>
+                )}
+              </SectionHeader>
+              <div className="space-y-2">
+                {damageRows.map((row, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <div className="flex-1 min-w-0">
+                      <IconSelect tooltip={t('Tipo de daño (Punzante, Cortante, Fuego, etc.)')} value={row.tipo} onChange={(v) => updateDamage(i, { tipo: v as DamageTypeName })}
+                        options={ALL_DAMAGE_TYPES.map((dt) => ({ value: dt, label: DAMAGE_TYPE_LABELS[dt] }))}
+                        renderIcon={(v) => <DamageIcon type={v as DamageTypeName} />} className="w-full" />
+                    </div>
+                    <Input tooltip={t('Daño mínimo del arma para este tipo')} type="number" placeholder={t('Mín')} value={row.min || ''} onChange={(e) => updateDamage(i, { min: Number(e.target.value) })} className="w-16 sm:w-20" />
+                    <span className="text-zinc-600">–</span>
+                    <Input tooltip={t('Daño máximo del arma para este tipo')} type="number" placeholder={t('Máx')} value={row.max || ''} onChange={(e) => updateDamage(i, { max: Number(e.target.value) })} className="w-16 sm:w-20" />
+                    <span className="w-7 shrink-0">
+                      {damageRows.length > 1 && (
+                        <Button size="sm" variant="danger-ghost" onClick={() => setDamageRows(damageRows.filter((_, j) => j !== i))} title={t("Quitar")}>x</Button>
+                      )}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
 
-        {/* Card: Muescas */}
-        <Card title={
-          <span className="flex items-center justify-between w-full">
-            <span className="flex items-center gap-1">{t("Muescas")} <HelpPopover text={t('Gemas incrustadas en el arma. Las de daño agregan daño especial que solo reduce el Factor de Protección (FP), no la armadura completa. Las de Vel. Ataque / Vel. Invocación agregan % de velocidad. Solo las Arcanas tienen 2 muescas.')} /></span>
-            <span className="text-xs font-normal text-zinc-500">{rareza}: {RAREZA_SLOTS[rareza].muescas} {RAREZA_SLOTS[rareza].muescas === 1 ? t("muesca") : t("muescas")}</span>
-          </span>
-        }>
-          <SlotEditor
-            rows={muescaRows}
-            max={RAREZA_SLOTS[rareza].muescas}
-            options={bonusSelectOptions(MUESCA_TYPES, (t) => MUESCA_TYPE_LABELS[t as MuescaType])}
-            onChange={(rows) => setMuescaRows(rows as MuescaRow[])}
-            valueInput={muescaValueInput}
-            selectTooltip={t('Tipo de la gema: daño o velocidad')}
-            noun={{ one: 'muesca', many: 'muescas' }}
-            limitLabel={t('Un arma {rareza}', { rareza: t(rareza) })}
-          />
-        </Card>
+            {/* Muescas: 1, salvo las Arcanas que tienen 2 */}
+            <section>
+              <SectionHeader title={t("Muescas")} help={t('Gemas incrustadas en el arma. Las de daño agregan daño especial que solo reduce el Factor de Protección (FP), no la armadura completa. Las de Vel. Ataque / Vel. Invocación agregan % de velocidad. Solo las Arcanas tienen 2 muescas.')}>
+                <span className="text-xs text-zinc-500">{slots.muescas} {slots.muescas === 1 ? t("muesca") : t("muescas")}</span>
+              </SectionHeader>
+              <SlotEditor
+                rows={muescaRows}
+                max={slots.muescas}
+                options={bonusSelectOptions(MUESCA_TYPES, (t) => MUESCA_TYPE_LABELS[t as MuescaType])}
+                onChange={(rows) => setMuescaRows(rows as MuescaRow[])}
+                valueInput={muescaValueInput}
+                selectTooltip={t('Tipo de la gema: daño o velocidad')}
+                noun={{ one: 'muesca', many: 'muescas' }}
+                limitLabel={t('Un arma {rareza}', { rareza: t(rareza) })}
+                valueWidthClass="w-16 sm:w-20"
+              />
+            </section>
+          </div>
+
+          {/* Derecha: bonus (la cantidad de slots depende de la rareza) */}
+          <section>
+            <SectionHeader title={t("Bonus")} help={t('Modificadores adicionales del arma: atributos, crítico, velocidad de ataque y daño extra por tipo. Se ven en el tooltip del arma. La cantidad de slots depende de la rareza.')}>
+              <span className="text-xs text-zinc-500">{slots.bonus} {slots.bonus === 1 ? t("slot") : t("slots")}</span>
+            </SectionHeader>
+            <SlotEditor
+              rows={bonusRows}
+              max={slots.bonus}
+              options={bonusSelectOptions(bonusOptionsForRareza(rareza, BONUS_TYPES).map((o) => o.value))}
+              onChange={setBonusRows}
+              selectTooltip={t('Tipo de bonus (atributo, crítico, velocidad, daño extra, etc.)')}
+              noun={{ one: 'bonus', many: 'bonus' }}
+              limitLabel={t('Un arma {rareza}', { rareza: t(rareza) })}
+              valueWidthClass="w-16 sm:w-20"
+            />
+          </section>
+        </div>
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -501,13 +512,13 @@ export function BuildArma() {
       {/* Weapon forms */}
       {isBarbaro && weaponMode === 'duales' ? (
         <div className="space-y-3">
-          <Collapsible title={t("Arma Principal")} icon="/icons/arma.png" defaultOpen={true}>
+          <Collapsible title={t("Arma Principal")} icon="/icons/arma.svg" defaultOpen={true}>
             <WeaponForm
               weapon={weapon}
               onWeaponChange={(w) => setWeapon(w)}
             />
           </Collapsible>
-          <Collapsible title={t("Arma Secundaria")} icon="/icons/arma.png" defaultOpen={true}>
+          <Collapsible title={t("Arma Secundaria")} icon="/icons/arma.svg" defaultOpen={true}>
             <WeaponForm
               weapon={secondaryWeapon}
               onWeaponChange={(w) => setSecondaryWeapon(w)}
@@ -538,7 +549,7 @@ export function BuildArma() {
 
       {/* Arrow section for Arquero */}
       {isArquero && (
-        <Collapsible title={t("Flechas")} icon="/icons/flechas.png" defaultOpen={false}>
+        <Collapsible title={t("Flechas")} icon="/icons/flechas.svg" defaultOpen={false}>
           <ArrowForm
             arrows={arrows}
             onArrowsChange={(a) => setArrows(a)}
