@@ -78,6 +78,27 @@ npx next build
 
 Stack: Next.js 16 (App Router), React 19, Tailwind v4, TypeScript.
 
+### Pruebas de punta a punta (Playwright)
+
+```bash
+npx playwright install chromium   # solo la primera vez
+npm run test:e2e                  # corre todo; levanta `npm run dev` o usa el que ya esté abierto
+npm run test:e2e:ui               # modo visual, para ver y depurar paso a paso
+npm run test:e2e:report           # abre el reporte HTML de la última corrida
+```
+
+- Las pruebas están en `e2e/` y la configuración en `playwright.config.ts`. El navegador se fija
+  en español (`es-AR`) para que los textos coincidan.
+- `e2e/build-flow.spec.ts` recorre el Build: personaje → arma y joyería → armadura → simulación
+  (ofensiva y defensiva). También prueba que el build se conserve al recargar, los avisos cuando
+  falta arma o armadura, y el modo Duales del Bárbaro.
+- Cada prueba arranca con el navegador limpio. Los números esperados (por ejemplo, 390 – 425 del
+  Martillo de Magnas con el Caballero por defecto) salen del motor: si se cambian las fórmulas a
+  propósito, hay que actualizarlos.
+- `e2e/helpers.ts` tiene atajos para lo que se repite (elegir en un `<select>` por su opción vacía,
+  elegir en los selectores con íconos, agregar un bonus de joyería).
+- En caso de falla quedan captura y traza en `test-results/` (`npx playwright show-trace <zip>`).
+
 ## Deploy
 
 Manual a Vercel (no está vinculado a GitHub). Ver [docs/DEPLOY.md](docs/DEPLOY.md).
