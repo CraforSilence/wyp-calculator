@@ -60,6 +60,9 @@ elige según el idioma del navegador.
 `src/lib/engine/` sigue las fórmulas del juego (`Formulas.md`):
 
 - Daño por tipo con atributo, crítico (`base de la subclase × (1 + bonus%)`) y velocidad.
+- Atributos del arma (`atributos`: Fuerza, Destreza, Inteligencia, Constitución, Concentración):
+  solo el stat principal de la subclase suma daño, con su multiplicador. Las armas viejas con
+  `bonusStat` se leen como el stat principal de la clase del arma (`src/lib/weaponAttributes.ts`).
 - Armadura: la protección se aplica según el peso de cada tipo, con daño mínimo de 4–8%;
   luego resistencia general y por tipo.
 - El daño especial (gemas) solo lo reduce el factor de protección (PF).
