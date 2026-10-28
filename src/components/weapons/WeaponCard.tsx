@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button';
 import { DAMAGE_TYPE_LABELS } from '@/lib/engine/constants';
 import type { DamageTypeName } from '@/types/weapon';
 import { useT } from '@/i18n/I18nProvider';
+import { WeaponIcon } from '@/components/icons/WeaponIcon';
 
 interface WeaponCardProps {
   weapon: Weapon;
@@ -25,15 +26,20 @@ export function WeaponCard({ weapon, calcResult, onEdit, onDelete, onDuplicate, 
       !weapon.isDefault ? 'border-amber-800/50' : isModified ? 'border-yellow-800/50' : 'border-zinc-800'
     }`}>
       <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="text-sm font-semibold text-zinc-100 truncate">{weapon.nombre}</h3>
-            <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{t(weapon.rareza)}</Badge>
-            {!weapon.isDefault && <Badge variant="info">{t("Temporal")}</Badge>}
-            {isModified && <Badge variant="damage">{t("Modificada")}</Badge>}
-          </div>
-          <div className="text-xs text-zinc-500 mt-0.5">
-            {t(weapon.subcategoria)} &middot; {t(weapon.velocidad)}
+        <div className="flex items-start gap-3 min-w-0">
+          <span className="inline-flex shrink-0 items-center justify-center w-14 h-14 rounded-lg border border-zinc-700 bg-zinc-800 p-1.5">
+            <WeaponIcon subcategoria={weapon.subcategoria} className="w-full h-full object-contain" />
+          </span>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className="text-sm font-semibold text-zinc-100 truncate">{weapon.nombre}</h3>
+              <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{t(weapon.rareza)}</Badge>
+              {!weapon.isDefault && <Badge variant="info">{t("Temporal")}</Badge>}
+              {isModified && <Badge variant="damage">{t("Modificada")}</Badge>}
+            </div>
+            <div className="text-xs text-zinc-500 mt-0.5">
+              {t(weapon.subcategoria)} &middot; {t(weapon.velocidad)}
+            </div>
           </div>
         </div>
         <div className="flex gap-1 shrink-0">

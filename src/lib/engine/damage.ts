@@ -190,7 +190,7 @@ export function calcWeaponDamage(
     joyeria: jBonus.attackSpeed || 0,
   };
   const attackSpeedPct = attackSpeedSources.arma + attackSpeedSources.muescas + attackSpeedSources.joyeria;
-  const castSpeedPct = (jBonus.castSpeed || 0) + muescaSpeeds.castSpeed;
+  const castSpeedPct = (weapon.castSpeedPct || 0) + (jBonus.castSpeed || 0) + muescaSpeeds.castSpeed;
   const golpesPorSeg = (1.0 / velBase) * (1 + attackSpeedPct / 100);
   const velEfectiva = 1.0 / golpesPorSeg;
 

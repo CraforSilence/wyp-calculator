@@ -1,15 +1,16 @@
 'use client';
 
-import { InputHTMLAttributes } from 'react';
+import { useId, type InputHTMLAttributes, type ReactNode } from 'react';
 import { HelpPopover } from './HelpPopover';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
+  label?: ReactNode;
   tooltip?: string;
 }
 
 export function Input({ label, tooltip, className = '', id, ...props }: InputProps) {
-  const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
+  const autoId = useId();
+  const inputId = id || (typeof label === 'string' ? label.toLowerCase().replace(/\s+/g, '-') : autoId);
   return (
     <div className="flex flex-col gap-1">
       {label && (

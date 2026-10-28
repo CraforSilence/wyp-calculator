@@ -2,12 +2,13 @@
 
 import { Badge, rarezaToBadgeVariant } from '@/components/ui/Badge';
 import { WeaponAbility } from '@/components/weapons/WeaponAbility';
-import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, MUESCA_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
+import { DAMAGE_TYPE_LABELS, MUESCA_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import { isMuescaSpeedType } from '@/lib/engine/constants';
-import { bonusIcon } from '@/lib/bonusDisplay';
 import type { DamageTypeName, MuescaType, Weapon, WeaponAttr, WeaponCalcResult } from '@/types/weapon';
 import { getWeaponAttributes, WEAPON_ATTR_LABELS } from '@/lib/weaponAttributes';
 import { useT } from '@/i18n/I18nProvider';
+import { BonusIcon, DamageIcon } from '@/components/icons/StatIcons';
+import { WeaponIcon } from '@/components/icons/WeaponIcon';
 
 export interface BestFlags {
   dps: boolean;
@@ -74,7 +75,7 @@ export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemo
           <h3 className="text-sm font-semibold text-zinc-100 leading-snug break-words">{weapon.nombre}</h3>
           <div className="flex items-center gap-1.5 flex-wrap mt-1">
             <Badge variant={rarezaToBadgeVariant(weapon.rareza)}>{t(weapon.rareza)}</Badge>
-            <span className="text-xs text-zinc-500">{t(weapon.subcategoria)} &middot; {t(weapon.velocidad)}</span>
+            <span className="text-xs text-zinc-500"><WeaponIcon subcategoria={weapon.subcategoria} /> {t(weapon.subcategoria)} &middot; {t(weapon.velocidad)}</span>
           </div>
           </div>
         </div>
@@ -114,7 +115,7 @@ export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemo
             <Row key={tipo} label={
               <span className="pl-2 inline-flex items-center gap-1">
                 <span className={`w-1.5 h-1.5 rounded-full ${isPhysical ? 'bg-orange-500' : 'bg-blue-500'}`} />
-                {DAMAGE_TYPE_ICONS[tipo as DamageTypeName]} {t(label)}
+                <DamageIcon type={tipo as DamageTypeName} /> {t(label)}
               </span>
             }>
               <span className="text-zinc-400">
@@ -147,11 +148,11 @@ export function CompareCard({ weapon, result, best, rank, dpsDiffPct = 0, onRemo
         <Section title={t("Bonus del arma")}>
           {weapon.bonusAtributo !== 0 && <Row label={t("Atributo")}>+{weapon.bonusAtributo}</Row>}
           {attrEntries.map(([attr, valor]) => (
-            <Row key={attr} label={`${bonusIcon(attr)} ${t(WEAPON_ATTR_LABELS[attr])}`}>+{valor}</Row>
+            <Row key={attr} label={<><BonusIcon bonus={attr} /> {t(WEAPON_ATTR_LABELS[attr])}</>}>+{valor}</Row>
           ))}
           {weapon.atributoClasePct !== 0 && <Row label={t("Atributo de clase")}>{fmtPct(weapon.atributoClasePct)}</Row>}
           {muescaEntries.map(([tipo, valor]) => (
-            <Row key={tipo} label={`${bonusIcon(tipo)} ${t('Muesca {tipo}', { tipo: t(MUESCA_TYPE_LABELS[tipo] || tipo) })}`}>+{valor}</Row>
+            <Row key={tipo} label={<><BonusIcon bonus={tipo} /> {t('Muesca {tipo}', { tipo: t(MUESCA_TYPE_LABELS[tipo] || tipo) })}</>}>+{valor}</Row>
           ))}
         </Section>
       )}

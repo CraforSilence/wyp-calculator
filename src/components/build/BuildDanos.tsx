@@ -1,10 +1,12 @@
 'use client';
 
 import { useBuildDamage } from '@/hooks/useBuildDamage';
-import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
+import { DAMAGE_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import { Card } from '@/components/ui/Card';
 import type { DamageTypeName, WeaponCalcResult } from '@/types/weapon';
 import { useT } from '@/i18n/I18nProvider';
+import { DamageIcon } from '@/components/icons/StatIcons';
+import { WeaponIcon } from '@/components/icons/WeaponIcon';
 
 function DamageStatsGrid({ calc, label }: { calc: WeaponCalcResult; label?: string }) {
   const t = useT();
@@ -85,7 +87,7 @@ function DamageByType({ calc }: { calc: WeaponCalcResult }) {
             <div key={tipo}>
               <div className="flex items-center justify-between gap-2 text-sm mb-0.5">
                 <span className="text-zinc-300">
-                  {DAMAGE_TYPE_ICONS[tipo] || ''} {t(DAMAGE_TYPE_LABELS[tipo] || tipo)}
+                  <DamageIcon type={tipo} /> {t(DAMAGE_TYPE_LABELS[tipo] || tipo)}
                   {special != null && (
                     <span
                       className="ml-2 text-[12px] text-purple-400"
@@ -152,7 +154,7 @@ export function BuildDanos() {
           {isDualMode && dualCalc ? t("Duales (Combinado)") : calc.nombre || t('Arma del Build')}
         </h4>
         <span className="text-xs text-zinc-500">
-          {isDualMode ? t("Duales") : t(weapon.subcategoria)} &middot; {isDualMode ? `${t("vel.")} ${mainCalc.velEfectiva}s` : t(weapon.velocidad)}
+          {!isDualMode && <WeaponIcon subcategoria={weapon.subcategoria} />} {isDualMode ? t("Duales") : t(weapon.subcategoria)} &middot; {isDualMode ? `${t("vel.")} ${mainCalc.velEfectiva}s` : t(weapon.velocidad)}
         </span>
         {isArquero && hasArrows && (
           <span className="text-xs text-green-500">{t("+ Flechas")}</span>

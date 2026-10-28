@@ -1,6 +1,6 @@
 'use client';
 
-import { bonusIcon, bonusSelectOptions } from '@/lib/bonusDisplay';
+import { bonusSelectOptions } from '@/lib/bonusDisplay';
 import { SlotEditor } from '@/components/weapons/SlotEditor';
 import {
   ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, SHIELD_ONLY_BONUS_TYPES,
@@ -8,6 +8,7 @@ import {
 } from '@/lib/engine/constants';
 import type { ArmorBonus, ArmorBonusType, ArmorRareza, ArmorSlot } from '@/types/armor';
 import { useT, type TFunction } from '@/i18n/I18nProvider';
+import { BonusIcon } from '@/components/icons/StatIcons';
 
 /** Sin limite por rareza (Artesano en el catalogo), se mantiene el tope de antes. */
 const ARTESANO_CATALOG_MAX = 4;
@@ -64,7 +65,7 @@ export function ArmorBonusSlots({ bonuses, slot, rareza, onChange, lockArtesano 
         ) : (
           bonuses.map((b, i) => (
             <div key={i} className="flex items-center justify-between text-xs bg-zinc-800/60 rounded px-2 py-1">
-              <span className="text-zinc-300">{bonusIcon(b.type)} {t(ARMOR_BONUS_LABELS[b.type])}</span>
+              <span className="text-zinc-300"><BonusIcon bonus={b.type} /> {t(ARMOR_BONUS_LABELS[b.type])}</span>
               <span className="text-amber-400 font-semibold">+{b.value}</span>
             </div>
           ))

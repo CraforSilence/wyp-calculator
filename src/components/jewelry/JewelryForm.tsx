@@ -1,6 +1,8 @@
 'use client';
 
 import { bonusSelectOptions } from '@/lib/bonusDisplay';
+import { BonusIcon } from '@/components/icons/StatIcons';
+import { IconSelect } from '@/components/ui/IconSelect';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -96,9 +98,10 @@ export function JewelryForm({ onSave, editingItem, onCancel }: JewelryFormProps)
               return (
                 <div key={idx} className="flex items-end gap-2">
                   <div className="flex-1">
-                    <Select
+                    <IconSelect
                       value={bonus.type}
-                      onChange={(e) => handleUpdateBonus(idx, 'type', e.target.value)}
+                      renderIcon={(v) => <BonusIcon bonus={v} />}
+                      onChange={(v) => handleUpdateBonus(idx, 'type', v)}
                       options={bonusSelectOptions(availableTypes, (t) => JEWELRY_BONUS_LABELS[t as JewelryBonusType])}
                     />
                   </div>

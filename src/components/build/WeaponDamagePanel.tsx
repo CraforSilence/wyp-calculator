@@ -4,10 +4,13 @@ import { useBuildDamage } from '@/hooks/useBuildDamage';
 import { useCharacter } from '@/hooks/useCharacter';
 import { aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import {
-  DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, PHYSICAL_DAMAGE_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_TYPES, CRIT_BASE,
+  DAMAGE_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES, JEWELRY_BONUS_LABELS, JEWELRY_BONUS_TYPES, CRIT_BASE,
 } from '@/lib/engine/constants';
-import type { DamageTypeName } from '@/types/weapon';
+import type { DamageTypeName, WeaponCalcResult } from '@/types/weapon';
+import type { Subclase } from '@/types/character';
+import type { JewelrySet } from '@/types/jewelry';
 import { useT } from '@/i18n/I18nProvider';
+import { DamageIcon } from '@/components/icons/StatIcons';
 
 const MAIN_STAT_LABELS = { STR: 'Fuerza', DXT: 'Destreza', INT: 'Inteligencia' } as const;
 
@@ -26,29 +29,41 @@ export function WeaponDamagePanel() {
   const { hasWeapon, mainCalc, jewelry, isDualMode } = useBuildDamage();
   const { character } = useCharacter();
 
-  if (!hasWeapon || !mainCalc) {
-    return (
-      <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/60 p-4 text-center">
-        <p className="text-[12px] uppercase tracking-wider text-zinc-500 mb-1">{t("Daño por golpe")}</p>
-        <p className="text-sm text-zinc-400">{t("Cargá un arma y acá vas a ver tu daño en vivo.")}</p>
-      </div>
-    );
-  }
+  if (!hasWeapon || !mainCalc) return <EmptyDamagePanel text={t("Cargá un arma y acá vas a ver tu daño en vivo.")} />;
+  return <DamagePanel calc={mainCalc} subclase={character.subclase} jewelry={jewelry} title={isDualMode ? t("Duales (combinado)") : mainCalc.nombre || t('Arma del Build')} />;
+}
 
-  const c = mainCalc;
+export function EmptyDamagePanel({ text }: { text: string }) {
+  const t = useT();
+  return (
+    <div className="rounded-lg border border-dashed border-zinc-700 bg-zinc-900/60 p-4 text-center">
+      <p className="text-[12px] uppercase tracking-wider text-zinc-500 mb-1">{t("Daño por golpe")}</p>
+      <p className="text-sm text-zinc-400">{text}</p>
+    </div>
+  );
+}
+
+/** El panel de daño de un cálculo cualquiera (el del Build o el arma que se está editando). */
+export function DamagePanel({ calc: c, subclase, jewelry = null, title }: {
+  calc: WeaponCalcResult;
+  subclase: Subclase;
+  jewelry?: JewelrySet | null;
+  title: string;
+}) {
+  const t = useT();
   const p = c.pasos;
-  const jBonus = aggregateJewelryBonuses(jewelry);
+  const jBonus = jewelry ? aggregateJewelryBonuses(jewelry) : {};
   const jewelryEntries = JEWELRY_BONUS_TYPES.filter((dt) => jBonus[dt]);
   const types = Object.entries(c.desglose) as [DamageTypeName, [number, number]][];
   // El "Chance de critico %" de arma y joyeria multiplica el critico base de la subclase
-  const critBase = CRIT_BASE[character.subclase];
+  const critBase = CRIT_BASE[subclase];
   const critBonusPct = c.critBonusPct;
 
   return (
     <div className="rounded-lg border border-amber-700/40 bg-zinc-900 shadow-lg shadow-black/30 overflow-hidden">
       <div className="px-4 pt-3 pb-3 bg-gradient-to-b from-amber-500/10 to-transparent">
         <p className="text-[12px] uppercase tracking-wider text-amber-500/80 font-semibold">{t("Daño por golpe")}</p>
-        <p className="text-xs text-zinc-400 truncate" title={c.nombre}>{isDualMode ? t("Duales (combinado)") : c.nombre || t('Arma del Build')}</p>
+        <p className="text-xs text-zinc-400 truncate" title={title}>{title}</p>
         <p className="mt-1 text-3xl font-bold text-zinc-50 tabular-nums">
           {c.danoMin} <span className="text-zinc-500">–</span> {c.danoMax}
           <span className="ml-2 text-xs font-normal text-zinc-500">{t("mín – máx")}</span>
@@ -67,7 +82,7 @@ export function WeaponDamagePanel() {
           </div>
           <div
             className="rounded-md bg-zinc-800/60 px-2.5 py-1.5"
-            title={t('Crítico base de {subclase}: {base}%. El "Chance de crítico %" del arma y la joyería (+{bonus}%) se aplica sobre esa base: {base}% × {mult} = {total}%.', { subclase: t(character.subclase), base: critBase, bonus: critBonusPct, mult: (1 + critBonusPct / 100).toFixed(2), total: c.critTotalPct })}
+            title={t('Crítico base de {subclase}: {base}%. El "Chance de crítico %" del arma y la joyería (+{bonus}%) se aplica sobre esa base: {base}% × {mult} = {total}%.', { subclase: t(subclase), base: critBase, bonus: critBonusPct, mult: (1 + critBonusPct / 100).toFixed(2), total: c.critTotalPct })}
           >
             <p className="text-[12px] text-zinc-500">{t("Crítico")}</p>
             <p className="font-semibold text-zinc-100 tabular-nums">{c.critTotalPct}% <span className="text-xs font-normal text-zinc-500">x{c.critMult}</span></p>
@@ -87,7 +102,7 @@ export function WeaponDamagePanel() {
             <div key={dt} className="flex items-center justify-between gap-2 py-0.5">
               <span className="flex items-center gap-1.5 text-zinc-300">
                 <span className={`w-1.5 h-1.5 rounded-full ${PHYSICAL_DAMAGE_TYPES.includes(dt) ? 'bg-orange-500' : 'bg-blue-500'}`} />
-                {DAMAGE_TYPE_ICONS[dt]} {t(DAMAGE_TYPE_LABELS[dt] || dt)}
+                <DamageIcon type={dt} /> {t(DAMAGE_TYPE_LABELS[dt] || dt)}
                 {c.specialDamagePerType[dt] != null && (
                   <span className="text-[11px] text-purple-400" title={t("Daño especial: solo lo reduce el factor de protección (PF)")}>+{c.specialDamagePerType[dt]} {t('esp.')}</span>
                 )}

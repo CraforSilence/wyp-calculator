@@ -1,6 +1,6 @@
 'use client';
 
-import { Fragment, SelectHTMLAttributes } from 'react';
+import { Fragment, type SelectHTMLAttributes } from 'react';
 import { HelpPopover } from './HelpPopover';
 import { useT, type TFunction } from '@/i18n/I18nProvider';
 
@@ -11,11 +11,11 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   options: { value: string; label: string; group?: string }[];
 }
 
-type SelectOption = SelectProps['options'][number];
+export type SelectOption = SelectProps['options'][number];
 
 // Las etiquetas de las opciones suelen ser datos del juego (clases, bonus, rarezas): se traducen aca.
-// Si traen un icono adelante ("💥  Chance de critico %") se traduce solo el texto.
-function translateLabel(label: string, t: TFunction): string {
+// Si traen algo que no es letra adelante ("+5 ...", "% Daño de Arma") se traduce solo el texto.
+export function translateLabel(label: string, t: TFunction): string {
   const m = label.match(/^([^\p{L}]*)(.*)$/u);
   return m ? m[1] + t(m[2]) : t(label);
 }

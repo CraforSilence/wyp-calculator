@@ -15,11 +15,14 @@ import { PageHeader } from '@/components/layout/PageHeader';
 import { Select } from '@/components/ui/Select';
 import { Modal } from '@/components/ui/Modal';
 import { Badge, rarezaToBadgeVariant } from '@/components/ui/Badge';
-import { SUBCATEGORIAS_POR_CLASE, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, PHYSICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
+import { SUBCATEGORIAS_POR_CLASE, DAMAGE_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES } from '@/lib/engine/constants';
 import type { WeaponCalcResult, DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 import type { Weapon } from '@/types/weapon';
 import { useT } from '@/i18n/I18nProvider';
+import { DamageIcon } from '@/components/icons/StatIcons';
+import { WeaponIcon } from '@/components/icons/WeaponIcon';
+import { IconSelect } from '@/components/ui/IconSelect';
 
 type SortKey = 'dps' | 'prom' | 'crit' | 'sg' | 'gps';
 
@@ -132,10 +135,12 @@ export default function RankingsPage() {
           />
         </div>
         {subcatOptions.length > 0 && (
-          <Select
+          <IconSelect
             label={t('Subcategoría')}
             value={filterSubcat}
-            onChange={(e) => setFilterSubcat(e.target.value)}
+            onChange={setFilterSubcat}
+            renderIcon={(v) => (v === 'Todas' ? null : <WeaponIcon subcategoria={v} />)}
+            className="min-w-44"
             options={[{ value: 'Todas', label: 'Todas' }, ...subcatOptions.map((s) => ({ value: s, label: s }))]}
           />
         )}
@@ -153,6 +158,7 @@ export default function RankingsPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs text-zinc-500 font-mono">#{i + 1}</span>
+                  <WeaponIcon subcategoria={weapon.subcategoria} />
                   <span className="text-sm font-medium text-zinc-200 truncate">{result.nombre}</span>
                 </div>
                 <Badge variant={rarezaToBadgeVariant(weapon.rareza)} className="mt-1">{t(weapon.rareza)}</Badge>
@@ -211,6 +217,7 @@ export default function RankingsPage() {
                 <td className="py-2 px-2 text-zinc-500">{i + 1}</td>
                 <td className="py-2 px-2">
                   <div className="flex items-center gap-2">
+                    <WeaponIcon subcategoria={weapon.subcategoria} />
                     <span className="text-zinc-200">{result.nombre}</span>
                     <Badge variant={rarezaToBadgeVariant(weapon.rareza)} className="hidden sm:inline-flex">{t(weapon.rareza)}</Badge>
                   </div>
@@ -256,7 +263,7 @@ export default function RankingsPage() {
             <div className="flex items-center gap-1.5 flex-wrap -mt-1">
               <Badge variant={rarezaToBadgeVariant(selectedDetail.weapon.rareza)}>{t(selectedDetail.weapon.rareza)}</Badge>
               <span className="text-xs text-zinc-500">
-                {t(selectedDetail.weapon.clase)} &middot; {t(selectedDetail.weapon.subcategoria)} &middot; {t(selectedDetail.weapon.velocidad)}
+                {t(selectedDetail.weapon.clase)} &middot; <WeaponIcon subcategoria={selectedDetail.weapon.subcategoria} /> {t(selectedDetail.weapon.subcategoria)} &middot; {t(selectedDetail.weapon.velocidad)}
               </span>
             </div>
 
@@ -303,7 +310,7 @@ export default function RankingsPage() {
                       <div key={tipo} className="flex items-baseline justify-between gap-2 py-0.5">
                         <span className="text-xs text-zinc-500 inline-flex items-center gap-1">
                           <span className={`w-1.5 h-1.5 rounded-full ${PHYSICAL_DAMAGE_TYPES.includes(tipo) ? 'bg-orange-500' : 'bg-blue-500'}`} />
-                          {DAMAGE_TYPE_ICONS[tipo]} {t(DAMAGE_TYPE_LABELS[tipo] || tipo)}
+                          <DamageIcon type={tipo} /> {t(DAMAGE_TYPE_LABELS[tipo] || tipo)}
                         </span>
                         <span className="text-sm text-zinc-200 tabular-nums">{min === max ? min : `${min} – ${max}`}</span>
                       </div>

@@ -9,12 +9,13 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useBuildDamage } from '@/hooks/useBuildDamage';
 import { buildEffectiveArmorSet } from '@/lib/engine/simulation';
 import {
-  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, PHYSICAL_DAMAGE_TYPES,
+  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES,
   PROTECTION_FACTORS, ITEM_DISTRIBUTION,
 } from '@/lib/engine/constants';
 import { QUALITY_STYLES } from '@/components/armor/ArmorPieceSummary';
 import type { ArmorSlot, ProtectionQuality } from '@/types/armor';
 import { useT } from '@/i18n/I18nProvider';
+import { DamageIcon } from '@/components/icons/StatIcons';
 
 /** Calidad mas cercana a un factor de proteccion promedio. */
 function nearestQuality(pf: number): ProtectionQuality {
@@ -119,7 +120,7 @@ export function ArmorStatusPanel() {
             <div key={dt} className="py-1.5 border-b border-zinc-800/60 last:border-0">
               <div className="grid grid-cols-[1fr_auto_auto] gap-x-3 items-baseline text-sm">
                 <span className="flex items-baseline gap-1.5 min-w-0">
-                  <span className="text-zinc-300 truncate">{DAMAGE_TYPE_ICONS[dt]} {t(DAMAGE_TYPE_LABELS[dt])}</span>
+                  <span className="text-zinc-300 truncate"><DamageIcon type={dt} /> {t(DAMAGE_TYPE_LABELS[dt])}</span>
                   <span className={`font-bold tabular-nums ${isPhysical ? 'text-orange-400' : 'text-blue-400'}`} title={t("Protección total contra este tipo")}>{Math.round(prot)}</span>
                 </span>
                 <span className="text-right tabular-nums text-zinc-400">{Number.isFinite(threshold) ? threshold : '∞'}</span>

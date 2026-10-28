@@ -1,10 +1,10 @@
 'use client';
 
-import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, MUESCA_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES, RAREZA_SLOTS, isMuescaSpeedType } from '@/lib/engine/constants';
-import { bonusIcon } from '@/lib/bonusDisplay';
+import { DAMAGE_TYPE_LABELS, MUESCA_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES, RAREZA_SLOTS, isMuescaSpeedType } from '@/lib/engine/constants';
 import type { DamageTypeName, MuescaType, Weapon, WeaponAttr } from '@/types/weapon';
 import { getWeaponAttributes, WEAPON_ATTR_LABELS } from '@/lib/weaponAttributes';
 import { useT } from '@/i18n/I18nProvider';
+import { BonusIcon, DamageIcon } from '@/components/icons/StatIcons';
 
 function Row({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
@@ -27,6 +27,7 @@ function weaponBonusList(weapon: Weapon): { key: string; label: string; value: s
   if (weapon.critChanceExtra) list.push({ key: 'Chance de critico %', label: 'Chance de crítico', value: fmtPct(weapon.critChanceExtra) });
   if (weapon.critDmgExtra) list.push({ key: 'Dano critico %', label: 'Daño crítico', value: fmtPct(weapon.critDmgExtra) });
   if (weapon.attackSpeedPct) list.push({ key: 'Vel ataque %', label: 'Vel. ataque', value: fmtPct(weapon.attackSpeedPct) });
+  if (weapon.castSpeedPct) list.push({ key: 'Vel invocacion %', label: 'Vel. invocación', value: fmtPct(weapon.castSpeedPct) });
   if (weapon.atributoClasePct) list.push({ key: 'Atributo de clase %', label: 'Atributo de clase', value: fmtPct(weapon.atributoClasePct) });
   for (const [tipo, valor] of Object.entries(weapon.bonusDano) as [DamageTypeName, number][]) {
     if (valor) list.push({ key: tipo, label: `Daño ${DAMAGE_TYPE_LABELS[tipo]}`, dmgType: DAMAGE_TYPE_LABELS[tipo], value: `+${valor}` });
@@ -70,7 +71,7 @@ export function WeaponSheet({ weapon }: { weapon: Weapon }) {
           <Row key={tipo} label={
             <span className="inline-flex items-center gap-1">
               <span className={`w-1.5 h-1.5 rounded-full ${PHYSICAL_DAMAGE_TYPES.includes(tipo) ? 'bg-orange-500' : 'bg-blue-500'}`} />
-              {DAMAGE_TYPE_ICONS[tipo]} {t(DAMAGE_TYPE_LABELS[tipo])}
+              <DamageIcon type={tipo} /> {t(DAMAGE_TYPE_LABELS[tipo])}
             </span>
           }>
             <span className="tabular-nums">{min === max ? min : `${min} – ${max}`}</span>
@@ -90,7 +91,7 @@ export function WeaponSheet({ weapon }: { weapon: Weapon }) {
         {bonuses.length === 0 ? (
           <span className="text-xs text-zinc-600">{t("Sin bonus")}</span>
         ) : bonuses.map((b) => (
-          <Row key={b.key} label={<span>{bonusIcon(b.key)} {b.dmgType ? `${t('Daño')} ${t(b.dmgType)}` : t(b.label)}</span>}>
+          <Row key={b.key} label={<span><BonusIcon bonus={b.key} /> {b.dmgType ? `${t('Daño')} ${t(b.dmgType)}` : t(b.label)}</span>}>
             <span className="text-amber-400 font-semibold">{b.value}</span>
           </Row>
         ))}
@@ -103,7 +104,7 @@ export function WeaponSheet({ weapon }: { weapon: Weapon }) {
         {muescas.length === 0 ? (
           <span className="text-xs text-zinc-600">{t("Sin muescas")}</span>
         ) : muescas.map(([tipo, valor]) => (
-          <Row key={tipo} label={<span>{bonusIcon(tipo)} {t(MUESCA_TYPE_LABELS[tipo] || tipo)}</span>}>
+          <Row key={tipo} label={<span><BonusIcon bonus={tipo} /> {t(MUESCA_TYPE_LABELS[tipo] || tipo)}</span>}>
             {isMuescaSpeedType(tipo)
               ? <span className="text-amber-400 font-semibold">+{valor}%</span>
               : <span className="text-purple-400 font-semibold" title={t("Nivel de la gema")}>nv {valor}</span>}

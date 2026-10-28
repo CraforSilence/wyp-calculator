@@ -1,6 +1,8 @@
 'use client';
 
 import { bonusSelectOptions } from '@/lib/bonusDisplay';
+import { BonusIcon } from '@/components/icons/StatIcons';
+import { IconSelect } from '@/components/ui/IconSelect';
 import { Card } from '@/components/ui/Card';
 import { Select } from '@/components/ui/Select';
 import { Input } from '@/components/ui/Input';
@@ -100,12 +102,13 @@ export function EnemyJewelryEditor({ jewelry, onUpdate }: EnemyJewelryEditorProp
                   return (
                     <div key={idx} className="flex items-end gap-2">
                       <div className="flex-1">
-                        <Select
+                        <IconSelect
                           label={idx === 0 ? t("Tipo") : undefined}
                           value={bonus.type}
-                          onChange={(e) =>
+                          renderIcon={(v) => <BonusIcon bonus={v} />}
+                          onChange={(v) =>
                             updateBonus(slot, idx, {
-                              type: e.target.value as JewelryBonusType,
+                              type: v as JewelryBonusType,
                               value: bonus.value,
                             })
                           }

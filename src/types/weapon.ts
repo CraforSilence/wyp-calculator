@@ -35,6 +35,8 @@ export interface Weapon {
   critChanceExtra: number;
   critDmgExtra: number;
   attackSpeedPct: number;
+  /** % de velocidad de invocación que da el arma como bonus (opcional: armas viejas no lo traen) */
+  castSpeedPct?: number;
   atributoClasePct: number;
   tiposDano: Partial<Record<DamageTypeName, [number, number]>>;
   bonusDano: Partial<Record<DamageTypeName, number>>;

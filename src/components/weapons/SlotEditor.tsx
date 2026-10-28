@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Input } from '@/components/ui/Input';
-import { Select } from '@/components/ui/Select';
+import { IconSelect } from '@/components/ui/IconSelect';
+import { BonusIcon } from '@/components/icons/StatIcons';
 import { Button } from '@/components/ui/Button';
 import { isMuescaSpeedType } from '@/lib/engine/constants';
 import { useT } from '@/i18n/I18nProvider';
@@ -99,10 +100,11 @@ export function SlotEditor<T extends SlotRow>({
               {i + 1}
             </span>
             <div className="flex-1 min-w-0">
-            <Select
+            <IconSelect
               tooltip={selectTooltip}
               value={row.tipo}
-              onChange={(e) => update(i, { tipo: e.target.value, ...(e.target.value ? {} : { valor: 0 }) })}
+              renderIcon={(v) => <BonusIcon bonus={v} />}
+              onChange={(tipo) => update(i, { tipo, ...(tipo ? {} : { valor: 0 }) })}
               options={[
                 { value: '', label: '— Vacío —' },
                 ...options,

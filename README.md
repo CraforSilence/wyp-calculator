@@ -87,3 +87,18 @@ Manual a Vercel (no está vinculado a GitHub). Ver [docs/DEPLOY.md](docs/DEPLOY.
 Logos originales en `public/logo/`. Versiones derivadas para fondo oscuro
 (`wypforge-logo-dark.png`, `wypforge-name-dark.png`, `wypforge-mark.png`) y los íconos de
 `src/app/` (favicon, apple-icon, imagen para redes) salen de esos originales.
+
+### Íconos
+
+Todos siguen la paleta del logo (contorno navy, azul pizarra, dorado). Se pueden ver juntos en
+`/iconos` (página sin link en el menú).
+
+- **Equipo** (arma, flechas, joyas, piezas de armadura): SVG en `public/icons/`, generados por
+  `scripts/build-icons.mjs`. Para cambiar uno, editar el script y correr `node scripts/build-icons.mjs`.
+- **Tipos de arma** (lanza, maza, espada, hacha, martillo, florín, garrote, arcos, báculo): SVG en
+  `public/icons/armas/`, del mismo generador. `src/components/icons/WeaponIcon.tsx` mapea subcategoría → ícono.
+- **Clases y subclases**: componentes React en `src/components/icons/CharacterIcons.tsx`.
+- **Tipos de daño y bonus**: `src/components/icons/StatIcons.tsx` (`<DamageIcon>`, `<BonusIcon>`).
+  Qué ícono lleva cada bonus se define en `src/lib/bonusDisplay.ts` (`bonusIconId`). Los `<select>`
+  no pueden mostrar imágenes en las opciones: el ícono del bonus elegido va dentro del selector
+  (prop `icon` de `Select`).

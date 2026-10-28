@@ -1,5 +1,5 @@
 import type { Clase, Subclase, MainStat } from '@/types/character';
-import type { ArmorSlot, ArmorBonusType, ProtectionQuality, ArmorPiece, ArmorRareza } from '@/types/armor';
+import type { ArmorSlot, ArmorBonusType, ProtectionQuality, ArmorPiece, ArmorRareza, ArmorFamilia } from '@/types/armor';
 import type { DamageTypeName, MuescaSpeedType, MuescaType, Rareza } from '@/types/weapon';
 import type { JewelryBonusType } from '@/types/jewelry';
 
@@ -127,6 +127,24 @@ export function pieceRareza(piece: Pick<ArmorPiece, 'rareza'> | undefined, setRa
   return piece?.rareza ?? setRareza ?? 'Legendaria';
 }
 
+/**
+ * Mejoras de armadura (Resistir +1% / +2%) por pieza segun el set. Los magos tienen menos
+ * piezas y por eso cada una lleva mas. El escudo y el brazalete no llevan mejoras.
+ */
+export const ARMOR_UPGRADES_POR_FAMILIA: Record<ArmorFamilia, { mago: number; resto: number }> = {
+  magnanitas: { mago: 7, resto: 4 },
+  champion: { mago: 5, resto: 3 },
+  dragon: { mago: 4, resto: 2 },
+};
+
+/** Maximo de mejoras de una pieza. Sin familia (armadura cargada a mano) se usa el mayor de su clase. */
+export function maxArmorUpgrades(familia: ArmorFamilia | undefined, clase: Clase, slot: ArmorSlot): number {
+  if (!familia) return clase === 'Mago' ? 7 : 4;
+  if (slot === 'escudo' || slot === 'brazalete') return 0;
+  const limits = ARMOR_UPGRADES_POR_FAMILIA[familia];
+  return clase === 'Mago' ? limits.mago : limits.resto;
+}
+
 /** Opciones de bonus de arma permitidas para una rareza. */
 export function bonusOptionsForRareza(rareza: Rareza, all: readonly string[]): { value: string; label: string }[] {
   const allowed = RAREZA_SLOTS[rareza].bonusTypes;
@@ -144,16 +162,6 @@ export const MUESCA_TYPE_LABELS: Record<MuescaType, string> = {
 export function isMuescaSpeedType(tipo: string): tipo is MuescaSpeedType {
   return (MUESCA_SPEED_TYPES as string[]).includes(tipo);
 }
-
-// Iconos/emojis por tipo de daño para UI
-export const DAMAGE_TYPE_ICONS: Record<DamageTypeName, string> = {
-  punzante: '\u{1F3F9}',   // arco/flecha
-  cortante: '\u{2694}\uFE0F', // espadas cruzadas
-  aplastante: '\u{1F528}', // martillo
-  fuego: '\u{1F525}',      // fuego
-  hielo: '\u{2744}\uFE0F', // copo de nieve
-  electrico: '\u{26A1}',   // rayo
-};
 
 export const ARMOR_SLOT_LABELS: Record<ArmorSlot, string> = {
   pechera: 'Pechera',
@@ -308,21 +316,21 @@ export const ARMOR_BONUS_LABELS: Record<ArmorBonusType, string> = {
 
 // Iconos por slot de armadura
 export const ARMOR_SLOT_ICONS: Record<ArmorSlot, string> = {
-  pechera: '/icons/pechera.png',
-  casco: '/icons/casco.png',
-  perneras: '/icons/perneras.png',
-  hombreras: '/icons/hombreras.png',
-  guanteletes: '/icons/guanteletes.png',
-  escudo: '/icons/escudo.png',
-  brazalete: '/icons/escudo.png',
-  tunica: '/icons/pechera.png',
+  pechera: '/icons/pechera.svg',
+  casco: '/icons/casco.svg',
+  perneras: '/icons/perneras.svg',
+  hombreras: '/icons/hombreras.svg',
+  guanteletes: '/icons/guanteletes.svg',
+  escudo: '/icons/escudo.svg',
+  brazalete: '/icons/brazalete.svg',
+  tunica: '/icons/tunica.svg',
 };
 
 // Iconos de joyería
 export const JEWELRY_ICONS: Record<string, string> = {
-  anillo1: '/icons/anillo.png',
-  anillo2: '/icons/anillo.png',
-  amuleto: '/icons/amuleto.png',
+  anillo1: '/icons/anillo.svg',
+  anillo2: '/icons/anillo.svg',
+  amuleto: '/icons/amuleto.svg',
 };
 
 // Mapa subcategoría → categoría para cálculos de habilidades

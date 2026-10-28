@@ -20,11 +20,11 @@ const WHAT_HAPPENS: Record<ShareType, string> = {
 };
 
 const TYPE_ICONS: Record<ShareType, string> = {
-  weapon: '/icons/arma.png',
-  jewelry: '/icons/anillo.png',
-  armor: '/icons/pechera.png',
+  weapon: '/icons/arma.svg',
+  jewelry: '/icons/anillo.svg',
+  armor: '/icons/pechera.svg',
   build: '/logo/wypforge-mark.png',
-  compare: '/icons/arma.png',
+  compare: '/icons/comparar.svg',
 };
 
 export default function ImportarPage() {

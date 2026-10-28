@@ -6,7 +6,7 @@ import { Select } from '@/components/ui/Select';
 import { Card } from '@/components/ui/Card';
 import { HelpTip } from '@/components/ui/HelpTip';
 import {
-  ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
+  ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, ARMOR_SLOT_LABELS,
   armorSlotsFor, ARMOR_SLOT_ICONS, CLASE_SUBCLASES,
   PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_SLOT_LABEL_OVERRIDES,
 } from '@/lib/engine/constants';
@@ -17,6 +17,7 @@ import { ArmorModifiersSection } from '@/components/armor/ArmorModifiersSection'
 import type { ArmorSet, ArmorSlot, ArmorPiece, ProtectionQuality } from '@/types/armor';
 import type { Clase, Subclase } from '@/types/character';
 import { useT } from '@/i18n/I18nProvider';
+import { DamageIcon } from '@/components/icons/StatIcons';
 
 const QUALITY_OPTIONS: { value: string; label: string }[] = [
   { value: '', label: 'N/A' },
@@ -180,7 +181,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
                 <div className="grid grid-cols-2 gap-1.5">
                   {DAMAGE_TYPES_PAIRED.map((dt) => (
                     <div key={dt} className="flex items-center gap-1.5">
-                      <span className="text-sm shrink-0" title={t(DAMAGE_TYPE_LABELS[dt])}>{DAMAGE_TYPE_ICONS[dt]}</span>
+                      <DamageIcon type={dt} title={t(DAMAGE_TYPE_LABELS[dt])} className="w-[1.2em] h-[1.2em] shrink-0 text-sm" />
                       <select
                         className={`flex-1 min-w-0 rounded border px-2 py-1.5 text-xs focus:outline-none focus:border-amber-500 transition-colors ${piece.protectionFactors[dt] ? QUALITY_STYLES[piece.protectionFactors[dt] as ProtectionQuality] : 'bg-zinc-800 border-zinc-700 text-zinc-100'}`}
                         value={piece.protectionFactors[dt] || ''}
@@ -253,7 +254,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
               {ALL_DAMAGE_TYPES.map((dt) => (
                 <Input
                   key={dt}
-                  label={`${DAMAGE_TYPE_ICONS[dt]} ${t(DAMAGE_TYPE_LABELS[dt])}`}
+                  label={<><DamageIcon type={dt} /> {t(DAMAGE_TYPE_LABELS[dt])}</>}
                   type="number" min={0} max={100}
                   value={armorSet.typeResistance[dt] ?? 0}
                   onChange={(e) => onUpdateSet({
@@ -274,7 +275,7 @@ export function EnemyArmorEditor({ armorSet, enemyClase, enemySubclase, onChange
               {ALL_DAMAGE_TYPES.map((dt) => (
                 <Input
                   key={dt}
-                  label={`${DAMAGE_TYPE_ICONS[dt]} ${t(DAMAGE_TYPE_LABELS[dt])}`}
+                  label={<><DamageIcon type={dt} /> {t(DAMAGE_TYPE_LABELS[dt])}</>}
                   type="number" min={0}
                   value={armorSet.barrierPoints[dt] ?? 0}
                   onChange={(e) => onUpdateSet({

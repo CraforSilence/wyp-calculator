@@ -1,43 +1,43 @@
-import { DAMAGE_TYPE_ICONS, DAMAGE_TYPE_LABELS, ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
+import { DAMAGE_TYPE_LABELS, ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
+import type { StatIconId } from '@/components/icons/StatIcons';
 import type { DamageTypeName } from '@/types/weapon';
 
 /**
- * Icono y grupo de cada bonus, para que los selectores se lean de un vistazo. Las claves son
+ * Ícono y grupo de cada bonus, para que los selectores se lean de un vistazo. Las claves son
  * las de armadura y joyeria, y los nombres que usan los bonus de arma ("Fuerza", "Dano Fuego").
  */
 type BonusGroup = 'Atributos' | 'Daño' | 'Crítico' | 'Velocidad' | 'Resistencias' | 'Otros';
 
-const ATTRIBUTE: Record<string, string> = {
-  fuerza: '💪', STR: '💪', Fuerza: '💪',
-  destreza: '🎯', DXT: '🎯', Destreza: '🎯',
-  inteligencia: '🧠', INT: '🧠', Inteligencia: '🧠',
-  constitucion: '🧱', CON: '🧱', Constitucion: '🧱',
-  concentracion: '🧘', FOC: '🧘', Concentracion: '🧘',
-  classAttribute: '⭐', 'Atributo de clase %': '⭐',
+const ATTRIBUTE: Record<string, StatIconId> = {
+  fuerza: 'fuerza', STR: 'fuerza', Fuerza: 'fuerza',
+  destreza: 'destreza', DXT: 'destreza', Destreza: 'destreza',
+  inteligencia: 'inteligencia', INT: 'inteligencia', Inteligencia: 'inteligencia',
+  constitucion: 'constitucion', CON: 'constitucion', Constitucion: 'constitucion',
+  concentracion: 'concentracion', FOC: 'concentracion', Concentracion: 'concentracion',
+  classAttribute: 'atributoClase', 'Atributo de clase %': 'atributoClase',
 };
 
-const CRIT: Record<string, string> = {
-  critChance: '💥', 'Chance de critico %': '💥',
-  'Dano critico %': '💢',
+const CRIT: Record<string, StatIconId> = {
+  critChance: 'critChance', 'Chance de critico %': 'critChance',
+  'Dano critico %': 'critDmg',
 };
 
-const SPEED: Record<string, string> = {
-  velocidadAtaque: '⏩', attackSpeed: '⏩', 'Vel ataque %': '⏩',
-  velocidadIncantacion: '✨', castSpeed: '✨',
-  velocidadMovimiento: '👟', velocidadMovimientoBZ: '👟',
+const SPEED: Record<string, StatIconId> = {
+  velocidadAtaque: 'attackSpeed', attackSpeed: 'attackSpeed', 'Vel ataque %': 'attackSpeed',
+  velocidadIncantacion: 'castSpeed', castSpeed: 'castSpeed', 'Vel invocacion %': 'castSpeed',
+  velocidadMovimiento: 'moveSpeed', velocidadMovimientoBZ: 'moveSpeed',
 };
 
-const RESIST: Record<string, string> = {
-  resistirFisico: '🪖', resistirMagico: '🔮',
-  resistirCortante: DAMAGE_TYPE_ICONS.cortante, resistirPunzante: DAMAGE_TYPE_ICONS.punzante,
-  resistirAplastante: DAMAGE_TYPE_ICONS.aplastante, resistirFuego: DAMAGE_TYPE_ICONS.fuego,
-  resistirHielo: DAMAGE_TYPE_ICONS.hielo, resistirElectricidad: DAMAGE_TYPE_ICONS.electrico,
-  armaduraPct: '🛡️', bloqueo: '🔰',
-  reduccionMelee: '🤺', reduccionRango: '🪃',
+const RESIST: Record<string, StatIconId> = {
+  resistirFisico: 'resistFisico', resistirMagico: 'resistMagico',
+  resistirCortante: 'cortante', resistirPunzante: 'punzante', resistirAplastante: 'aplastante',
+  resistirFuego: 'fuego', resistirHielo: 'hielo', resistirElectricidad: 'electrico',
+  armaduraPct: 'armadura', bloqueo: 'bloqueo',
+  reduccionMelee: 'reduccionMelee', reduccionRango: 'reduccionRango',
 };
 
-const OTHER: Record<string, string> = {
-  vida: '❤️', mana: '💧', rangoAtaque: '📏', bonusCuracion: '💚', weaponDmgPct: '🗡️',
+const OTHER: Record<string, StatIconId> = {
+  vida: 'vida', mana: 'mana', rangoAtaque: 'rango', bonusCuracion: 'curacion', weaponDmgPct: 'weaponDmg',
 };
 
 /** Tipo de dano al que apunta un bonus de dano ("dano_fuego", "Dano Fuego"), si lo es. */
@@ -54,10 +54,9 @@ function damageTypeOf(key: string): DamageTypeName | undefined {
   return undefined;
 }
 
-export function bonusIcon(key: string): string {
-  const dmg = damageTypeOf(key);
-  if (dmg) return DAMAGE_TYPE_ICONS[dmg];
-  return ATTRIBUTE[key] ?? CRIT[key] ?? SPEED[key] ?? RESIST[key] ?? OTHER[key] ?? '•';
+/** Ícono de un bonus (se dibuja con <BonusIcon>). */
+export function bonusIconId(key: string): StatIconId | undefined {
+  return damageTypeOf(key) ?? ATTRIBUTE[key] ?? CRIT[key] ?? SPEED[key] ?? RESIST[key] ?? OTHER[key];
 }
 
 export function bonusGroup(key: string): BonusGroup {
@@ -71,9 +70,9 @@ export function bonusGroup(key: string): BonusGroup {
 
 const GROUP_ORDER: BonusGroup[] = ['Atributos', 'Daño', 'Crítico', 'Velocidad', 'Resistencias', 'Otros'];
 
-/** Opciones de un selector de bonus con icono y agrupadas por tipo. */
+/** Opciones de un selector de bonus agrupadas por tipo (el ícono va al lado del selector). */
 export function bonusSelectOptions(keys: readonly string[], labelOf: (key: string) => string = (k) => k) {
   return keys
-    .map((k) => ({ value: k, label: `${bonusIcon(k)}  ${labelOf(k)}`, group: bonusGroup(k) }))
+    .map((k) => ({ value: k, label: labelOf(k), group: bonusGroup(k) }))
     .sort((a, b) => GROUP_ORDER.indexOf(a.group) - GROUP_ORDER.indexOf(b.group));
 }

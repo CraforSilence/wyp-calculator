@@ -4,10 +4,11 @@ import { useState } from 'react';
 import { Card } from '@/components/ui/Card';
 import { WeaponAbility, hasWeaponAbility } from '@/components/weapons/WeaponAbility';
 import { HelpTip } from '@/components/ui/HelpTip';
-import { DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS } from '@/lib/engine/constants';
+import { DAMAGE_TYPE_LABELS } from '@/lib/engine/constants';
 import type { SimulationResult, SimulationHit } from '@/types/simulation';
 import type { DamageTypeName, WeaponCalcResult } from '@/types/weapon';
 import { useT } from '@/i18n/I18nProvider';
+import { BonusIcon } from '@/components/icons/StatIcons';
 
 interface SimResultadosProps {
   result: SimulationResult;
@@ -25,12 +26,11 @@ function DamagePerTypeBars({ perType, maxReference }: { perType: Record<string, 
       {types.map((type) => {
         const val = perType[type];
         const pct = maxReference > 0 ? (val / maxReference) * 100 : 0;
-        const icon = DAMAGE_TYPE_ICONS[type as DamageTypeName] || '';
         const label = DAMAGE_TYPE_LABELS[type as DamageTypeName] || type;
         return (
           <div key={type} className="flex items-center gap-2">
             <div className="w-24 text-xs text-zinc-400 flex items-center gap-1 shrink-0">
-              <span>{icon}</span>
+              <BonusIcon bonus={type} />
               <span>{label}</span>
             </div>
             <div className="flex-1 h-4 bg-zinc-800 rounded-full overflow-hidden relative">
@@ -124,6 +124,7 @@ export function SimResultados({ result, weaponStats }: SimResultadosProps) {
             return (
               <div key={hit.hitNumber}>
                 <button
+                  data-testid="sim-hit"
                   onClick={() => toggleHit(hit.hitNumber)}
                   className="w-full flex items-center gap-3 py-1 hover:bg-zinc-800/40 rounded transition-colors cursor-pointer"
                 >

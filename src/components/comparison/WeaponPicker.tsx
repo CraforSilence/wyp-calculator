@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { Badge, rarezaToBadgeVariant } from '@/components/ui/Badge';
 import type { Weapon, WeaponCalcResult } from '@/types/weapon';
 import { useT } from '@/i18n/I18nProvider';
+import { WeaponIcon } from '@/components/icons/WeaponIcon';
 
 export interface PickerItem {
   weapon: Weapon;
@@ -79,7 +80,7 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
                   : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
               }`}
             >
-              {t(s)}
+              {s !== 'Todas' && <WeaponIcon subcategoria={s} />} {t(s)}
             </button>
           ))}
         </div>
@@ -109,7 +110,7 @@ export function WeaponPicker({ items, selectedIds, maxSelected, onToggle, ref }:
                   {!weapon.isDefault && <Badge variant="info">{t("Propia")}</Badge>}
                 </div>
                 <div className="text-xs text-zinc-500 mt-0.5">
-                  {t(weapon.subcategoria)} &middot; {t(weapon.velocidad)} &middot; {result.danoMin}-{result.danoMax}
+                  <WeaponIcon subcategoria={weapon.subcategoria} /> {t(weapon.subcategoria)} &middot; {t(weapon.velocidad)} &middot; {result.danoMin}-{result.danoMax}
                 </div>
               </div>
               <div className="text-right shrink-0">

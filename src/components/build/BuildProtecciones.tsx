@@ -5,7 +5,7 @@ import { useCharacter } from '@/hooks/useCharacter';
 import { useArmor } from '@/hooks/useArmor';
 import { calcTotalProtection, filterArmorForSubclase } from '@/lib/engine/armor';
 import {
-  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS,
+  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS,
   PHYSICAL_DAMAGE_TYPES, ARMOR_SLOT_LABELS, CLASE_SUBCLASES,
   ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, ARMOR_SLOT_LABEL_OVERRIDES,
 } from '@/lib/engine/constants';
@@ -13,6 +13,7 @@ import { Card } from '@/components/ui/Card';
 import type { ArmorSlot, ArmorBonusType } from '@/types/armor';
 import type { Clase } from '@/types/character';
 import { useT } from '@/i18n/I18nProvider';
+import { DamageIcon } from '@/components/icons/StatIcons';
 
 function getClase(subclase: string): Clase {
   for (const [clase, subs] of Object.entries(CLASE_SUBCLASES)) {
@@ -87,7 +88,7 @@ export function BuildProtecciones() {
             return (
               <div key={dt}>
                 <div className="flex items-center justify-between text-sm mb-0.5">
-                  <span className="text-zinc-300">{DAMAGE_TYPE_ICONS[dt]} {t(DAMAGE_TYPE_LABELS[dt])}</span>
+                  <span className="text-zinc-300"><DamageIcon type={dt} /> {t(DAMAGE_TYPE_LABELS[dt])}</span>
                   <span className={`font-bold ${val > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-600'}`}>
                     {Math.round(val)}
                   </span>
@@ -112,7 +113,7 @@ export function BuildProtecciones() {
               <tr className="text-zinc-500 border-b border-zinc-800">
                 <th className="text-left py-1.5 pr-2 font-medium">{t("Pieza")}</th>
                 {ALL_DAMAGE_TYPES.map((dt) => (
-                  <th key={dt} className="text-right py-1.5 px-1 font-medium" title={t(DAMAGE_TYPE_LABELS[dt])}>{DAMAGE_TYPE_ICONS[dt]}</th>
+                  <th key={dt} className="text-right py-1.5 px-1 font-medium" title={t(DAMAGE_TYPE_LABELS[dt])}><DamageIcon type={dt} title={t(DAMAGE_TYPE_LABELS[dt])} /></th>
                 ))}
               </tr>
             </thead>

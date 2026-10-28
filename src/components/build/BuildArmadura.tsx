@@ -6,10 +6,11 @@ import { useArmor } from '@/hooks/useArmor';
 import { calcTotalProtection, filterArmorForSubclase, allArmorBonuses } from '@/lib/engine/armor';
 import { useActiveArmorPreset } from '@/hooks/useActiveArmorPreset';
 import {
-  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, ARMOR_SLOT_LABELS,
+  ARMOR_CLASSES, ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, ARMOR_SLOT_LABELS,
   PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, armorSlotsFor, CLASE_SUBCLASES,
   ARMOR_BONUS_TYPES, ARMOR_BONUS_LABELS, ARMOR_SLOT_ICONS,
   ARMOR_SLOT_LABEL_OVERRIDES, pieceRareza, ITEM_DISTRIBUTION,
+  maxArmorUpgrades,
 } from '@/lib/engine/constants';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
@@ -25,6 +26,7 @@ import type { ArmorSlot, ArmorBonusType, ArmorBonus, ArmorUpgrade, ProtectionQua
 import type { DamageTypeName } from '@/types/weapon';
 import type { Clase } from '@/types/character';
 import { useT } from '@/i18n/I18nProvider';
+import { DamageIcon } from '@/components/icons/StatIcons';
 
 const QUALITY_OPTIONS: { value: string; label: string }[] = [
   { value: 'Muy Mala', label: 'Muy Mala' },
@@ -193,7 +195,7 @@ export function BuildArmadura() {
               const shared = qualities.size === 1 ? [...qualities][0] : '';
               return (
                 <label key={dt} className="flex flex-col gap-0.5">
-                  <span className="text-[12px] text-zinc-500">{DAMAGE_TYPE_ICONS[dt]} {t(DAMAGE_TYPE_LABELS[dt])}</span>
+                  <span className="text-[12px] text-zinc-500"><DamageIcon type={dt} /> {t(DAMAGE_TYPE_LABELS[dt])}</span>
                   <select
                     value={shared}
                     onChange={(e) => {
@@ -222,6 +224,8 @@ export function BuildArmadura() {
           const bonuses: ArmorBonus[] = piece?.bonuses || [];
           const upgrades: ArmorUpgrade[] = piece?.upgrades || [];
           const rareza = pieceRareza(piece, activePreset?.rareza);
+          const maxUpgrades = maxArmorUpgrades(activePreset?.familia, clase, slot);
+          const extraUpgrades = upgrades.length - maxUpgrades;
           const isEditing = editing.has(slot);
           const slotLabel = ARMOR_SLOT_LABEL_OVERRIDES[clase]?.[slot] ?? ARMOR_SLOT_LABELS[slot];
 
@@ -304,7 +308,7 @@ export function BuildArmadura() {
                   <div className="grid grid-cols-2 gap-1.5">
                     {DAMAGE_TYPES_PAIRED.map((dt) => (
                       <div key={dt} className="flex items-center gap-1.5">
-                        <span className="text-sm shrink-0" title={t(DAMAGE_TYPE_LABELS[dt])}>{DAMAGE_TYPE_ICONS[dt]}</span>
+                        <DamageIcon type={dt} title={t(DAMAGE_TYPE_LABELS[dt])} className="w-[1.2em] h-[1.2em] shrink-0 text-sm" />
                         <select
                           className={`flex-1 min-w-0 rounded border px-2 py-1.5 text-xs focus:outline-none focus:border-amber-500 transition-colors ${QUALITY_STYLES[piece?.protectionFactors[dt] || 'Normal']}`}
                           value={piece?.protectionFactors[dt] || 'Normal'}
@@ -347,8 +351,12 @@ export function BuildArmadura() {
                 {!isEmpty && (
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <span className="text-xs font-medium text-zinc-500">{t("Mejoras")} <HelpPopover text={t('Mejoras de armadura. Cada una agrega Resistir +1% o +2% a un tipo de daño. Máximo 4 por pieza.')} /></span>
-                      {upgrades.length < 4 && (
+                      <span className="text-xs font-medium text-zinc-500">
+                        {t("Mejoras")}{' '}
+                        <span className={extraUpgrades > 0 ? 'text-red-400' : 'text-zinc-600'}>{upgrades.length}/{maxUpgrades}</span>{' '}
+                        <HelpPopover text={t('Mejoras de armadura: cada una agrega Resistir +1% o +2% a un tipo de daño. Cuántas lleva depende del set: Magnanitas 4 (magos 7), Champion 3 (magos 5), Dragon 2 (magos 4). El escudo y el brazalete no llevan.')} />
+                      </span>
+                      {upgrades.length < maxUpgrades && (
                         <button
                           onClick={() => {
                             const newUpgrades = [...upgrades, { type: 'punzante' as DamageTypeName, value: 1 }];
@@ -401,6 +409,16 @@ export function BuildArmadura() {
                         </div>
                       ))}
                     </div>
+                    {maxUpgrades === 0 && upgrades.length === 0 && (
+                      <p className="text-xs text-zinc-600">{t('Esta pieza no lleva mejoras.')}</p>
+                    )}
+                    {extraUpgrades > 0 && (
+                      <p className="mt-1 text-xs text-red-400">
+                        {maxUpgrades === 0
+                          ? t('Esta pieza no lleva mejoras: sacalas.')
+                          : t('Esta pieza lleva hasta {max} mejoras: sacá {n}.', { max: maxUpgrades, n: extraUpgrades })}
+                      </p>
+                    )}
                   </div>
                 )}
                 {isEmpty && (
@@ -439,7 +457,7 @@ export function BuildArmadura() {
               const upgradeRes = val - baseRes;
               return (
                 <div key={dt} className="text-center">
-                  <div className="text-xs text-zinc-500 mb-1">{DAMAGE_TYPE_ICONS[dt]} {t(DAMAGE_TYPE_LABELS[dt])}</div>
+                  <div className="text-xs text-zinc-500 mb-1"><DamageIcon type={dt} /> {t(DAMAGE_TYPE_LABELS[dt])}</div>
                   <div className={`text-lg font-bold ${val > 0 ? (isPhysical ? 'text-orange-400' : 'text-blue-400') : 'text-zinc-600'}`}>
                     {val}%
                   </div>

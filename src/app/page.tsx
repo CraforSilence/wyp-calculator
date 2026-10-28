@@ -14,31 +14,31 @@ const SECTIONS = [
   {
     href: '/armas',
     title: 'Armas',
-    icon: '/icons/arma.png',
+    icon: '/icons/arma.svg',
     description: 'Cargá y guardá tus armas con sus bonus, gemas y muescas para usarlas en el Build o compararlas.',
   },
   {
     href: '/joyeria',
     title: 'Joyería',
-    icon: '/icons/anillo.png',
+    icon: '/icons/anillo.svg',
     description: 'Guardá tus anillos y amuletos para precargarlos en el Build con un clic.',
   },
   {
     href: '/armadura',
     title: 'Armaduras',
-    icon: '/icons/pechera.png',
+    icon: '/icons/pechera.svg',
     description: 'Calculá la protección de cada pieza y cuánto daño te pasa según el tipo de golpe.',
   },
   {
     href: '/rankings',
     title: 'Rankings',
-    emoji: '🏆',
+    icon: '/icons/rankings.svg',
     description: 'Todas tus armas ordenadas por DPS, promedio, crítico o velocidad, calculadas con tu personaje.',
   },
   {
     href: '/comparar',
     title: 'Comparar',
-    emoji: '⚖️',
+    icon: '/icons/comparar.svg',
     description: 'Poné hasta 5 armas lado a lado y mirá cuál conviene y por cuánto.',
   },
 ];
@@ -103,9 +103,7 @@ export default function HomePage() {
               }`}
             >
               <span className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-lg border border-zinc-700 bg-zinc-800 p-1.5">
-                {s.icon
-                  ? <img src={s.icon} alt="" className="w-full h-full object-contain" />
-                  : <span className="text-xl">{s.emoji}</span>}
+                <img src={s.icon} alt="" className="w-full h-full object-contain" />
               </span>
               <span className="min-w-0">
                 <span className="flex items-center gap-1 text-sm font-semibold text-zinc-100 group-hover:text-amber-400 transition-colors">

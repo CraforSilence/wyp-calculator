@@ -21,6 +21,7 @@ import type { ShareResult } from '@/lib/share';
 import type { Weapon, Subcategoria } from '@/types/weapon';
 import type { Clase, Subclase } from '@/types/character';
 import { useT } from '@/i18n/I18nProvider';
+import { WeaponIcon } from '@/components/icons/WeaponIcon';
 
 export default function ArmasPage() {
   const t = useT();
@@ -182,7 +183,7 @@ export default function ArmasPage() {
                     : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
                 }`}
               >
-                {sc}
+                <WeaponIcon subcategoria={sc} /> {t(sc)}
               </button>
             ))}
           </div>
@@ -210,7 +211,7 @@ export default function ArmasPage() {
                     : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-300'
                 }`}
               >
-                {sc}
+                <WeaponIcon subcategoria={sc} /> {t(sc)}
               </button>
             ))}
           </div>
@@ -263,7 +264,7 @@ export default function ArmasPage() {
                   <h3 className="text-lg font-bold text-zinc-200 mb-3">{clase}</h3>
                   {Array.from(subMap.entries()).map(([subcat, items]) => (
                     <div key={subcat} className="mb-4">
-                      <h4 className="text-sm font-medium text-zinc-400 mb-2">{subcat} ({items.length})</h4>
+                      <h4 className="text-sm font-medium text-zinc-400 mb-2 flex items-center gap-1.5"><WeaponIcon subcategoria={subcat} className="w-5 h-5" /> {t(subcat)} ({items.length})</h4>
                       <div className="grid gap-3 sm:grid-cols-2">
                         {items
                           .sort((a, b) => b.result.dpsEfectivo - a.result.dpsEfectivo)
@@ -309,7 +310,7 @@ export default function ArmasPage() {
                   <h3 className="text-lg font-bold text-zinc-200 mb-3">{clase}</h3>
                   {Array.from(subMap.entries()).map(([subcat, items]) => (
                     <div key={subcat} className="mb-4">
-                      <h4 className="text-sm font-medium text-zinc-400 mb-2">{subcat} ({items.length})</h4>
+                      <h4 className="text-sm font-medium text-zinc-400 mb-2 flex items-center gap-1.5"><WeaponIcon subcategoria={subcat} className="w-5 h-5" /> {t(subcat)} ({items.length})</h4>
                       <div className="grid gap-3 sm:grid-cols-2">
                         {items
                           .sort((a, b) => b.result.dpsEfectivo - a.result.dpsEfectivo)

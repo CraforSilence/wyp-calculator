@@ -1,11 +1,11 @@
 'use client';
 
 import {
-  DAMAGE_TYPE_LABELS, DAMAGE_TYPE_ICONS, PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_BONUS_LABELS,
+  DAMAGE_TYPE_LABELS, PHYSICAL_DAMAGE_TYPES, MAGICAL_DAMAGE_TYPES, ARMOR_BONUS_LABELS,
 } from '@/lib/engine/constants';
-import { bonusIcon } from '@/lib/bonusDisplay';
 import type { ArmorPiece, ProtectionQuality } from '@/types/armor';
 import { useT } from '@/i18n/I18nProvider';
+import { BonusIcon, DamageIcon } from '@/components/icons/StatIcons';
 
 // En grid-cols-3: los físicos en la primera fila, los mágicos en la segunda
 const SUMMARY_DAMAGE_TYPES = [...PHYSICAL_DAMAGE_TYPES, ...MAGICAL_DAMAGE_TYPES];
@@ -42,7 +42,7 @@ export function ArmorPieceSummary({ piece }: { piece: ArmorPiece }) {
               title={`${t(DAMAGE_TYPE_LABELS[dt])}: ${q}`}
               className={`flex items-center gap-1 rounded border px-1.5 py-0.5 text-[12px] whitespace-nowrap ${QUALITY_STYLES[q]}`}
             >
-              <span aria-hidden>{DAMAGE_TYPE_ICONS[dt]}</span>{q}
+              <DamageIcon type={dt} />{q}
             </span>
           );
         })}
@@ -55,7 +55,7 @@ export function ArmorPieceSummary({ piece }: { piece: ArmorPiece }) {
           <div className="flex flex-wrap gap-x-3 gap-y-0.5">
             {bonuses.map((b, i) => (
               <span key={i}>
-                <span className="text-zinc-400">{bonusIcon(b.type)} {t(ARMOR_BONUS_LABELS[b.type])}</span>{' '}
+                <span className="text-zinc-400"><BonusIcon bonus={b.type} /> {t(ARMOR_BONUS_LABELS[b.type])}</span>{' '}
                 <span className="text-amber-400 font-semibold">+{b.value}</span>
               </span>
             ))}
@@ -65,7 +65,7 @@ export function ArmorPieceSummary({ piece }: { piece: ArmorPiece }) {
           <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1">
             {upgrades.map((u, i) => (
               <span key={i} className="text-zinc-400">
-                Resistir {DAMAGE_TYPE_ICONS[u.type]} <span className="text-cyan-400 font-semibold">+{u.value}%</span>
+                Resistir <DamageIcon type={u.type} /> <span className="text-cyan-400 font-semibold">+{u.value}%</span>
               </span>
             ))}
           </div>
