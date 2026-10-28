@@ -8,7 +8,7 @@ import type { DamageTypeName } from '@/types/weapon';
 import { useT } from '@/i18n/I18nProvider';
 
 /** Totaliza bonuses de piezas + conjunto, agrupando por tipo */
-function getTotalBonuses(set: CatalogArmorSet, subclase?: string): ArmorBonus[] {
+export function getTotalBonuses(set: CatalogArmorSet, subclase?: string): ArmorBonus[] {
   const totals = new Map<ArmorBonusType, number>();
 
   // Bonuses de cada pieza
@@ -29,7 +29,23 @@ function getTotalBonuses(set: CatalogArmorSet, subclase?: string): ArmorBonus[] 
   return Array.from(totals.entries()).map(([type, value]) => ({ type, value }));
 }
 
-interface ArmorSetTableProps {
+/** Protección por tipo del set (con las piezas de su subclase) y la suma de todos los tipos. */
+export function setProtection(set: CatalogArmorSet, armorClass: number) {
+  const prot = calcTotalProtection({
+    pieces: set.subclase ? filterArmorForSubclase(set, set.subclase as Subclase).pieces : set.pieces,
+    bonusArmaduraPct: 0,
+    generalResistance: { fisico: 0, magico: 0 },
+    typeResistance: {},
+    barrierPoints: {},
+    meleeDmgReductionPct: 0,
+    rangedDmgReductionPct: 0,
+    bonusConjunto: setBonusesFor(set, set.subclase),
+  }, armorClass);
+  const totalProt = Object.values(prot.perType).reduce((a, b) => a + b, 0);
+  return { prot, totalProt };
+}
+
+export interface ArmorSetTableProps {
   sets: CatalogArmorSet[];
   armorClass: number;
   subclase?: string;
@@ -73,18 +89,7 @@ export function ArmorSetTable({
           {sets.map((set) => {
             const modified = isModified?.(set.id) ?? false;
             const isSelected = selectedIds?.includes(set.id) ?? false;
-            const fakeArmorSet = {
-              pieces: set.subclase ? filterArmorForSubclase(set, set.subclase as Subclase).pieces : set.pieces,
-              bonusArmaduraPct: 0,
-              generalResistance: { fisico: 0, magico: 0 },
-              typeResistance: {},
-              barrierPoints: {},
-              meleeDmgReductionPct: 0,
-              rangedDmgReductionPct: 0,
-              bonusConjunto: setBonusesFor(set, set.subclase),
-            };
-            const prot = calcTotalProtection(fakeArmorSet, armorClass);
-            const totalProt = Object.values(prot.perType).reduce((a, b) => a + b, 0);
+            const { prot, totalProt } = setProtection(set, armorClass);
             const pieceCount = Object.keys(set.pieces).length;
 
             return (

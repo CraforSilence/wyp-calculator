@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useArmorSets } from '@/hooks/useArmorSets';
 import { useShowMore } from '@/hooks/useShowMore';
 import { useCharacter } from '@/hooks/useCharacter';
 import { ArmorSetTable } from '@/components/armor/ArmorSetTable';
+import { ArmorSetCards } from '@/components/armor/ArmorSetCards';
 import { ArmorComparison } from '@/components/armor/ArmorComparison';
 import { ArmorSetForm } from '@/components/armor/ArmorSetForm';
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -39,6 +40,19 @@ export default function ArmaduraPage() {
   const [editingSet, setEditingSet] = useState<CatalogArmorSet | null>(null);
   const [claseFilter, setClaseFilter] = useState<'Todas' | 'Guerrero' | 'Arquero' | 'Mago'>('Todas');
   const [subclaseFilter, setSubclaseFilter] = useState<string>('Todas');
+
+  // Vista de los sets: tarjetas (como Armas) o tabla. Se recuerda en el navegador.
+  const [view, setView] = useState<'cards' | 'list'>('cards');
+  useEffect(() => {
+    try { if (localStorage.getItem('regnum-armor-view') === 'list') setView('list'); } catch {}
+  }, []);
+  const changeView = (v: 'cards' | 'list') => {
+    setView(v);
+    try { localStorage.setItem('regnum-armor-view', v); } catch {}
+  };
+  const SetList = view === 'cards' ? ArmorSetCards : ArmorSetTable;
+  // La tabla va dentro de un recuadro; las tarjetas ya tienen el suyo.
+  const listWrap = view === 'cards' ? '' : 'bg-zinc-900 border border-zinc-800 rounded-lg';
 
   const armorClass = ARMOR_CLASSES[character.subclase as Subclase] ?? 1.30;
 
@@ -208,6 +222,25 @@ export default function ArmaduraPage() {
             ))}
           </div>
         )}
+        <div className="ml-auto flex rounded-md border border-zinc-800 bg-zinc-900 p-0.5" role="group" aria-label={t('Vista')}>
+          {(['cards', 'list'] as const).map((v) => (
+            <button
+              key={v}
+              onClick={() => changeView(v)}
+              aria-pressed={view === v}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded text-xs transition-colors cursor-pointer ${
+                view === v ? 'bg-amber-900/30 text-amber-400' : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden>
+                {v === 'cards'
+                  ? <path strokeLinecap="round" strokeLinejoin="round" d="M4 5h7v6H4zM13 5h7v6h-7zM4 13h7v6H4zM13 13h7v6h-7z" />
+                  : <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />}
+              </svg>
+              {v === 'cards' ? t('Tarjetas') : t('Lista')}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Hidden sets panel */}
@@ -257,11 +290,11 @@ export default function ArmaduraPage() {
               <h2 className="text-base font-bold text-amber-400">{t("Mis sets")}</h2>
               <Badge variant="damage">{customCount}</Badge>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg">
-              <ArmorSetTable
+            <div className={listWrap}>
+              <SetList
                 sets={customSets}
                 armorClass={armorClass}
-                subclase={t(character.subclase)}
+                subclase={character.subclase}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
@@ -288,11 +321,11 @@ export default function ArmaduraPage() {
               <h2 className="text-base font-bold text-zinc-400">{t("Sets base")}</h2>
               <Badge variant="info">{baseCount}</Badge>
             </div>
-            <div className="bg-zinc-900 border border-zinc-800 rounded-lg">
-              <ArmorSetTable
+            <div className={listWrap}>
+              <SetList
                 sets={baseSets}
                 armorClass={armorClass}
-                subclase={t(character.subclase)}
+                subclase={character.subclase}
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 onDuplicate={handleDuplicate}
