@@ -10,6 +10,9 @@ export type ProtectionQuality =
 /** Rareza de una pieza de armadura. Artesano existe solo en armaduras (Magnanitas, Champion). */
 export type ArmorRareza = 'Mágica' | 'Épica' | 'Legendaria' | 'Arcana' | 'Artesano';
 
+/** Familia de los sets precargados: define cuantas mejoras de armadura lleva cada pieza. */
+export type ArmorFamilia = 'magnanitas' | 'champion' | 'dragon';
+
 export type GeneralDamageType = 'fisico' | 'magico';
 
 export type ArmorBonusType =
@@ -70,6 +73,8 @@ export interface DefaultArmorSet {
   pieces: Partial<Record<ArmorSlot, ArmorPiece>>;
   /** Rareza de todas las piezas del set (cada pieza puede sobrescribirla). */
   rareza?: ArmorRareza;
+  /** Familia del set (sin definir = armadura cargada a mano) */
+  familia?: ArmorFamilia;
   bonusConjunto: ArmorBonus[];
   bonusConjuntoPorSubclase?: Partial<Record<string, ArmorBonus[]>>;
 }
