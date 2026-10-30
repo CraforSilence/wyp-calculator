@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useT } from '@/i18n/I18nProvider';
 
-const SECTIONS = [
+const CALC_SECTIONS = [
   {
     href: '/build',
     title: 'Build',
@@ -41,6 +41,33 @@ const SECTIONS = [
     icon: '/icons/comparar.svg',
     description: 'Poné hasta 5 armas lado a lado y mirá cuál conviene y por cuánto.',
   },
+];
+
+const TRAINER_SECTIONS = [
+  {
+    href: '/entrenador',
+    title: 'Entrenador',
+    icon: '/icons/entrenador.svg',
+    description: 'Repartí los puntos de disciplina y de poder como en el juego, guardá tus setups y compartilos.',
+  },
+];
+
+const WAR_SECTIONS = [
+  {
+    href: '/guerra',
+    title: 'Guerra',
+    icon: '/icons/guerra.svg',
+    description: 'Quién tiene cada fuerte y castillo, las gemas de cada altar y las reliquias, leído de la página oficial.',
+  },
+];
+
+type Section = (typeof CALC_SECTIONS)[number] & { featured?: boolean };
+
+// Mismo agrupamiento que los menus de la barra
+const GROUPS: { title: string; sections: Section[] }[] = [
+  { title: 'Calculadora', sections: CALC_SECTIONS },
+  { title: 'Entrenador', sections: TRAINER_SECTIONS },
+  { title: 'Guerra', sections: WAR_SECTIONS },
 ];
 
 const FEATURES = [
@@ -88,34 +115,36 @@ export default function HomePage() {
         </p>
       </section>
 
-      {/* Secciones */}
-      <section>
-        <h2 className="text-xs uppercase tracking-wider text-zinc-500 mb-3">{t("Qué podés hacer")}</h2>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {SECTIONS.map((s) => (
-            <Link
-              key={s.href}
-              href={s.href}
-              className={`group flex gap-3 rounded-lg border p-4 transition-colors ${
-                s.featured
-                  ? 'bg-amber-500/5 border-amber-600/40 hover:border-amber-500/70'
-                  : 'bg-zinc-900 border-zinc-800 hover:border-zinc-600'
-              }`}
-            >
-              <span className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-lg border border-zinc-700 bg-zinc-800 p-1.5">
-                <img src={s.icon} alt="" className="w-full h-full object-contain" />
-              </span>
-              <span className="min-w-0">
-                <span className="flex items-center gap-1 text-sm font-semibold text-zinc-100 group-hover:text-amber-400 transition-colors">
-                  {t(s.title)}
-                  <span className="text-zinc-600 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-transform">→</span>
+      {/* Secciones, agrupadas como los menus */}
+      {GROUPS.map((g, gi) => (
+        <section key={g.title} className={gi > 0 ? 'mt-8' : undefined}>
+          <h2 className="text-xs uppercase tracking-wider text-zinc-500 mb-3">{t(g.title)}</h2>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {g.sections.map((s) => (
+              <Link
+                key={s.href}
+                href={s.href}
+                className={`group flex gap-3 rounded-lg border p-4 transition-colors ${
+                  s.featured
+                    ? 'bg-amber-500/5 border-amber-600/40 hover:border-amber-500/70'
+                    : 'bg-zinc-900 border-zinc-800 hover:border-zinc-600'
+                }`}
+              >
+                <span className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-lg border border-zinc-700 bg-zinc-800 p-1.5">
+                  <img src={s.icon} alt="" className="w-full h-full object-contain" />
                 </span>
-                <span className="block text-xs text-zinc-400 mt-1">{t(s.description)}</span>
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
+                <span className="min-w-0">
+                  <span className="flex items-center gap-1 text-sm font-semibold text-zinc-100 group-hover:text-amber-400 transition-colors">
+                    {t(s.title)}
+                    <span className="text-zinc-600 group-hover:text-amber-500 group-hover:translate-x-0.5 transition-transform">→</span>
+                  </span>
+                  <span className="block text-xs text-zinc-400 mt-1">{t(s.description)}</span>
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ))}
 
       {/* Características */}
       <section className="grid gap-3 sm:grid-cols-3 mt-8">

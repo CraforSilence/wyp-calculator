@@ -17,6 +17,7 @@ const WHAT_HAPPENS: Record<ShareType, string> = {
   armor: 'Se agrega a tus sets de armadura. No toca nada de lo que ya tenés.',
   build: 'Reemplaza tu Build actual (personaje, arma, joyería y armadura). Si querés conservarlo, compartilo antes para tener el código.',
   compare: 'Las armas que no tengas se agregan a Mis armas y quedan elegidas en Comparar. Tu personaje no cambia, salvo que lo marques abajo.',
+  trainer: 'Se agrega a tus setups guardados del Entrenador y queda abierto. No toca nada de lo que ya tenés.',
 };
 
 const TYPE_ICONS: Record<ShareType, string> = {
@@ -25,6 +26,7 @@ const TYPE_ICONS: Record<ShareType, string> = {
   armor: '/icons/pechera.svg',
   build: '/logo/wypforge-mark.png',
   compare: '/icons/comparar.svg',
+  trainer: '/icons/entrenador.svg',
 };
 
 export default function ImportarPage() {
@@ -76,7 +78,7 @@ export default function ImportarPage() {
     <div className="max-w-2xl mx-auto">
       <PageHeader
         title={t("Importar")}
-        description={t("Pegá un código o un link de WypForge: armas, joyas, armaduras, builds o comparativos. Lo detectamos solo y te llevamos a la sección que corresponde.")}
+        description={t("Pegá un código o un link de WypForge: armas, joyas, armaduras, builds, comparativos o setups del entrenador. Lo detectamos solo y te llevamos a la sección que corresponde.")}
       />
 
       <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4 space-y-4">
@@ -136,7 +138,7 @@ export default function ImportarPage() {
       </div>
 
       <p className="text-xs text-zinc-500 mt-4">
-        {t('Para compartir algo tuyo usá el botón Compartir en Armas, Joyería, Armaduras, Comparar o el Build.')}{' '}
+        {t('Para compartir algo tuyo usá el botón Compartir en Armas, Joyería, Armaduras, Comparar, el Build o el Entrenador.')}{' '}
         {t('La data viaja dentro del código: no se guarda en ningún servidor.')}
       </p>
     </div>

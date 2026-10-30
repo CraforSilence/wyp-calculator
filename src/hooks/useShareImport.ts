@@ -9,6 +9,8 @@ import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { useArmor } from '@/hooks/useArmor';
 import { useJewelry } from '@/hooks/useJewelry';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { useTrainer } from '@/hooks/useTrainer';
+import { fromSharePayload, type TrainerSharePayload } from '@/lib/trainer';
 import { SHARE_TYPE_ROUTES, stripWeapon } from '@/lib/share';
 import type { ShareResult, BuildPayload, ComparePayload, SharedWeapon } from '@/lib/share';
 import type { Weapon } from '@/types/weapon';
@@ -53,6 +55,7 @@ export function useShareImport() {
   const { loadPieces, updateSet } = useArmor();
   const { updatePiece } = useJewelry();
   const [, setCompareIds] = useLocalStorage<string[]>(COMPARE_SELECTED_KEY, []);
+  const { importSetup } = useTrainer();
 
   const importShare = useCallback((result: ShareResult, options: ImportOptions = {}): ImportOutcome => {
     const href = SHARE_TYPE_ROUTES[result.type];
@@ -115,8 +118,16 @@ export function useShareImport() {
         const extra = added > 0 ? ` (${added} ${added === 1 ? 'arma nueva' : 'armas nuevas'} en Mis armas)` : '';
         return { href, message: `Comparativo importado${extra}` };
       }
+
+      case 'trainer': {
+        const payload = result.data as TrainerSharePayload;
+        const setup = fromSharePayload(payload);
+        if (!setup) return { href, message: 'Setup no válido' };
+        importSetup(setup, payload.nm || `${payload.s} ${payload.n}`);
+        return { href, message: 'Setup importado' };
+      }
     }
-  }, [weapons, addWeapon, addItem, addSet, updateCharacter, setWeapon, setWeaponMode, setSecondaryWeapon, setArrows, loadPieces, updateSet, updatePiece, setCompareIds]);
+  }, [weapons, addWeapon, addItem, addSet, updateCharacter, setWeapon, setWeaponMode, setSecondaryWeapon, setArrows, loadPieces, updateSet, updatePiece, setCompareIds, importSetup]);
 
   return { importShare };
 }

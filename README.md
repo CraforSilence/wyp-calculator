@@ -17,6 +17,8 @@ Todo corre en el navegador: no hay cuentas ni servidor. Lo que cargás queda gua
 | `/armadura` | Sets de armadura, protección por pieza y comparación |
 | `/rankings` | Armas ordenadas por DPS, promedio, crítico o velocidad con tu personaje, con ficha de detalle |
 | `/comparar` | Hasta 5 armas lado a lado, con veredicto y cuadro comparativo |
+| `/entrenador` | Entrenador de poderes de las 6 subclases: puntos de disciplina y de poder como en el juego, setups guardados y compartibles (`WYP-T:`) |
+| `/guerra` | Estado de guerra de RA en vivo: fuertes, castillos, murallas, gemas y reliquias, con mapa propio |
 | `/importar` | Import general: pegás cualquier código o link y te lleva a su sección |
 
 ## Compartir
@@ -98,6 +100,43 @@ npm run test:e2e:report           # abre el reporte HTML de la última corrida
 - `e2e/helpers.ts` tiene atajos para lo que se repite (elegir en un `<select>` por su opción vacía,
   elegir en los selectores con íconos, agregar un bonus de joyería).
 - En caso de falla quedan captura y traza en `test-results/` (`npx playwright show-trace <zip>`).
+
+## Guerra
+
+`/guerra` muestra el estado de guerra del servidor RA (AMUN no, es el de pruebas). Se actualiza
+sola cada minuto mientras la pestaña está visible.
+
+**De dónde salen los datos.** La página oficial
+(`championsofregnum.com/index.php?l=0&sec=3&world=ra`) es HTML sin API ni CORS, así que la lee
+nuestro servidor:
+
+- `src/lib/war.ts`: tipos y `parseWarStatus()`, que saca del HTML los 12 fuertes (dueño y reino
+  donde está), las 6 gemas de cada altar (`gem_1` = Ignis, `gem_2` = Alsius, `gem_3` = Syrtis,
+  `gem_0` = vacío), las reliquias y la hora de la oficial. Si no encuentra 12 fuertes y 3 reinos,
+  tira error: es la señal de que la oficial cambió de formato.
+- `GET /api/guerra?lang=es|en`: devuelve ese JSON. Pide la oficial en el idioma de la app (los
+  nombres de los fuertes vienen traducidos de ahí) y cachea 60 s.
+- `GET /api/guerra/imagen?reliquia=79167`: íconos de reliquias desde nuestro dominio, para no
+  abrir la CSP (`img-src 'self'`).
+
+Son las únicas rutas de servidor de la app; todo lo demás sigue siendo del navegador.
+
+**Mapa.** `src/components/war/WarMap.tsx` dibuja en SVG, encima de la ilustración
+`public/guerra/mapa.webp` (1024×1024, hecha con Leonardo.ai tomando el mapa oficial como
+referencia), los escudos de cada fuerte con el color del dueño actual, las murallas y las gemas de
+cada altar. Un fuerte en manos de otro reino tiene un anillo que late. Las posiciones (`POS`,
+`WALLS`, `ALTAR`) están en píxeles de esa imagen: si se cambia la ilustración, hay que
+reubicarlas. Los altares están ubicados a ojo.
+
+**Íconos.** Escudos (`Shield`/`ShieldIcon` en `WarMap.tsx`) y gemas
+(`src/components/war/GemShape.tsx`) siguen la grilla 64×64 de `public/icons`: base en el tono
+oscuro del reino, mitad izquierda clara, contorno navy y detalles dorados. Los tonos de cada reino
+están en `REALM_TONES`.
+
+**Últimos cambios.** La oficial no publica historial. El navegador guarda la última lectura
+(`regnum-war-snap-ra`) y al leer de nuevo anota capturas, recuperaciones y gemas movidas en
+`regnum-war-log` (últimos 10). Es por navegador: solo ve lo que pasó con la página abierta o
+entre visitas. Un historial compartido necesitaría guardar los eventos en un servidor.
 
 ## Deploy
 

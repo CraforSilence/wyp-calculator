@@ -41,7 +41,7 @@ export function StatIcon({ id, className = DEFAULT_CLASS, title }: { id: StatIco
       aria-hidden={title ? undefined : true}
     >
       {title && <title>{title}</title>}
-      {ICONS[id]}
+      {STAT_GLYPHS[id]}
     </svg>
   );
 }
@@ -78,7 +78,7 @@ const sparkle = (x: number, y: number, r: number) =>
   `M${x} ${y - r}Q${x} ${y} ${x + r} ${y}Q${x} ${y} ${x} ${y + r}Q${x} ${y} ${x - r} ${y}Q${x} ${y} ${x} ${y - r}Z`;
 
 // Espada en diagonal, punta arriba a la derecha.
-const SWORD = (
+export const SWORD_GLYPH = (
   <>
     <path d="M9.5 19L23 5.5L28 4L26.5 9L13 22.5Z" fill={B} />
     <path d="M9.5 19L23 5.5L28 4L11 21Z" fill={H} stroke="none" />
@@ -148,7 +148,8 @@ const snowflake = (() => {
 
 // ── Íconos ─────────────────────────────────────────────────────────────────
 
-const ICONS: Record<StatIconId, ReactNode> = {
+/** Dibujos sueltos (viewBox 32), para armar otros íconos como los de poderes */
+export const STAT_GLYPHS: Record<StatIconId, ReactNode> = {
   // Daño
   punzante: ARROW,
   cortante: (
@@ -251,7 +252,7 @@ const ICONS: Record<StatIconId, ReactNode> = {
   // Velocidad
   attackSpeed: (
     <>
-      {SWORD}
+      {SWORD_GLYPH}
       <path d="M3 9H10M2 13H7M6 5H12" fill="none" stroke={GL} strokeWidth={2} />
     </>
   ),
@@ -296,7 +297,7 @@ const ICONS: Record<StatIconId, ReactNode> = {
       <path d="M27 8L30.5 5M28 16H31.5M27 24L30.5 27" fill="none" stroke={GL} strokeWidth={2} />
     </>
   ),
-  reduccionMelee: <>{SWORD}{badge(MINUS)}</>,
+  reduccionMelee: <>{SWORD_GLYPH}{badge(MINUS)}</>,
   reduccionRango: <>{ARROW}{badge(MINUS)}</>,
 
   // Otros
@@ -317,5 +318,5 @@ const ICONS: Record<StatIconId, ReactNode> = {
     </>
   ),
   curacion: heart(HEAL, '#8fd19c', <Line d="M16 11V20M11.5 15.5H20.5" color="#f4f1e8" width={2.5} />),
-  weaponDmg: <>{SWORD}{badge(UP)}</>,
+  weaponDmg: <>{SWORD_GLYPH}{badge(UP)}</>,
 };

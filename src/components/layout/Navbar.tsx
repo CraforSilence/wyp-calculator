@@ -6,37 +6,79 @@ import { usePathname } from 'next/navigation';
 import { useI18n } from '@/i18n/I18nProvider';
 import type { Lang } from '@/i18n/I18nProvider';
 
-const NAV_ITEMS = [
-  { href: '/build', label: 'Build' },
-  { href: '/armas', label: 'Armas' },
-  { href: '/joyeria', label: 'Joyería' },
-  { href: '/armadura', label: 'Armaduras' },
-  { href: '/rankings', label: 'Rankings' },
-  { href: '/comparar', label: 'Comparar' },
+type NavItem = { href: string; label: string; icon: string };
+type NavGroup = { label: string; items: NavItem[] };
+
+// Cada grupo es un menu de la barra. Un grupo con un solo item se muestra como link directo.
+const NAV_GROUPS: NavGroup[] = [
+  {
+    label: 'Calculadora',
+    items: [
+      { href: '/build', label: 'Build', icon: '/logo/wypforge-mark.png' },
+      { href: '/armas', label: 'Armas', icon: '/icons/arma.svg' },
+      { href: '/joyeria', label: 'Joyería', icon: '/icons/anillo.svg' },
+      { href: '/armadura', label: 'Armaduras', icon: '/icons/pechera.svg' },
+      { href: '/rankings', label: 'Rankings', icon: '/icons/rankings.svg' },
+      { href: '/comparar', label: 'Comparar', icon: '/icons/comparar.svg' },
+    ],
+  },
+  {
+    label: 'Entrenador',
+    items: [{ href: '/entrenador', label: 'Entrenador', icon: '/icons/entrenador.svg' }],
+  },
+  {
+    label: 'Guerra',
+    items: [{ href: '/guerra', label: 'Estado de guerra', icon: '/icons/guerra.svg' }],
+  },
 ];
 
 const LANGS: Lang[] = ['es', 'en'];
+
+// Mismo recuadro que las tarjetas del inicio, en chico
+function NavIcon({ src }: { src: string }) {
+  return (
+    <span className="shrink-0 inline-flex items-center justify-center w-7 h-7 rounded-md border border-zinc-700 bg-zinc-800 p-1">
+      <img src={src} alt="" className="w-full h-full object-contain" />
+    </span>
+  );
+}
 
 export function Navbar() {
   const { t, lang, setLang } = useI18n();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [openGroup, setOpenGroup] = useState<string | null>(null);
 
-  // Close menu on route change
+  // Close menus on route change
   useEffect(() => {
     setMenuOpen(false);
+    setOpenGroup(null);
   }, [pathname]);
 
-  // Close menu on outside click
+  // Close menus on outside click
   useEffect(() => {
-    if (!menuOpen) return;
+    if (!menuOpen && !openGroup) return;
     const handle = (e: MouseEvent) => {
       const nav = document.getElementById('main-nav');
-      if (nav && !nav.contains(e.target as Node)) setMenuOpen(false);
+      if (nav && !nav.contains(e.target as Node)) {
+        setMenuOpen(false);
+        setOpenGroup(null);
+      }
     };
     document.addEventListener('mousedown', handle);
     return () => document.removeEventListener('mousedown', handle);
-  }, [menuOpen]);
+  }, [menuOpen, openGroup]);
+
+  // Close dropdown with Escape
+  useEffect(() => {
+    if (!openGroup) return;
+    const handle = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpenGroup(null); };
+    document.addEventListener('keydown', handle);
+    return () => document.removeEventListener('keydown', handle);
+  }, [openGroup]);
+
+  const linkClass = (active: boolean) =>
+    active ? 'bg-amber-600/20 text-amber-400' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800';
 
   return (
     <nav id="main-nav" className="bg-zinc-950 border-b border-zinc-800 sticky top-0 z-50">
@@ -50,22 +92,58 @@ export function Navbar() {
             </span>
           </Link>
 
-          {/* Desktop links */}
+          {/* Desktop menus */}
           <div className="hidden md:flex items-center gap-1 flex-1">
-            {NAV_ITEMS.map((item) => {
-              const active = pathname === item.href;
+            {NAV_GROUPS.map((group) => {
+              const groupActive = group.items.some((i) => pathname === i.href);
+              if (group.items.length === 1) {
+                const item = group.items[0];
+                return (
+                  <Link
+                    key={group.label}
+                    href={item.href}
+                    className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${linkClass(groupActive)}`}
+                  >
+                    {t(group.label)}
+                  </Link>
+                );
+              }
+              const open = openGroup === group.label;
               return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
-                    active
-                      ? 'bg-amber-600/20 text-amber-400'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                  }`}
+                <div
+                  key={group.label}
+                  className="relative"
+                  onMouseEnter={() => setOpenGroup(group.label)}
+                  onMouseLeave={() => setOpenGroup((g) => (g === group.label ? null : g))}
                 >
-                  {t(item.label)}
-                </Link>
+                  <button
+                    onClick={() => setOpenGroup(open ? null : group.label)}
+                    aria-haspopup="menu"
+                    aria-expanded={open}
+                    className={`inline-flex items-center gap-1 px-3 py-1.5 rounded text-sm font-medium transition-colors cursor-pointer ${linkClass(groupActive)}`}
+                  >
+                    {t(group.label)}
+                    <svg className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+                  {open && (
+                    // pt-1 en vez de margin: el hueco sigue siendo parte del hover y el menu no se cierra al bajar el mouse
+                    <div className="absolute left-0 top-full pt-1 z-50" role="menu">
+                      <div className="min-w-48 rounded-md border border-zinc-800 bg-zinc-950 shadow-lg shadow-black/40 p-1">
+                        {group.items.map((item) => (
+                          <Link
+                            key={item.href}
+                            href={item.href}
+                            role="menuitem"
+                            className={`flex items-center gap-2.5 px-2 py-1.5 rounded text-sm font-medium transition-colors ${linkClass(pathname === item.href)}`}
+                          >
+                            <NavIcon src={item.icon} />
+                            {t(item.label)}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -118,22 +196,21 @@ export function Navbar() {
         {/* Mobile dropdown panel */}
         {menuOpen && (
           <div className="md:hidden border-t border-zinc-800 py-2 space-y-0.5">
-            {NAV_ITEMS.map((item) => {
-              const active = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`block px-3 py-2 rounded text-sm font-medium transition-colors ${
-                    active
-                      ? 'bg-amber-600/20 text-amber-400'
-                      : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                  }`}
-                >
-                  {t(item.label)}
-                </Link>
-              );
-            })}
+            {NAV_GROUPS.map((group) => (
+              <div key={group.label} className="pb-1">
+                <div className="px-3 pt-2 pb-1 text-[11px] uppercase tracking-wider text-zinc-500">{t(group.label)}</div>
+                {group.items.map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-2.5 px-3 py-1.5 rounded text-sm font-medium transition-colors ${linkClass(pathname === item.href)}`}
+                  >
+                    <NavIcon src={item.icon} />
+                    {t(item.label)}
+                  </Link>
+                ))}
+              </div>
+            ))}
             <Link
               href="/importar"
               className={`flex items-center gap-1.5 px-3 py-2 rounded text-sm font-medium transition-colors ${

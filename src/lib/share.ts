@@ -3,8 +3,9 @@ import type { Weapon, ArrowSet, WeaponMode } from '@/types/weapon';
 import type { JewelryItem, JewelrySet } from '@/types/jewelry';
 import type { CatalogArmorSet, ArmorSet } from '@/types/armor';
 import type { CharacterProfile } from '@/types/character';
+import { fromSharePayload, isTrainerSharePayload, type TrainerSharePayload } from '@/lib/trainer';
 
-export type ShareType = 'weapon' | 'jewelry' | 'armor' | 'build' | 'compare';
+export type ShareType = 'weapon' | 'jewelry' | 'armor' | 'build' | 'compare' | 'trainer';
 
 const PREFIXES: Record<ShareType, string> = {
   weapon: 'WYP-W:',
@@ -12,6 +13,7 @@ const PREFIXES: Record<ShareType, string> = {
   armor: 'WYP-A:',
   build: 'WYP-B:',
   compare: 'WYP-C:',
+  trainer: 'WYP-T:',
 };
 
 const PREFIX_TO_TYPE: Record<string, ShareType> = {
@@ -20,6 +22,7 @@ const PREFIX_TO_TYPE: Record<string, ShareType> = {
   'WYP-A:': 'armor',
   'WYP-B:': 'build',
   'WYP-C:': 'compare',
+  'WYP-T:': 'trainer',
 };
 
 export interface BuildPayload {
@@ -53,6 +56,7 @@ export const SHARE_TYPE_LABELS: ShareTypeLabel = {
   armor: 'Set de armadura',
   build: 'Build completo',
   compare: 'Comparativo',
+  trainer: 'Setup de entrenador',
 };
 
 /** Seccion donde se abre cada tipo despues de importarlo */
@@ -62,6 +66,7 @@ export const SHARE_TYPE_ROUTES: Record<ShareType, string> = {
   armor: '/armadura',
   build: '/build',
   compare: '/comparar',
+  trainer: '/entrenador',
 };
 
 export const IMPORT_PATH = '/importar';
@@ -143,6 +148,8 @@ function validatePayload(type: ShareType, data: unknown): boolean {
     case 'compare':
       return typeof obj.character === 'object' && Array.isArray(obj.weapons) && obj.weapons.length > 0
         && obj.weapons.every((w) => w && typeof w === 'object' && typeof (w as Record<string, unknown>).nombre === 'string');
+    case 'trainer':
+      return isTrainerSharePayload(data) && fromSharePayload(data) !== null;
     default:
       return false;
   }
@@ -166,6 +173,10 @@ export function getSharePreview(result: ShareResult, t: (key: string, vars?: Rec
     case 'compare': {
       const names = (obj.weapons as { nombre: string }[]).map((w) => w.nombre);
       return `${t('Comparativo')}: ${names.join(' vs ')}`;
+    }
+    case 'trainer': {
+      const p = result.data as TrainerSharePayload;
+      return `${p.nm ? `${p.nm} — ` : ''}${t(p.s)} ${t('nivel')} ${p.n}`;
     }
     default:
       return t('Desconocido');
