@@ -7,6 +7,7 @@ import type { DamageTypeName, WeaponCalcResult } from '@/types/weapon';
 import { useT } from '@/i18n/I18nProvider';
 import { DamageIcon } from '@/components/icons/StatIcons';
 import { WeaponIcon } from '@/components/icons/WeaponIcon';
+import { AbilityTable } from '@/components/weapons/AbilityTable';
 
 function DamageStatsGrid({ calc, label }: { calc: WeaponCalcResult; label?: string }) {
   const t = useT();
@@ -134,7 +135,7 @@ function MiniStat({ label, value, sub, className = 'text-zinc-200' }: { label: s
 
 export function BuildDanos() {
   const t = useT();
-  const { weapon, secondaryWeapon, hasWeapon, hasArrows, isArquero, isDualMode, calc, dualCalc, secondaryCalc, mainCalc } = useBuildDamage();
+  const { weapon, secondaryWeapon, hasWeapon, hasArrows, isArquero, isDualMode, calc, dualCalc, secondaryCalc, mainCalc, character } = useBuildDamage();
 
   if (!hasWeapon) {
     return (
@@ -193,16 +194,13 @@ export function BuildDanos() {
 
       <DamageByType calc={mainCalc} />
 
-      {/* Habilidades y velocidad */}
-      <Card title={t("Habilidades y velocidad")}>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 text-sm">
-          {mainCalc.riposteDmg && <MiniStat label={t("Riposte")} value={mainCalc.riposteDmg} sub="prom x2.7 + 75" className="text-red-400" />}
-          {mainCalc.impactoVigoroso && (
-            <MiniStat label={t("Impacto Vigoroso")} value={`${mainCalc.impactoVigoroso.min} - ${mainCalc.impactoVigoroso.max}`} sub={`prom ${mainCalc.impactoVigoroso.prom}`} className="text-orange-400" />
-          )}
-          {mainCalc.cruzDelSur && (
-            <MiniStat label={t("Cruz del Sur")} value={`${mainCalc.cruzDelSur.min} - ${mainCalc.cruzDelSur.max}`} sub={`prom ${mainCalc.cruzDelSur.prom}`} className="text-sky-400" />
-          )}
+      <Card title={t("Habilidades con esta arma")}>
+        <AbilityTable weapon={weapon} calc={mainCalc} subclase={character.subclase} />
+      </Card>
+
+      {/* Velocidad */}
+      <Card title={t("Velocidad")}>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-sm">
           <MiniStat label={t("Vel. base")} value={`${mainCalc.velBase}s`} />
           <MiniStat label={t("Bonus vel. ataque")} value={`${mainCalc.attackSpeedPct}%`} />
           <MiniStat label={t("Bonus vel. invocación")} value={`${mainCalc.castSpeedPct}%`} />

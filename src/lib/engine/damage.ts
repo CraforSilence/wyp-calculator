@@ -6,6 +6,15 @@ import { aggregateJewelryBonuses } from '@/hooks/useJewelry';
 import { roundTo } from '../utils';
 import { getWeaponAttributes, sumWeaponAttributes } from '../weaponAttributes';
 
+/**
+ * DPS con críticos: el crítico multiplica el daño normal, no el especial (gemas y joyería),
+ * igual que en la simulación.
+ */
+function calcDps(promedio: number, especial: number, golpesPorSeg: number, critChance: number, critMult: number): number {
+  const normal = promedio - especial;
+  return (normal * (1 + critChance * (critMult - 1)) + especial) * golpesPorSeg;
+}
+
 function calcAttributeBonus(
   mainStatValue: number,
   bonusStat: number,
@@ -91,58 +100,35 @@ export function calcWeaponDamage(
   const statBonus = (jBonus[mainStat] || 0) + (jBonus.classAttribute || 0);
   const mainStatValue = (character.stats[mainStat] + statBonus) * (1 + atributoClasePct / 100);
 
-  // Paso 1: Daño base total (max)
-  const totalBaseMax = Object.values(tipos).reduce((sum, v) => sum + (v ? v[1] : 0), 0);
-
-  // Paso 1b: weaponDmgPct — multiplicar daño base por tipo
-  const weaponDmgPct = jBonus.weaponDmgPct || 0;
-  const tiposAjustados: Record<string, [number, number]> = {};
+  // Paso 1a: Daño del arma por tipo, con las líneas "Daño [tipo] +X" del arma y de las flechas.
+  // Según Formulas.md se suman acá, así que pasan por los % y cuentan para repartir el bonus.
+  const tiposConBonus: Record<string, [number, number]> = {};
   for (const [tipo, rango] of Object.entries(tipos)) {
-    if (!rango) continue;
-    const [dmin, dmax] = rango;
-    if (weaponDmgPct > 0) {
-      const mult = weaponDmgPct / 100;
-      tiposAjustados[tipo] = [dmin + dmin * mult, dmax + dmax * mult];
-    } else {
-      tiposAjustados[tipo] = [dmin, dmax];
+    if (rango) tiposConBonus[tipo] = [rango[0], rango[1]];
+  }
+  const lineasDano = [bonusDano, arrows?.bonusDano ?? {}];
+  for (const lineas of lineasDano) {
+    for (const [tipo, valor] of Object.entries(lineas)) {
+      if (!valor) continue;
+      const prev = tiposConBonus[tipo] ?? [0, 0];
+      tiposConBonus[tipo] = [prev[0] + valor, prev[1] + valor];
     }
   }
+  const totalMax = Object.values(tiposConBonus).reduce((sum, v) => sum + v[1], 0);
 
-  // Recalcular totalBaseMax ajustado para proporciones
-  const totalBaseMaxAdj = Object.values(tiposAjustados).reduce((sum, v) => sum + v[1], 0);
+  // Paso 3b: "% Daño de Arma" — aplica a todos los tipos (incluidas las líneas "Daño +X").
+  // Multiplicar el mín y el máx equivale a multiplicar el valor aleatorio del golpe.
+  const weaponDmgPct = jBonus.weaponDmgPct || 0;
+  const pctMult = 1 + weaponDmgPct / 100;
 
-  // Paso 2: Extra damage per type
+  // Paso 2: Bonus de atributo + "(+X)" del arma, repartido según el máximo de cada tipo (paso 1a)
   const extraTotal = calcAttributeBonus(mainStatValue, bonusStat, bonusAtributo, attributeMultiplier);
 
-  // Paso 3 y 4: Repartir extra y aplicar
+  // Paso 3c: Daño por tipo = daño del arma con % + su parte del bonus
   const resultado: Record<string, [number, number]> = {};
-  for (const [tipo, rango] of Object.entries(tiposAjustados)) {
-    const [dmin, dmax] = rango;
-    const proporcion = totalBaseMaxAdj > 0 ? dmax / totalBaseMaxAdj : 0;
-    const extra = extraTotal * proporcion;
-    resultado[tipo] = [dmin + extra, dmax + extra];
-  }
-
-  // Paso 4b: Bonus de daño del arma (flat)
-  for (const [tipo, valor] of Object.entries(bonusDano)) {
-    if (!valor) continue;
-    if (resultado[tipo]) {
-      resultado[tipo] = [resultado[tipo][0] + valor, resultado[tipo][1] + valor];
-    } else {
-      resultado[tipo] = [valor, valor];
-    }
-  }
-
-  // Paso 4c: Bonus de daño de flechas (flat)
-  if (arrows) {
-    for (const [tipo, valor] of Object.entries(arrows.bonusDano)) {
-      if (!valor) continue;
-      if (resultado[tipo]) {
-        resultado[tipo] = [resultado[tipo][0] + valor, resultado[tipo][1] + valor];
-      } else {
-        resultado[tipo] = [valor, valor];
-      }
-    }
+  for (const [tipo, [dmin, dmax]] of Object.entries(tiposConBonus)) {
+    const extra = totalMax > 0 ? extraTotal * (dmax / totalMax) : 0;
+    resultado[tipo] = [dmin * pctMult + extra, dmax * pctMult + extra];
   }
 
   // Track special damage (muescas + jewelry flat) — reduced only by PF in combat
@@ -171,11 +157,13 @@ export function calcWeaponDamage(
     }
   }
 
-  const baseMin = Object.values(tiposAjustados).reduce((sum, v) => sum + v[0], 0);
-  const baseMax = Object.values(tiposAjustados).reduce((sum, v) => sum + v[1], 0);
+  // Daño propio del arma (sin líneas "Daño +X") con el % de daño de arma: lo usan el desglose y Cruz del Sur
+  const baseMin = Object.values(tipos).reduce((sum, v) => sum + (v ? v[0] : 0), 0) * pctMult;
+  const baseMax = Object.values(tipos).reduce((sum, v) => sum + (v ? v[1] : 0), 0) * pctMult;
   const especialTotal = Object.values(specialDamagePerType).reduce((sum, v) => sum + v, 0);
-  const bonusPlano = Object.values(bonusDano).reduce<number>((sum, v) => sum + (v || 0), 0)
-    + (arrows ? Object.values(arrows.bonusDano).reduce<number>((sum, v) => sum + (v || 0), 0) : 0);
+  const bonusPlano = lineasDano
+    .flatMap((lineas) => Object.values(lineas))
+    .reduce<number>((sum, v) => sum + (v || 0), 0) * pctMult;
 
   // Paso 6: Daño final con floor
   const finalMin = Math.floor(Object.values(resultado).reduce((sum, v) => sum + v[0], 0));
@@ -199,14 +187,15 @@ export function calcWeaponDamage(
   const critBaseValue = CRIT_BASE[character.subclase];
   const critTotal = (critBaseValue * (1 + critExtra / 100)) / 100;
   const danoPromedio = (finalMin + finalMax) / 2;
-  const dpsEfectivo = danoPromedio * golpesPorSeg * (1 + critTotal * (critMultTotal - 1));
+  const dpsEfectivo = calcDps(danoPromedio, especialTotal, golpesPorSeg, critTotal, critMultTotal);
 
   // Habilidades específicas
   const categoria = SUBCATEGORIA_TO_CATEGORIA[weapon.subcategoria] || weapon.subcategoria.toLowerCase();
 
   let riposteDmg: number | null = null;
   if (categoria === 'lanza') {
-    riposteDmg = Math.floor(danoPromedio * 2.7 + 75);
+    // El especial (gemas y joyería) no escala con el poder: se suma una sola vez
+    riposteDmg = Math.floor((danoPromedio - especialTotal) * 2.7 + especialTotal + 75);
   }
 
   let impactoVigoroso: { min: number; max: number; prom: number } | null = null;
@@ -219,8 +208,9 @@ export function calcWeaponDamage(
   // Cruz del Sur (cortante): daño base del arma +100%, daño bonus +65%
   let cruzDelSur: { min: number; max: number; prom: number } | null = null;
   if (categoria === 'espada' || categoria === 'hacha') {
-    const cdsMin = Math.floor(baseMin * 2 + (finalMin - baseMin) * 1.65);
-    const cdsMax = Math.floor(baseMax * 2 + (finalMax - baseMax) * 1.65);
+    // El especial (gemas y joyería) no escala con el poder: se suma una sola vez
+    const cdsMin = Math.floor(baseMin * 2 + (finalMin - baseMin - especialTotal) * 1.65 + especialTotal);
+    const cdsMax = Math.floor(baseMax * 2 + (finalMax - baseMax - especialTotal) * 1.65 + especialTotal);
     cruzDelSur = { min: cdsMin, max: cdsMax, prom: roundTo((cdsMin + cdsMax) / 2, 1) };
   }
 
@@ -252,7 +242,7 @@ export function calcWeaponDamage(
       attributeMultiplier,
       bonusAtributo: roundTo(extraTotal, 1),
       danoBase: [roundTo(baseMin, 1), roundTo(baseMax, 1)],
-      bonusPlano,
+      bonusPlano: roundTo(bonusPlano, 1),
       especial: especialTotal,
     },
   };
@@ -330,8 +320,7 @@ export function calcDualDamage(
   const critExtra = mergedWeapon.critChanceExtra + (jBonus.critChance || 0);
   const critTotal = (critBaseValue * (1 + critExtra / 100)) / 100;
   const critMultTotal = result.critMult;
-  const danoPromedio = result.danoPromedio;
-  const dpsEfectivo = danoPromedio * golpesPorSeg * (1 + critTotal * (critMultTotal - 1));
+  const dpsEfectivo = calcDps(result.danoPromedio, result.pasos.especial, golpesPorSeg, critTotal, critMultTotal);
 
   return {
     ...result,

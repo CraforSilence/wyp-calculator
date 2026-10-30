@@ -7,7 +7,7 @@ import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Collapsible } from '@/components/ui/Collapsible';
-import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, RAREZA_SLOTS, bonusOptionsForRareza } from '@/lib/engine/constants';
+import { ALL_DAMAGE_TYPES, DAMAGE_TYPE_LABELS, MUESCA_TYPES, MUESCA_TYPE_LABELS, SUBCATEGORIAS_POR_CLASE, SUBCATEGORIAS_POR_SUBCLASE, RAREZA_SLOTS, bonusOptionsForRareza } from '@/lib/engine/constants';
 import { HelpPopover } from '@/components/ui/HelpPopover';
 import { SlotEditor, muescaValueInput } from '@/components/weapons/SlotEditor';
 import { useBuildWeapon, DEFAULT_WEAPON, DEFAULT_ARROWS } from '@/hooks/useBuildWeapon';
@@ -112,13 +112,18 @@ interface WeaponFormProps {
   weapon: Weapon;
   onWeaponChange: (w: Weapon) => void;
   showPreload?: boolean;
-  showClaseSelector?: boolean;
+  /** Clase del personaje: el arma queda atada a ella y no se muestra el selector de clase */
+  fixedClase?: Clase;
+  /** Tipos de arma que puede usar la subclase del personaje */
+  allowedSubcats?: string[];
 }
 
-function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelector = true }: WeaponFormProps) {
+function WeaponForm({ weapon, onWeaponChange, showPreload = true, fixedClase, allowedSubcats }: WeaponFormProps) {
   const t = useT();
   const [nombre, setNombre] = useState(weapon.nombre);
-  const [clase, setClase] = useState<Clase>(weapon.clase);
+  const [claseLocal, setClase] = useState<Clase>(weapon.clase);
+  const clase = fixedClase ?? claseLocal;
+  const showClaseSelector = !fixedClase;
   const [subcategoria, setSubcategoria] = useState<string>(weapon.subcategoria);
   const [velocidad, setVelocidad] = useState<Velocidad>(weapon.velocidad);
   const [rareza, setRareza] = useState<Rareza>(weapon.rareza);
@@ -139,7 +144,9 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
     setMuescaRows(weaponToMuescaRows(w));
   }, []);
 
-  const { weapons: savedWeapons } = useWeapons();
+  const { weapons: allSaved } = useWeapons();
+  // Solo las armas que puede usar el personaje
+  const savedWeapons = allowedSubcats ? allSaved.filter((w) => allowedSubcats.includes(w.subcategoria)) : allSaved;
   const customOptions = savedWeapons.filter((w) => !w.isDefault);
   const defaultOptions = savedWeapons.filter((w) => w.isDefault);
   // El arma cargada se reconoce por nombre (prioriza Mis armas): sobrevive a recargas y se
@@ -192,7 +199,7 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nombre, clase, subcategoria, velocidad, rareza, bonusAtributo, damageRows, bonusRows, muescaRows]);
 
-  const subcatOptions = SUBCATEGORIAS_POR_CLASE[clase].map((s) => ({ value: s, label: s }));
+  const subcatOptions = (allowedSubcats ?? SUBCATEGORIAS_POR_CLASE[clase]).map((s) => ({ value: s, label: s }));
   const slots = RAREZA_SLOTS[rareza];
   const updateDamage = (i: number, patch: Partial<DamageRow>) =>
     setDamageRows(damageRows.map((r, j) => (j === i ? { ...r, ...patch } : r)));
@@ -201,7 +208,7 @@ function WeaponForm({ weapon, onWeaponChange, showPreload = true, showClaseSelec
     <Card title={
       <span className="flex items-center justify-between w-full gap-2">
         <span>{t("Datos del Arma")}</span>
-        <Button size="sm" variant="ghost" onClick={() => loadWeapon({ ...DEFAULT_WEAPON, id: weapon.id, clase, subcategoria: subcategoria as Subcategoria })}>
+        <Button size="sm" variant="ghost" onClick={() => loadWeapon({ ...DEFAULT_WEAPON, id: weapon.id, clase, subcategoria: (subcatOptions.some((o) => o.value === subcategoria) ? subcategoria : subcatOptions[0]?.value ?? subcategoria) as Subcategoria })}>
           {t("Limpiar")}
         </Button>
       </span>
@@ -456,6 +463,19 @@ export function BuildArma() {
 
   const isBarbaro = character.subclase === 'Bárbaro';
   const isArquero = character.clase === 'Arquero';
+  const allowedSubcats = SUBCATEGORIAS_POR_SUBCLASE[character.subclase];
+  // Al limpiar desde el aviso se vuelve a montar el formulario para que tome el arma nueva
+  const [formKey, setFormKey] = useState(0);
+  const invalid = [
+    hasWeapon && !allowedSubcats.includes(weapon.subcategoria) ? { w: weapon, set: setWeapon, id: DEFAULT_WEAPON.id } : null,
+    isBarbaro && weaponMode === 'duales' && hasSecondaryWeapon && !allowedSubcats.includes(secondaryWeapon.subcategoria)
+      ? { w: secondaryWeapon, set: setSecondaryWeapon, id: 'build-weapon-secondary' } : null,
+  ].filter(Boolean) as { w: Weapon; set: (w: Weapon) => void; id: string }[];
+  const clearInvalid = () => {
+    for (const x of invalid) x.set({ ...DEFAULT_WEAPON, id: x.id, clase: character.clase, subcategoria: allowedSubcats[0] as Subcategoria });
+    setFormKey((k) => k + 1);
+  };
+  const formProps = { fixedClase: character.clase, allowedSubcats };
 
   const MAX_CUSTOM = 50;
   const canSave = customCount < MAX_CUSTOM;
@@ -509,21 +529,34 @@ export function BuildArma() {
         </div>
       )}
 
+      {invalid.length > 0 && (
+        <div className="rounded-md border border-red-800/60 bg-red-900/20 px-3 py-2 text-sm text-red-300 flex flex-wrap items-center gap-3">
+          <span className="flex-1 min-w-48">
+            {invalid.map((x) => t('"{arma}" es {tipo}: el {subclase} no puede usarla.', { arma: x.w.nombre || t('El arma'), tipo: t(x.w.subcategoria), subclase: t(character.subclase) })).join(' ')}{' '}
+            {t('Los daños de abajo no corresponden a tu personaje.')}
+          </span>
+          <Button size="sm" variant="danger" onClick={clearInvalid}>{t('Limpiar arma')}</Button>
+        </div>
+      )}
+
       {/* Weapon forms */}
       {isBarbaro && weaponMode === 'duales' ? (
         <div className="space-y-3">
           <Collapsible title={t("Arma Principal")} icon="/icons/arma.svg" defaultOpen={true}>
             <WeaponForm
+              key={`p${formKey}`}
               weapon={weapon}
               onWeaponChange={(w) => setWeapon(w)}
+              {...formProps}
             />
           </Collapsible>
           <Collapsible title={t("Arma Secundaria")} icon="/icons/arma.svg" defaultOpen={true}>
             <WeaponForm
+              key={`s${formKey}`}
               weapon={secondaryWeapon}
               onWeaponChange={(w) => setSecondaryWeapon(w)}
               showPreload={true}
-              showClaseSelector={true}
+              {...formProps}
             />
           </Collapsible>
           <div className="flex gap-2">
@@ -538,8 +571,10 @@ export function BuildArma() {
       ) : (
         <>
           <WeaponForm
+            key={`p${formKey}`}
             weapon={weapon}
             onWeaponChange={(w) => setWeapon(w)}
+            {...formProps}
           />
           <Button size="sm" variant="secondary" onClick={() => handleSaveWeapon(weapon)} disabled={!canSave || !hasWeapon}>
             {t("Guardar en Mis armas")}

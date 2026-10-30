@@ -149,12 +149,14 @@ export function applyDamageReduction(
   let totalDamage = Object.values(damage).reduce((s, v) => s + v, 0)
     + Object.values(processedSpecial).reduce((s, v) => s + v, 0);
 
-  // Step 3h: Magical barrier (clamped to available damage per type)
+  // Step 3h: Magical barrier (clamped to the damage of that type, special included: it reduces the total)
   let barrierReduction = 0;
-  for (const type of damageTypes) {
+  const barrierTypes = new Set([...damageTypes, ...Object.keys(processedSpecial)]);
+  for (const type of barrierTypes) {
     const barrier = armorSet.barrierPoints[type as keyof typeof armorSet.barrierPoints] ?? 0;
     if (barrier > 0) {
-      const effectiveBarrier = Math.min(barrier, Math.max(0, damage[type]));
+      const available = Math.max(0, damage[type] ?? 0) + (processedSpecial[type] || 0);
+      const effectiveBarrier = Math.min(barrier, available);
       barrierReduction += effectiveBarrier;
     }
   }

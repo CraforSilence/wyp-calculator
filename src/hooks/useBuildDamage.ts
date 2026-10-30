@@ -5,11 +5,17 @@ import { useCharacter } from '@/hooks/useCharacter';
 import { useJewelry } from '@/hooks/useJewelry';
 import { useBuildWeapon } from '@/hooks/useBuildWeapon';
 import { calcWeaponDamage, calcDualDamage } from '@/lib/engine/damage';
+import { useArmor } from '@/hooks/useArmor';
+import { armorAttributes, withArmorAttributes } from '@/lib/character';
 
 /** Dano del arma del Build con la joyeria aplicada (y duales o flechas si corresponde). */
 export function useBuildDamage() {
-  const { character } = useCharacter();
+  const { character: baseCharacter } = useCharacter();
   const { jewelry } = useJewelry();
+  const { armorSet } = useArmor();
+  // Los atributos cargados son sin equipo: se suma lo de la armadura (arma y joyería las suma el cálculo)
+  const character = useMemo(() => withArmorAttributes(baseCharacter, armorSet), [baseCharacter, armorSet]);
+  const armorAttrs = useMemo(() => armorAttributes(armorSet), [armorSet]);
   const { weapon, hasWeapon, weaponMode, secondaryWeapon, hasSecondaryWeapon, arrows, hasArrows } = useBuildWeapon();
 
   const isArquero = character.clase === 'Arquero';
@@ -35,7 +41,7 @@ export function useBuildDamage() {
   const mainCalc = isDualMode && dualCalc ? dualCalc : calc;
 
   return {
-    weapon, secondaryWeapon, hasWeapon, hasArrows, jewelry,
+    weapon, secondaryWeapon, hasWeapon, hasArrows, jewelry, character, armorAttrs,
     isArquero, isDualMode, calc, dualCalc, secondaryCalc, mainCalc,
   };
 }

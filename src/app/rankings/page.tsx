@@ -10,6 +10,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/components/ui/Toast';
 import { Button } from '@/components/ui/Button';
 import { WeaponSheet } from '@/components/weapons/WeaponSheet';
+import { AbilityTable } from '@/components/weapons/AbilityTable';
 import { calcWeaponDamage } from '@/lib/engine/damage';
 import { PageHeader } from '@/components/layout/PageHeader';
 import { Select } from '@/components/ui/Select';
@@ -63,7 +64,9 @@ export default function RankingsPage() {
   const { character } = useCharacter();
   const { weapons } = useWeapons();
   const { jewelry } = useJewelry();
-  const [filterClase, setFilterClase] = useState<string>('Todas');
+  // 'Mia' = la clase del personaje (sigue al personaje si cambia)
+  const [filterClaseRaw, setFilterClase] = useState<string>('Mia');
+  const filterClase = filterClaseRaw === 'Mia' ? character.clase : filterClaseRaw;
   const [filterSubcat, setFilterSubcat] = useState<string>('Todas');
   const [selectedDetail, setSelectedDetail] = useState<{ weapon: (typeof weapons)[0]; result: WeaponCalcResult } | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('dps');
@@ -122,9 +125,9 @@ export default function RankingsPage() {
       <div className="flex flex-wrap gap-3 mb-4">
         <Select
           label={t("Clase")}
-          value={filterClase}
+          value={filterClaseRaw}
           onChange={(e) => { setFilterClase(e.target.value); setFilterSubcat('Todas'); }}
-          options={[{ value: 'Todas', label: 'Todas' }, { value: 'Guerrero', label: 'Guerrero' }, { value: 'Arquero', label: 'Arquero' }, { value: 'Mago', label: 'Mago' }]}
+          options={[{ value: 'Mia', label: t('Mi clase ({clase})', { clase: t(character.clase) }) }, { value: 'Todas', label: 'Todas' }, { value: 'Guerrero', label: 'Guerrero' }, { value: 'Arquero', label: 'Arquero' }, { value: 'Mago', label: 'Mago' }]}
         />
         <div className="sm:hidden">
           <Select
@@ -319,6 +322,13 @@ export default function RankingsPage() {
                 </div>
               );
             })()}
+
+            <div className="rounded-md border border-zinc-700/70 bg-zinc-950/70 px-3 py-2.5">
+              <span className="text-[11px] uppercase tracking-wider text-amber-500/80 font-semibold">{t("Habilidades con esta arma")}</span>
+              <div className="mt-1.5">
+                <AbilityTable weapon={selectedDetail.weapon} calc={selectedDetail.result} subclase={character.subclase} compact />
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-2">
               <Button size="sm" className="w-full" onClick={() => loadInBuild(selectedDetail.weapon)}>{t("Usar en el Build")}</Button>

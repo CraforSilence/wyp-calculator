@@ -2,10 +2,8 @@
 
 import { useCallback } from 'react';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
-import { useCharacter } from '@/hooks/useCharacter';
-import { useJewelry } from '@/hooks/useJewelry';
 import { useArmor } from '@/hooks/useArmor';
-import { useBuildWeapon } from '@/hooks/useBuildWeapon';
+import { useBuildDamage } from '@/hooks/useBuildDamage';
 import { simulateHits } from '@/lib/engine/simulation';
 import { useWeapons } from '@/hooks/useWeapons';
 import { ARMOR_CLASSES, CLASE_SUBCLASES, SUBCLASE_MAIN_STAT, CRIT_BASE, ALL_DAMAGE_TYPES } from '@/lib/engine/constants';
@@ -111,10 +109,10 @@ interface BuildSimulacionProps {
 
 export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
   const t = useT();
-  const { character } = useCharacter();
-  const { jewelry } = useJewelry();
   const { armorSet: myArmor } = useArmor();
-  const { weapon: myWeapon, hasWeapon } = useBuildWeapon();
+  // Personaje (con los atributos de la armadura), joyería y daño del arma tal como los calcula el Build:
+  // con flechas o en duales si corresponde
+  const { character, jewelry, weapon: myWeapon, hasWeapon, mainCalc } = useBuildDamage();
   const { weapons: allWeapons } = useWeapons();
   const customWeapons = allWeapons.filter((w) => !w.isDefault);
   const defaultWeapons = allWeapons.filter((w) => w.isDefault);
@@ -197,7 +195,7 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
   // --- Simulate offensive ---
   const handleSimOffensive = () => {
     if (!hasWeapon) return;
-    const sim = simulateHits(myWeapon, character, jewelry, enemyArmor, 10, enemySubclase, enemyJewelry);
+    const sim = simulateHits(myWeapon, character, jewelry, enemyArmor, 10, enemySubclase, enemyJewelry, mainCalc);
     setOffResult(sim);
   };
 
@@ -209,7 +207,7 @@ export function BuildSimulacion({ onGoTo }: BuildSimulacionProps = {}) {
   };
 
   // --- Weapon calc for summary ---
-  const myWeaponCalc = hasWeapon ? calcWeaponDamage(myWeapon, character, jewelry) : null;
+  const myWeaponCalc = hasWeapon ? mainCalc : null;
   const myArmorPieceCount = Object.keys(myArmor.pieces).filter((s) => {
     const p = myArmor.pieces[s as ArmorSlot];
     return p && p.pba > 0;

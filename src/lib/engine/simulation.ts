@@ -1,5 +1,5 @@
 import type { CharacterProfile, Subclase } from '@/types/character';
-import type { Weapon, DamageTypeName } from '@/types/weapon';
+import type { Weapon, WeaponCalcResult, DamageTypeName } from '@/types/weapon';
 import type { JewelrySet } from '@/types/jewelry';
 import type { ArmorSet } from '@/types/armor';
 import type { SimulationHit, SimulationResult } from '@/types/simulation';
@@ -64,6 +64,7 @@ export function buildEffectiveArmorSet(armorSet: ArmorSet, defenderJewelry?: Jew
 /**
  * Simulates N hits of a weapon against an armor set.
  * @param defenderSubclase - Subclass of the defender (determines armor class multiplier)
+ * @param precomputed - Daño ya calculado del arma (con flechas o duales); si falta, se calcula el arma sola
  */
 export function simulateHits(
   weapon: Weapon,
@@ -72,9 +73,10 @@ export function simulateHits(
   armorSet: ArmorSet,
   numHits: number = 10,
   defenderSubclase?: Subclase,
-  defenderJewelry?: JewelrySet | null
+  defenderJewelry?: JewelrySet | null,
+  precomputed?: WeaponCalcResult | null
 ): SimulationResult {
-  const weaponResult = calcWeaponDamage(weapon, character, jewelry);
+  const weaponResult = precomputed ?? calcWeaponDamage(weapon, character, jewelry);
   const defender = defenderSubclase || character.subclase;
   const effectiveArmor = buildEffectiveArmorSet(filterArmorForSubclase(armorSet, defender), defenderJewelry);
   const armorClass = ARMOR_CLASSES[defender];

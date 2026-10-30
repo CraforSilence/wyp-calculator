@@ -35,15 +35,15 @@ test.describe('Build', () => {
     await expect(panel).toContainText('Cargá un arma');
     await loadWeapon(page);
     await expect(panel).toContainText('Martillo de Magnas');
-    await expect(panel).toContainText('390 – 425');
-    await expect(panel).toContainText('225.6');
+    await expect(panel).toContainText('301 – 336');
+    await expect(panel).toContainText('176.4');
 
     // Joyería: Fuerza +10 sube el daño
     await addJewelryBonus(page, 'Anillo 1', 'Fuerza', 10);
     await expect(panel).toContainText('Joyería aplicada');
     await expect(panel).toContainText('Fuerza +10');
-    await expect(panel).toContainText('405 – 440');
-    await expect(panel).toContainText('233.9');
+    await expect(panel).toContainText('316 – 351');
+    await expect(panel).toContainText('184.7');
 
     // 3. Armadura: set precargado y su estado en el panel
     await continueTo(page, STEPS.armadura);
@@ -76,13 +76,13 @@ test.describe('Build', () => {
     await continueTo(page, STEPS.arma);
     await loadWeapon(page);
     await addJewelryBonus(page, 'Anillo 1', 'Fuerza', 10);
-    await expect(sidePanel(page)).toContainText('405 – 440');
+    await expect(sidePanel(page)).toContainText('316 – 351');
 
     await page.reload();
     // Sigue en el mismo paso, con el arma y la joyería
     await expect(page.getByText('✓ cargada')).toBeVisible();
     await expect(sidePanel(page)).toContainText('Martillo de Magnas');
-    await expect(sidePanel(page)).toContainText('405 – 440');
+    await expect(sidePanel(page)).toContainText('316 – 351');
   });
 
   test('sin arma, la simulación avisa y lleva al paso del arma', async ({ page }) => {
