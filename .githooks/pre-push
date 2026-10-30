@@ -1,0 +1,81 @@
+#!/bin/sh
+#
+# Bloquea el push si la identidad de git no es CraforSilence.
+# Activado con: git config core.hooksPath .githooks
+#
+# Valida dos cosas:
+#   1. git config user.name / user.email del repo
+#   2. autor y committer de CADA commit que se esta por subir
+#
+
+EXPECTED_NAME="CraforSilence"
+EXPECTED_EMAIL="CraforSilence@users.noreply.github.com"
+EXPECTED_ID="$EXPECTED_NAME <$EXPECTED_EMAIL>"
+ZERO="0000000000000000000000000000000000000000"
+
+fail() {
+  echo "" >&2
+  echo "  ==========================================================" >&2
+  echo "   PUSH BLOQUEADO - identidad incorrecta" >&2
+  echo "  ==========================================================" >&2
+  echo "" >&2
+  printf '%s\n' "$1" >&2
+  echo "" >&2
+  echo "  Este repo se sube SIEMPRE como:" >&2
+  echo "    $EXPECTED_ID" >&2
+  echo "" >&2
+  echo "  Arreglar la config del repo:" >&2
+  echo "    git config user.name  \"$EXPECTED_NAME\"" >&2
+  echo "    git config user.email \"$EXPECTED_EMAIL\"" >&2
+  echo "" >&2
+  echo "  Si el commit ya quedo mal (solo el ultimo):" >&2
+  echo "    git commit --amend --reset-author --no-edit" >&2
+  echo "" >&2
+  exit 1
+}
+
+# --- 1) Identidad configurada en el repo ---
+name=$(git config user.name)
+email=$(git config user.email)
+
+if [ "$name" != "$EXPECTED_NAME" ] || [ "$email" != "$EXPECTED_EMAIL" ]; then
+  fail "  git config actual:  $name <$email>
+  deberia ser:        $EXPECTED_ID"
+fi
+
+# --- 2) Autor/committer de los commits a subir ---
+while read -r local_ref local_sha remote_ref remote_sha; do
+  # borrado de rama: nada que validar
+  [ "$local_sha" = "$ZERO" ] && continue
+
+  if [ "$remote_sha" = "$ZERO" ]; then
+    # rama nueva: todo lo que no exista ya en el remoto
+    range="$local_sha --not --remotes=origin"
+  else
+    range="$remote_sha..$local_sha"
+  fi
+
+  bad=$(git log $range --format='%H%x09%an <%ae>%x09%cn <%ce>' \
+        | awk -F'\t' -v id="$EXPECTED_ID" \
+            '$2 != id || $3 != id { printf "    %s  autor: %s  committer: %s\n", substr($1,1,9), $2, $3 }')
+
+  if [ -n "$bad" ]; then
+    fail "  Commits con identidad equivocada en $local_ref:
+
+$bad"
+  fi
+done
+
+# --- 3) Aviso (no bloquea): cuenta activa de gh ---
+if command -v gh >/dev/null 2>&1; then
+  active=$(gh auth status --active 2>&1 | sed -n 's/.*account \([A-Za-z0-9_-]*\).*/\1/p' | head -1)
+  if [ -n "$active" ] && [ "$active" != "$EXPECTED_NAME" ]; then
+    echo "" >&2
+    echo "  AVISO: la cuenta activa de gh es '$active', no '$EXPECTED_NAME'." >&2
+    echo "  El push sigue (git no usa gh), pero los comandos 'gh' van a ir con la cuenta equivocada." >&2
+    echo "  Cambiar con: gh auth switch --user $EXPECTED_NAME" >&2
+    echo "" >&2
+  fi
+fi
+
+exit 0
