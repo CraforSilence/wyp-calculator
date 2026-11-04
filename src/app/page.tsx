@@ -59,6 +59,12 @@ const WAR_SECTIONS = [
     icon: '/icons/guerra.svg',
     description: 'Quién tiene cada fuerte y castillo, las gemas de cada altar y las reliquias, leído de la página oficial.',
   },
+  {
+    href: '/battlezone',
+    title: 'Battlezones',
+    icon: '/icons/battlezone.svg',
+    description: 'Si la BZ está abierta, cuánto falta para que abra o cierre y los horarios de la semana en tu hora local.',
+  },
 ];
 
 type Section = (typeof CALC_SECTIONS)[number] & { featured?: boolean };

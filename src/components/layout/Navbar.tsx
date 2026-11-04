@@ -28,7 +28,10 @@ const NAV_GROUPS: NavGroup[] = [
   },
   {
     label: 'Guerra',
-    items: [{ href: '/guerra', label: 'Estado de guerra', icon: '/icons/guerra.svg' }],
+    items: [
+      { href: '/guerra', label: 'Estado de guerra', icon: '/icons/guerra.svg' },
+      { href: '/battlezone', label: 'Battlezones', icon: '/icons/battlezone.svg' },
+    ],
   },
 ];
 
