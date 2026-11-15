@@ -41,6 +41,12 @@ const CALC_SECTIONS = [
     icon: '/icons/comparar.svg',
     description: 'Poné hasta 5 armas lado a lado y mirá cuál conviene y por cuánto.',
   },
+  {
+    href: '/comparar-armaduras',
+    title: 'Comparar armaduras',
+    icon: '/icons/pechera.svg',
+    description: 'Poné hasta 5 sets lado a lado y mirá cuánto daño recibe cada uno con los mismos 10 golpes.',
+  },
 ];
 
 const TRAINER_SECTIONS = [
@@ -49,6 +55,15 @@ const TRAINER_SECTIONS = [
     title: 'Entrenador',
     icon: '/icons/entrenador.svg',
     description: 'Repartí los puntos de disciplina y de poder como en el juego, guardá tus setups y compartilos.',
+  },
+];
+
+const CRAFT_SECTIONS = [
+  {
+    href: '/crafteo',
+    title: 'Crafteo',
+    icon: '/icons/crafteo.svg',
+    description: 'El daño (+X) de cada arma, arco y báculo crafteado según material, calidad y rareza.',
   },
 ];
 
@@ -73,6 +88,7 @@ type Section = (typeof CALC_SECTIONS)[number] & { featured?: boolean };
 const GROUPS: { title: string; sections: Section[] }[] = [
   { title: 'Calculadora', sections: CALC_SECTIONS },
   { title: 'Entrenador', sections: TRAINER_SECTIONS },
+  { title: 'Crafteo', sections: CRAFT_SECTIONS },
   { title: 'Guerra', sections: WAR_SECTIONS },
 ];
 

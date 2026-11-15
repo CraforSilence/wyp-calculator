@@ -65,6 +65,7 @@ export function buildEffectiveArmorSet(armorSet: ArmorSet, defenderJewelry?: Jew
  * Simulates N hits of a weapon against an armor set.
  * @param defenderSubclase - Subclass of the defender (determines armor class multiplier)
  * @param precomputed - Daño ya calculado del arma (con flechas o duales); si falta, se calcula el arma sola
+ * @param rng - Generador de 0..1; con la misma semilla, dos sets reciben exactamente los mismos golpes
  */
 export function simulateHits(
   weapon: Weapon,
@@ -74,7 +75,8 @@ export function simulateHits(
   numHits: number = 10,
   defenderSubclase?: Subclase,
   defenderJewelry?: JewelrySet | null,
-  precomputed?: WeaponCalcResult | null
+  precomputed?: WeaponCalcResult | null,
+  rng: () => number = Math.random
 ): SimulationResult {
   const weaponResult = precomputed ?? calcWeaponDamage(weapon, character, jewelry);
   const defender = defenderSubclase || character.subclase;
@@ -99,11 +101,11 @@ export function simulateHits(
       // Subtract special damage from the range (it's flat, added equally to min and max)
       const adjMin = min - specialFlat;
       const adjMax = max - specialFlat;
-      rawDamage[type] = Math.max(0, adjMin + Math.random() * (adjMax - adjMin));
+      rawDamage[type] = Math.max(0, adjMin + rng() * (adjMax - adjMin));
     }
 
     // Check critical hit
-    const isCrit = Math.random() < critChance;
+    const isCrit = rng() < critChance;
     if (isCrit) {
       for (const type of Object.keys(rawDamage)) {
         rawDamage[type] *= critMult;
@@ -122,7 +124,7 @@ export function simulateHits(
     }
 
     // Apply damage reduction with real PF values
-    const hit = applyDamageReduction(rawDamage, specialDamage, protection, effectiveArmor, isMelee, avgPF);
+    const hit = applyDamageReduction(rawDamage, specialDamage, protection, effectiveArmor, isMelee, avgPF, rng);
     hit.hitNumber = i + 1;
     hit.isCrit = isCrit;
 
@@ -140,5 +142,17 @@ export function simulateHits(
     averageDamage: Math.round(averageDamage * 10) / 10,
     totalDamage,
     critsLanded,
+  };
+}
+
+/** Generador pseudoaleatorio con semilla (mulberry32): la misma semilla da la misma secuencia. */
+export function seededRng(seed: number): () => number {
+  let a = seed >>> 0;
+  return () => {
+    a = (a + 0x6d2b79f5) >>> 0;
+    let t = a;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }

@@ -148,7 +148,10 @@ export function BuildArmadura() {
                   const withRareza = Object.fromEntries(
                     Object.entries(presetPieces).map(([k, p]) => [k, p && { ...p, rareza: p.rareza ?? found.rareza }]),
                   ) as typeof presetPieces;
-                  loadPieces(withRareza);
+                  // Si el set no trae escudo (ej. Dragón) y la subclase lo usa, se conserva el que ya tenías
+                  const keptShield = !withRareza.escudo && armorSet.pieces.escudo
+                    && filterArmorForSubclase({ pieces: { escudo: armorSet.pieces.escudo } }, character.subclase).pieces.escudo;
+                  loadPieces(keptShield ? { ...withRareza, escudo: keptShield } : withRareza);
                   setActivePresetId(found.id);
                   setEditing(new Set());
                 }

@@ -370,14 +370,6 @@ export const DEFAULT_ARMOR_SETS: DefaultArmorSet[] = [
         bonuses: [],
         upgrades: [],
       },
-      escudo: {
-        slot: 'escudo',
-        pba: 220, bcmt: 9,
-        protectionFactors: { cortante: 'Normal', punzante: 'Normal', aplastante: 'Normal', fuego: 'Normal', hielo: 'Normal', electrico: 'Normal' },
-        bonusProteccionPct: {},
-        bonuses: [],
-        upgrades: [],
-      },
     },
     bonusConjunto: [],
     bonusConjuntoPorSubclase: {

@@ -10,7 +10,8 @@ import { useT } from '@/i18n/I18nProvider';
 
 interface ArmorComparisonProps {
   sets: CatalogArmorSet[];
-  armorClass: number;
+  /** Una para todos los sets (la del personaje) o una por set (la de su subclase). */
+  armorClass: number | ((set: CatalogArmorSet) => number);
 }
 
 export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
@@ -27,7 +28,7 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
         rangedDmgReductionPct: 0,
         bonusConjunto: setBonusesFor(set, set.subclase),
       };
-      const prot = calcTotalProtection(fakeArmorSet, armorClass);
+      const prot = calcTotalProtection(fakeArmorSet, typeof armorClass === 'function' ? armorClass(set) : armorClass);
       const totalProt = Object.values(prot.perType).reduce((a, b) => a + b, 0);
       return { set, prot, totalProt };
     });
@@ -51,7 +52,7 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
         totals.set(b.type, (totals.get(b.type) || 0) + b.value);
       }
     }
-    for (const b of set.bonusConjunto) {
+    for (const b of setBonusesFor(set, set.subclase)) {
       totals.set(b.type, (totals.get(b.type) || 0) + b.value);
     }
     return Array.from(totals.entries()).map(([type, value]) => ({ type, value }));
@@ -117,10 +118,10 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
       </Card>
 
       {/* Bar charts */}
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card title={t('Protección Total')}>
           <div className="space-y-2">
-            {results
+            {[...results]
               .sort((a, b) => b.totalProt - a.totalProt)
               .map(({ set, totalProt }) => (
                 <div key={set.id}>
@@ -177,12 +178,12 @@ export function ArmorComparison({ sets, armorClass }: ArmorComparisonProps) {
 
       {/* Per damage type bars */}
       <Card title={t('Protección por tipo')}>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {ALL_DAMAGE_TYPES.map((dt) => (
             <div key={dt}>
               <p className="text-xs text-zinc-500 mb-2">{t(DAMAGE_TYPE_LABELS[dt])}</p>
               <div className="space-y-1.5">
-                {results
+                {[...results]
                   .sort((a, b) => (b.prot.perType[dt] || 0) - (a.prot.perType[dt] || 0))
                   .map(({ set, prot }) => {
                     const val = Math.round(prot.perType[dt] || 0);

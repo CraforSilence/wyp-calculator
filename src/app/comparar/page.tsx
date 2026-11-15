@@ -7,6 +7,7 @@ import { useJewelry } from '@/hooks/useJewelry';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { calcWeaponDamage } from '@/lib/engine/damage';
 import { PageHeader } from '@/components/layout/PageHeader';
+import { CompareTabs } from '@/components/comparison/CompareTabs';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { WeaponPicker } from '@/components/comparison/WeaponPicker';
@@ -132,6 +133,7 @@ export default function CompararPage() {
 
   return (
     <div>
+      <CompareTabs />
       <PageHeader
         title={t("Comparar")}
         description={t('Poné hasta {n} armas lado a lado y mirá cuál rinde más con tu personaje.', { n: MAX_COMPARE })}
@@ -239,7 +241,7 @@ export default function CompararPage() {
         );
       })()}
 
-      <div className="grid lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] gap-4 mb-6 items-start lg:items-stretch">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)] gap-4 mb-6 items-start lg:items-stretch">
         {/* En pantalla grande el panel toma el alto de las cards de al lado (con un minimo) y la lista scrollea adentro */}
         <div className="lg:relative lg:min-h-[32rem]">
           <div className="lg:absolute lg:inset-0 flex flex-col bg-zinc-900 border border-zinc-800 rounded-lg animate-fade-in-up">

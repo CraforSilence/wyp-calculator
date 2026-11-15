@@ -65,7 +65,8 @@ export function applyDamageReduction(
   protection: ProtectionResult,
   armorSet: ArmorSet,
   isMelee: boolean = true,
-  avgProtectionFactors: Record<string, number> = {}
+  avgProtectionFactors: Record<string, number> = {},
+  rng: () => number = Math.random
 ): SimulationHit {
   const damageTypes = Object.keys(incomingDamage);
   const totalSpecialRaw = Object.values(specialDamage).reduce((s, v) => s + v, 0);
@@ -91,7 +92,7 @@ export function applyDamageReduction(
   const totalRegularDamage = Object.values(incomingDamage).reduce((s, v) => s + v, 0);
   const protInfluence: Record<string, number> = {};
   const minimumDamage: Record<string, number> = {};
-  const minDmgPct = 4 + Math.random() * 4; // 4-8%
+  const minDmgPct = 4 + rng() * 4; // 4-8%
 
   for (const type of damageTypes) {
     protInfluence[type] = totalRegularDamage > 0 ? (100 / totalRegularDamage) * incomingDamage[type] : 0;

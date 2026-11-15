@@ -19,12 +19,17 @@ const NAV_GROUPS: NavGroup[] = [
       { href: '/joyeria', label: 'Joyería', icon: '/icons/anillo.svg' },
       { href: '/armadura', label: 'Armaduras', icon: '/icons/pechera.svg' },
       { href: '/rankings', label: 'Rankings', icon: '/icons/rankings.svg' },
-      { href: '/comparar', label: 'Comparar', icon: '/icons/comparar.svg' },
+      { href: '/comparar', label: 'Comparar armas', icon: '/icons/comparar.svg' },
+      { href: '/comparar-armaduras', label: 'Comparar armaduras', icon: '/icons/comparar.svg' },
     ],
   },
   {
     label: 'Entrenador',
     items: [{ href: '/entrenador', label: 'Entrenador', icon: '/icons/entrenador.svg' }],
+  },
+  {
+    label: 'Crafteo',
+    items: [{ href: '/crafteo', label: 'Crafteo', icon: '/icons/crafteo.svg' }],
   },
   {
     label: 'Guerra',
