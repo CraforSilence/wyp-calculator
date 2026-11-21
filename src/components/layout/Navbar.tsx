@@ -32,6 +32,10 @@ const NAV_GROUPS: NavGroup[] = [
     items: [{ href: '/crafteo', label: 'Crafteo', icon: '/icons/crafteo.svg' }],
   },
   {
+    label: 'Equipamiento',
+    items: [{ href: '/equipamiento', label: 'Equipamiento', icon: '/icons/equipamiento.svg' }],
+  },
+  {
     label: 'Guerra',
     items: [
       { href: '/guerra', label: 'Estado de guerra', icon: '/icons/guerra.svg' },

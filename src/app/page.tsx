@@ -67,6 +67,15 @@ const CRAFT_SECTIONS = [
   },
 ];
 
+const EQUIPMENT_SECTIONS = [
+  {
+    href: '/equipamiento',
+    title: 'Cajas de equipamiento',
+    icon: '/icons/equipamiento.svg',
+    description: 'Los bonus que se pueden elegir en cada caja de armas y armaduras, y los extra de la Caja Legendaria.',
+  },
+];
+
 const WAR_SECTIONS = [
   {
     href: '/guerra',
@@ -89,6 +98,7 @@ const GROUPS: { title: string; sections: Section[] }[] = [
   { title: 'Calculadora', sections: CALC_SECTIONS },
   { title: 'Entrenador', sections: TRAINER_SECTIONS },
   { title: 'Crafteo', sections: CRAFT_SECTIONS },
+  { title: 'Equipamiento', sections: EQUIPMENT_SECTIONS },
   { title: 'Guerra', sections: WAR_SECTIONS },
 ];
 
